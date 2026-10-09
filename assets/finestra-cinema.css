@@ -1,0 +1,508 @@
+/* ==========================================================================
+   Finestra cinema (sections/finestra-cinema.liquid, assets/finestra-cinema.js)
+   Senza la classe .is-ready (niente JavaScript, o "riduci movimento") la sezione è
+   uno schermo con il video a tutto campo e i testi: niente blocco, niente animazioni.
+   Con .is-ready lo script blocca lo schermo e muove finestra, scritta e testi.
+   Colori solo dalle variabili del tema.
+   ========================================================================== */
+
+.fc {
+  /* finestra iniziale: orizzontale sul computer, verticale sul telefono */
+  --fc-w0: clamp(240px, 25vw, 480px);
+  --fc-h0: clamp(170px, 31vh, 380px);
+  --fc-r0: calc(var(--corner-radius, 2px) * 4 + 10px);
+  --fc-ease: cubic-bezier(.2, .8, .2, 1);
+  --fc-ease-io: cubic-bezier(.77, 0, .18, 1);
+  --fc-hud: color-mix(in srgb, var(--color-text) 74%, transparent);
+  position: relative;
+  display: block;
+  overflow-x: clip;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+@media (max-width: 749px) {
+  .fc { --fc-w0: 54vw; --fc-h0: 40svh; }
+}
+
+.fc__sticky {
+  position: relative;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+}
+
+/* --- Finestra con il video ------------------------------------------------ */
+.fc__window {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.fc__media { position: absolute; inset: 0; }
+.fc__media img,
+.fc__media video,
+.fc__media .fc__ph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: var(--fc-pos, 50% 50%);
+}
+.fc__ph { color: var(--color-muted); }
+.fc__video { position: absolute; inset: 0; }
+.fc__video--mobile { display: none; }
+@media (max-width: 749px) {
+  .fc__video--desktop { display: none; }
+  .fc__video--mobile { display: block; }
+}
+/* con l'immagine: la copertina resta finché il video non parte davvero */
+.fc--has-image .fc__video video { opacity: 0; transition: opacity 1.2s var(--fc-ease); }
+.fc--has-image .fc__video video.is-playing { opacity: 1; }
+
+.fc__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* in basso sfuma nel fondo della pagina: il bordo con la sezione dopo non si vede */
+  background:
+    linear-gradient(to top,
+      var(--color-bg) 0%,
+      color-mix(in srgb, var(--color-bg) 78%, transparent) 12%,
+      color-mix(in srgb, var(--color-bg) 45%, transparent) 34%,
+      transparent 62%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-bg) 55%, transparent), transparent 22%),
+    radial-gradient(ellipse at 50% 45%, transparent 45%, color-mix(in srgb, var(--color-bg) 55%, transparent) 100%);
+}
+.fc__dim { position: absolute; inset: 0; background: var(--color-bg); opacity: 0; pointer-events: none; }
+@media (max-width: 749px) {
+  /* sul telefono i testi occupano metà schermo: ombra più alta */
+  .fc__shade {
+    background:
+      linear-gradient(to top,
+        var(--color-bg) 0%,
+        color-mix(in srgb, var(--color-bg) 82%, transparent) 22%,
+        color-mix(in srgb, var(--color-bg) 50%, transparent) 50%,
+        transparent 74%),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-bg) 55%, transparent), transparent 20%);
+  }
+}
+
+/* --- Scritta enorme ------------------------------------------------------- */
+.fc__word,
+.fc__layout,
+.fc__frame,
+.fc__hud { display: none; }
+
+.fc__line {
+  display: block;
+  width: max-content;
+  font-size: 13vw;
+  line-height: .8;
+}
+.fc__ch {
+  display: inline-block;
+  /* maschera per l'entrata dal basso: taglia solo sotto */
+  padding: .08em 0 .1em;
+  margin: -.08em -.022em -.1em;
+  clip-path: inset(-1em -1em 0 -1em);
+}
+.fc__ch--sp { width: .28em; }
+.fc__chi { display: inline-block; }
+
+.fc__logo {
+  position: relative;
+  width: min(84vw, 1180px);
+  max-height: 44svh;
+  aspect-ratio: var(--fc-logo-ratio, 2.4);
+}
+.fc__slice {
+  position: absolute;
+  inset: 0;
+  /* ogni striscia è un decimo del logo (mezzo pixel in più per non lasciare righe) */
+  clip-path: inset(0 calc(100% - (var(--k) + 1) * 10% - .5px) 0 calc(var(--k) * 10% - .5px));
+}
+.fc__slice img { width: 100%; height: 100%; object-fit: contain; }
+
+/* --- Scritta e finestra quando lo script è attivo ------------------------- */
+.fc.is-ready { height: var(--fc-scroll, 260vh); }
+.fc.is-ready .fc__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100lvh;
+  min-height: 0;
+}
+.fc.is-ready .fc__window {
+  clip-path: inset(50% 50% round var(--fc-r0));
+  will-change: clip-path;
+}
+.fc.is-ready .fc__media { transform: scale(1.3); will-change: transform; }
+
+.fc.is-ready .fc__word,
+.fc.is-ready .fc__layout {
+  position: absolute;
+  inset: 0;
+  /* stessa area visibile: sotto l'header, sopra la barra del browser del telefono */
+  padding-top: var(--header-h, 0px);
+  padding-bottom: 0;
+  padding-bottom: calc(100lvh - 100svh);
+  pointer-events: none;
+}
+.fc.is-ready .fc__layout { display: grid; place-items: center; visibility: hidden; }
+.fc__probe {
+  display: block;
+  width: var(--fc-w0);
+  height: var(--fc-h0);
+  border-radius: var(--fc-r0);
+}
+
+.fc.is-ready .fc__word {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  justify-items: center;
+  font-family: var(--font-heading-family);
+  font-weight: var(--font-heading-weight);
+  text-transform: var(--heading-transform);
+  letter-spacing: 0;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  will-change: transform;
+}
+.fc__grp { display: flex; flex-direction: column; align-items: center; gap: .02em; }
+.fc__grp--top { align-self: end; }
+.fc__grp--bot { align-self: start; }
+.fc__gap { display: grid; place-items: center; height: calc(var(--fc-h0) * .56); }
+.fc--single .fc__gap { height: auto; }
+
+.fc__word--fill { z-index: 1; }
+.fc__word--ghost {
+  z-index: 3;
+  color: transparent;
+  -webkit-text-stroke: max(1px, .011em) var(--color-text);
+}
+.fc--logo .fc__word--ghost .fc__slice img { opacity: .92; }
+.fc.is-ready .fc__ch,
+.fc.is-ready .fc__slice { will-change: transform, opacity; }
+
+/* entrata: le lettere salgono dalla maschera, dal centro verso i lati */
+.fc.is-ready .fc__chi,
+.fc.is-ready .fc__slice img {
+  transform: translate3d(0, 112%, 0);
+  transition: transform .5s var(--fc-ease);
+}
+.fc.is-ready.is-in .fc__chi,
+.fc.is-ready.is-in .fc__slice img {
+  transform: none;
+  transition: transform 1.35s var(--fc-ease) calc(.08s + var(--o, 0) * .5s);
+}
+
+/* --- Mirino intorno alla finestra ----------------------------------------- */
+.fc.is-ready .fc__frame {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.fc__corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  border: 0 solid var(--color-text);
+  will-change: transform, opacity;
+}
+.fc__corner--tl { border-top-width: 1.5px; border-left-width: 1.5px; }
+.fc__corner--tr { border-top-width: 1.5px; border-right-width: 1.5px; }
+.fc__corner--bl { border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.fc__corner--br { border-bottom-width: 1.5px; border-right-width: 1.5px; }
+
+/* --- Area visibile: indicazioni e testi ----------------------------------- */
+.fc__safe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  height: 100%;
+  pointer-events: none;
+}
+.fc.is-ready .fc__safe { height: 100vh; height: 100svh; }
+
+.fc.is-ready .fc__hud {
+  position: absolute;
+  top: calc(var(--header-h, 0px) + clamp(14px, 2.4vh, 26px));
+  bottom: clamp(16px, 3vh, 30px);
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: 1fr auto;
+  align-items: start;
+  font: 500 11px/1.2 var(--font-body-family);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--fc-hud);
+  will-change: opacity;
+}
+.fc__hud > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition: opacity .4s ease, transform .4s ease;
+}
+.fc.is-in .fc__hud > * {
+  opacity: 1;
+  transform: none;
+  transition: opacity 1s var(--fc-ease) .7s, transform 1s var(--fc-ease) .7s;
+}
+.fc__hud-tl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc__hud-tr { justify-self: end; font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+.fc__hud-unit { margin-left: 2px; opacity: .6; }
+.fc__hud-bl { align-self: end; }
+.fc__hud-br { align-self: end; justify-self: end; }
+.fc__dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  animation: fc-blink 1.6s steps(2, jump-none) infinite;
+}
+@keyframes fc-blink { 50% { opacity: .25; } }
+.fc:not(.is-visible) :is(.fc__dot, .fc__cue-line i) { animation-play-state: paused; }
+.fc__cue-line {
+  position: relative;
+  display: block;
+  width: 1px;
+  height: 38px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-text) 22%, transparent);
+}
+.fc__cue-line i {
+  position: absolute;
+  inset: 0;
+  background: var(--color-text);
+  animation: fc-cue 1.9s var(--fc-ease-io) infinite;
+}
+@keyframes fc-cue {
+  0% { transform: translate3d(0, -100%, 0); }
+  55%, 100% { transform: translate3d(0, 100%, 0); }
+}
+.fc__bar {
+  position: relative;
+  display: block;
+  width: clamp(80px, 10vw, 150px);
+  height: 1px;
+  background: color-mix(in srgb, var(--color-text) 22%, transparent);
+}
+.fc__bar i {
+  position: absolute;
+  inset: 0;
+  background: var(--color-text);
+  transform: scaleX(0);
+  transform-origin: left;
+  will-change: transform;
+}
+
+/* --- Testi a finestra aperta ---------------------------------------------- */
+.fc__content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(26px, 7vh, 72px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: clamp(20px, 3vw, 48px);
+  pointer-events: auto;
+}
+.fc__text { display: grid; justify-items: start; gap: 0; max-width: 60rem; }
+
+.fc__kicker {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 clamp(14px, 2vh, 22px);
+  font: 500 11px/1.2 var(--font-body-family);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--fc-hud);
+}
+.fc__rule { display: block; width: 44px; height: 1px; background: currentColor; transform-origin: left; }
+.fc__kicker-m { display: block; overflow: hidden; }
+.fc__kicker-t { display: block; }
+
+.fc__title {
+  margin: 0 0 clamp(14px, 2.2vh, 24px);
+  font-size: clamp(2.5rem, 7.2vw, 7.6rem);
+  line-height: .86;
+  letter-spacing: -.035em;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+.fc__w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: .08em;
+  margin-bottom: -.08em;
+}
+.fc__wi { display: inline-block; transform-origin: 0 100%; }
+.fc__w--count {
+  margin-left: .12em;
+  font-size: .2em;
+  line-height: 1;
+  letter-spacing: .04em;
+  vertical-align: top;
+  padding-top: .25em;
+}
+.fc__count {
+  font-family: var(--font-body-family);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--fc-hud);
+}
+.fc__count::before { content: '('; }
+.fc__count::after { content: ')'; }
+
+.fc__sub {
+  max-width: 44ch;
+  margin: 0 0 clamp(18px, 3vh, 30px);
+  font-size: clamp(.95rem, 1.05vw, 1.08rem);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--color-text) 84%, transparent);
+}
+
+.fc__btn { gap: 14px; }
+.fc__btn .icon { width: 18px; height: 18px; transition: transform .5s var(--fc-ease); }
+.fc__btn:hover .icon { transform: translateX(5px); }
+
+.fc__prods {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(104px, 8.6vw, 148px);
+  gap: clamp(8px, 1vw, 14px);
+}
+.fc__plink { display: block; min-height: 44px; }
+.fc__pimg {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--corner-radius);
+  background: var(--color-stage, var(--color-surface));
+}
+.fc__pimg img,
+.fc__pimg .fc__ph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: var(--card-fit, contain);
+  mix-blend-mode: multiply;
+  transition: transform .9s var(--fc-ease);
+}
+.fc__plink:hover .fc__pimg img,
+.fc__plink:focus-visible .fc__pimg img { transform: scale(1.07); }
+.fc__pname {
+  display: block;
+  margin-top: 9px;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.fc__prod .price { margin-top: 2px; font-size: 11px; color: var(--fc-hud); }
+
+/* entrate a finestra aperta (uscita più rapida, senza ritardi) */
+.fc.is-ready .fc__shade { opacity: 0; transition: opacity .6s ease; }
+.fc.is-ready.is-open .fc__shade { opacity: 1; transition: opacity 1.4s var(--fc-ease); }
+
+.fc.is-ready .fc__rule { transform: scaleX(0); transition: transform .4s ease; }
+.fc.is-ready .fc__kicker-t { transform: translate3d(0, 110%, 0); transition: transform .4s ease; }
+.fc.is-ready .fc__wi { transform: translate3d(0, 118%, 0) rotate(5deg); transition: transform .45s cubic-bezier(.5, 0, .75, 0); }
+.fc.is-ready .fc__sub { opacity: 0; transform: translate3d(0, 26px, 0); transition: opacity .35s ease, transform .35s ease; }
+.fc.is-ready .fc__btn {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path .4s ease, background-color .2s ease, color .2s ease;
+}
+.fc.is-ready .fc__btn > * { opacity: 0; transform: translate3d(-12px, 0, 0); transition: opacity .3s ease, transform .3s ease; }
+.fc.is-ready .fc__prod {
+  opacity: 0;
+  clip-path: inset(100% 0 0 0);
+  transform: translate3d(0, 44px, 0);
+  transition: opacity .35s ease, clip-path .4s ease, transform .4s ease;
+}
+
+.fc.is-ready.is-open .fc__rule { transform: none; transition: transform 1s var(--fc-ease-io) .05s; }
+.fc.is-ready.is-open .fc__kicker-t { transform: none; transition: transform 1s var(--fc-ease) .2s; }
+.fc.is-ready.is-open .fc__wi {
+  transform: none;
+  transition: transform 1.25s var(--fc-ease) calc(.18s + var(--i, 0) * .08s);
+}
+.fc.is-ready.is-open .fc__sub {
+  opacity: 1;
+  transform: none;
+  transition: opacity 1.1s var(--fc-ease) .5s, transform 1.1s var(--fc-ease) .5s;
+}
+.fc.is-ready.is-open .fc__btn {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 1s var(--fc-ease-io) .6s, background-color .2s ease, color .2s ease;
+}
+.fc.is-ready.is-open .fc__btn > * {
+  opacity: 1;
+  transform: none;
+  transition: opacity .8s var(--fc-ease) 1.05s, transform .8s var(--fc-ease) 1.05s;
+}
+.fc.is-ready.is-open .fc__prod {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  transform: none;
+  transition:
+    opacity .6s ease calc(.55s + var(--i, 0) * .12s),
+    clip-path 1.1s var(--fc-ease-io) calc(.55s + var(--i, 0) * .12s),
+    transform 1.3s var(--fc-ease) calc(.55s + var(--i, 0) * .12s);
+}
+/* da tastiera i testi si vedono sempre, anche a finestra chiusa */
+.fc.is-ready .fc__content:focus-within :is(.fc__rule, .fc__kicker-t, .fc__wi, .fc__sub, .fc__btn, .fc__btn > *, .fc__prod) {
+  opacity: 1;
+  transform: none;
+  clip-path: none;
+}
+
+/* --- Telefono ------------------------------------------------------------- */
+@media (max-width: 749px) {
+  .fc__content { grid-template-columns: minmax(0, 1fr); bottom: clamp(20px, 4svh, 36px); gap: 22px; }
+  .fc__title { font-size: clamp(2.3rem, 11.5vw, 3.6rem); }
+  .fc__sub { font-size: .92rem; margin-bottom: 18px; }
+  .fc__btn { width: 100%; justify-content: space-between; }
+  .fc__prods { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-columns: auto; }
+  .fc__prods:has(> li:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .fc__pname { font-size: 10px; letter-spacing: .04em; }
+  .fc__hud-br { display: none; }
+  .fc.is-ready .fc__hud { grid-template-columns: 1fr auto; }
+}
+@media (max-height: 620px) {
+  .fc__prods { display: none; }
+}
+
+/* --- Riduci movimento ----------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .fc__dot,
+  .fc__cue-line i { animation: none; }
+  .fc--has-image .fc__video { display: none; }
+}
