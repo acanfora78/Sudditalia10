@@ -150,7 +150,7 @@ const shop = {
 };
 const routes = {
   root_url: 'index.html', cart_url: 'carrello.html', cart_add_url: '#', search_url: '#', account_url: '#',
-  collections_url: '#', all_products_collection_url: '#', product_recommendations_url: '#',
+  collections_url: 'collezioni.html', all_products_collection_url: '#', product_recommendations_url: '#',
 };
 const cart = { item_count: 0, items: [], total_price: 0, taxes_included: true, note: '', cart_level_discount_applications: [] };
 
@@ -351,6 +351,8 @@ for (const c of Object.values(collezioni)) if (c.products_count)
   await pagina(c.url, 'collection', { collection: c }, c.title);
 for (const p of Object.values(prodotti)) await pagina(p.url, 'product', { product: p }, p.title);
 await pagina('carrello.html', 'cart', {}, traduci('cart.general.title'));
+await pagina('collezioni.html', 'list-collections', { collections: Object.values(collezioni).filter((c) => c.products_count) }, traduci('collections.title'));
+await pagina('404.html', '404', {}, '404');
 
 for (const src of immaginiUsate) fs.copyFileSync(path.join(QUI, 'dati', src), path.join(OUT, src));
 console.log(`fatto: ${fs.readdirSync(OUT).length} file in ${OUT}, ${immaginiUsate.size} immagini`);
