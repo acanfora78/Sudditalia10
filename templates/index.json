@@ -1,5 +1,12 @@
 {
   "sections": {
+    "intro": {
+      "type": "intro-blocchi",
+      "settings": {
+        "image": "shopify://shop_images/apertura.jpg",
+        "focus": "50% 30%"
+      }
+    },
     "hero": {
       "type": "hero-outfit-slider",
       "settings": {
@@ -7,6 +14,42 @@
         "title": "",
         "subtitle": ""
       }
+    },
+    "social": {
+      "type": "striscia-social",
+      "blocks": {
+        "post1": {
+          "type": "post",
+          "settings": {
+            "image": "shopify://shop_images/instagram-1.jpg"
+          }
+        },
+        "post2": {
+          "type": "post",
+          "settings": {
+            "image": "shopify://shop_images/instagram-2.jpg"
+          }
+        },
+        "post3": {
+          "type": "post",
+          "settings": {
+            "image": "shopify://shop_images/instagram-3.jpg"
+          }
+        },
+        "post4": {
+          "type": "post",
+          "settings": {
+            "image": "shopify://shop_images/instagram-4.jpg"
+          }
+        }
+      },
+      "block_order": [
+        "post1",
+        "post2",
+        "post3",
+        "post4"
+      ],
+      "settings": {}
     },
     "featured": {
       "type": "featured-collection",
@@ -57,7 +100,9 @@
     }
   },
   "order": [
+    "intro",
     "hero",
+    "social",
     "featured",
     "collections"
   ]

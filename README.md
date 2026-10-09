@@ -79,6 +79,21 @@ Prompt usato per generare il modello vestito (con allegate foto modello + foto p
 > all'originale. Il capo deve calzare in modo naturale, con pieghe realistiche. Non cambiare viso,
 > capelli, braccia e mani. Formato verticale 1024×1536.
 
+## Sezioni in stile reel (seconda parte)
+- **Apertura a blocchi** (`sections/intro-blocchi.liquid`): foto a tutto schermo che si compone a
+  rettangoli; scorrendo si divide in griglia, si rimpicciolisce e sparisce.
+- **Passaggio a pixel**: ogni elemento con `data-pixel-reveal` (la hero, la striscia social) compare
+  sciogliendo una griglia di quadratini quando entra nello schermo.
+- **Striscia social** (`sections/striscia-social.liquid`): @profilo preso dal link Instagram delle
+  impostazioni, bottone Seguici, foto verticali caricate nei blocchi.
+- **Pagina prodotto a 3 colonne** (`sections/main-product.liquid`): testo a sinistra (frase dal
+  metafield `custom.frase`, altrimenti il nome), al centro la foto stesa che diventa il modello vestito
+  (dal file `capo_fronte`), a destra taglie e carrello.
+- Effetti in `assets/effetti.js`, stili in `assets/sezioni.css`. Con "riduci movimento" sono spenti.
+- Foto delle sezioni in `foto/sezioni/`: su Shopify vanno caricate in Contenuti → File con lo stesso
+  nome (`apertura.jpg`, `instagram-1.jpg` … `instagram-4.jpg`), così la home le trova da sola.
+- Da fare: la **finestra che si apre** (servono 2 foto: un dettaglio e una foto intera).
+
 ## Anteprima senza Shopify (`strumenti/anteprima/`)
 Fa girare i file Liquid veri del tema con i dati veri presi dal sito pubblico (prodotti, prezzi,
 taglie, collezioni, immagini) e crea un sito statico: home, collezioni, prodotti, carrello.

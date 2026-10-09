@@ -58,6 +58,19 @@ function fileCapo(vista, handle) {
   return { src: nome, width: w, height: h, alt: '', aspect_ratio: w / h };
 }
 
+// foto delle sezioni: "shopify://shop_images/<nome>" -> foto/sezioni/<nome> (su Shopify: Contenuti → File)
+function immagineSezione(valore) {
+  const m = /^shopify:\/\/shop_images\/(.+)$/.exec(valore || '');
+  if (!m) return null;
+  const sorgente = path.join(TEMA, 'foto', 'sezioni', m[1]);
+  if (!fs.existsSync(sorgente)) return null;
+  const nome = `img/sez-${m[1].replace(/\.[^.]+$/, '')}.webp`;
+  const [w, h] = execFileSync('python3', ['-I', '-c',
+    'import sys;from PIL import Image;im=Image.open(sys.argv[1]).convert("RGB");im.thumbnail((1800,1800));im.save(sys.argv[2],"WEBP",quality=82);print(*im.size)',
+    sorgente, path.join(OUT, nome)]).toString().trim().split(' ').map(Number);
+  return { src: nome, width: w, height: h, alt: '', aspect_ratio: w / h };
+}
+
 const prodotti = {};
 for (const p of Object.values(DATI.products)) {
   const media = p.images.map((im, i) => ({ id: p.id * 100 + i, media_type: 'image', alt: p.title, preview_image: img(im, p.title) }));
@@ -233,7 +246,8 @@ function risolvi(def, valore) {
     case 'collection': return valore ? collezioni[valore] || null : null;
     case 'product': return valore ? prodotti[valore] || null : null;
     case 'link_list': return valore ? menus[valore] || { links: [] } : null;
-    case 'image_picker': case 'page': case 'video': return null;
+    case 'image_picker': return immagineSezione(valore);
+    case 'page': case 'video': return null;
     default: return valore ?? null;
   }
 }
@@ -294,7 +308,7 @@ async function pagina(file, nomeTemplate, extra, titolo) {
   let html = await engine.parseAndRender(layout, { ...globali, content_for_layout: contenuto });
   // i CSS e i JS del tema vanno dentro la pagina; i font Archivo da Google Fonts
   html = html.replace(/<link rel="stylesheet" href="assets\/([\w.-]+\.css)"[^>]*>/g, (_, n) => `<style>${css(n)}</style>`)
-    .replace(/<script src="assets\/([\w.-]+\.js)"[^>]*><\/script>/g, (_, n) => `<script>${js(n)}</script>`)
+    .replace(/<script src="assets\/([\w.-]+\.js)"[^>]*><\/script>/g, (_, n) => `<script type="module">${js(n)}</script>`)
     .replace('</title>', '</title>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700&display=swap">')
     .replace(/src="assets\/([\w.-]+)"/g, (_, n) => { copiaAsset(n); return `src="assets/${n}"`; })
     .replace(/(<body[^>]*>)/, `$1${AVVISO}`);

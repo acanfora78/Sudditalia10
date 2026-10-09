@@ -59,6 +59,7 @@
     {% endstyle %}
 
     {{ 'theme.css' | asset_url | stylesheet_tag: preload: true }}
+    {{ 'sezioni.css' | asset_url | stylesheet_tag }}
 
     <script>
       document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
@@ -78,6 +79,7 @@
       };
     </script>
     <script src="{{ 'theme.js' | asset_url }}" defer></script>
+    <script src="{{ 'effetti.js' | asset_url }}" defer></script>
 
     {{ content_for_header }}
   </head>

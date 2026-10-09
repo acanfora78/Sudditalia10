@@ -1,0 +1,150 @@
+{%- comment -%}
+  Apertura a blocchi.
+  Una foto a tutto schermo che si compone a rettangoli quando si apre la pagina.
+  Scorrendo, i rettangoli si separano (si vedono le linee della griglia) e la foto si
+  rimpicciolisce e sparisce, lasciando il posto alla sezione successiva.
+  L'effetto è in assets/effetti.js (elemento <intro-blocchi>).
+{%- endcomment -%}
+{%- liquid
+  assign image = section.settings.image
+  assign image_mobile = section.settings.image_mobile | default: image
+  assign cols = section.settings.cols
+  assign rows = section.settings.rows
+  assign last_col = cols | minus: 1
+  assign last_row = rows | minus: 1
+-%}
+
+<intro-blocchi
+  class="ib"
+  style="--ib-cols: {{ cols }}; --ib-rows: {{ rows }}; --ib-scroll: {{ section.settings.scroll_height }}vh; --ib-pos: {{ section.settings.focus }};"
+>
+  <div class="ib__sticky">
+    <div class="ib__frame" data-ib-frame>
+      {%- for r in (0..last_row) -%}
+        {%- for c in (0..last_col) -%}
+          <div class="ib__tile" style="--c: {{ c }}; --r: {{ r }};" aria-hidden="{% if forloop.parentloop.first and forloop.first %}false{% else %}true{% endif %}">
+            {%- if image != blank -%}
+              <picture>
+                <source media="(max-width: 749px)" srcset="{{ image_mobile | image_url: width: 900 }}">
+                <img
+                  src="{{ image | image_url: width: 1800 }}"
+                  srcset="{{ image | image_url: width: 900 }} 900w, {{ image | image_url: width: 1400 }} 1400w, {{ image | image_url: width: 1800 }} 1800w, {{ image | image_url: width: 2400 }} 2400w"
+                  sizes="100vw"
+                  width="{{ image.width }}"
+                  height="{{ image.height }}"
+                  alt="{% if forloop.parentloop.first and forloop.first %}{{ image.alt | escape }}{% endif %}"
+                  {% if forloop.parentloop.first and forloop.first %}fetchpriority="high"{% endif %}
+                  loading="eager"
+                  decoding="async"
+                >
+              </picture>
+            {%- else -%}
+              {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      {%- endfor -%}
+
+      {%- if section.settings.title != blank or section.settings.subtitle != blank -%}
+        <div class="ib__text">
+          {%- if section.settings.title != blank -%}
+            <h1 class="ib__title">{{ section.settings.title | newline_to_br }}</h1>
+          {%- endif -%}
+          {%- if section.settings.subtitle != blank -%}
+            <p class="ib__subtitle">{{ section.settings.subtitle }}</p>
+          {%- endif -%}
+          {%- if section.settings.button_label != blank and section.settings.button_link != blank -%}
+            <a class="btn btn--light" href="{{ section.settings.button_link }}">{{ section.settings.button_label }}</a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</intro-blocchi>
+
+{% schema %}
+{
+  "name": "Apertura a blocchi",
+  "tag": "section",
+  "class": "section-intro-blocchi",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Foto",
+      "info": "Una foto d'atmosfera, almeno 2000 px di lato."
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mobile",
+      "label": "Foto per telefono (facoltativa)",
+      "info": "Meglio verticale. Se vuota usa la foto principale."
+    },
+    {
+      "type": "select",
+      "id": "focus",
+      "label": "Parte della foto da tenere al centro",
+      "options": [
+        { "value": "50% 50%", "label": "Centro" },
+        { "value": "50% 20%", "label": "Alto" },
+        { "value": "50% 80%", "label": "Basso" }
+      ],
+      "default": "50% 50%"
+    },
+    {
+      "type": "range",
+      "id": "cols",
+      "label": "Colonne di blocchi",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "rows",
+      "label": "Righe di blocchi",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "scroll_height",
+      "label": "Lunghezza dello scorrimento",
+      "info": "Quanto bisogna scorrere prima che la foto sparisca.",
+      "min": 100,
+      "max": 250,
+      "step": 10,
+      "unit": "vh",
+      "default": 170
+    },
+    {
+      "type": "header",
+      "content": "Testi sopra la foto (facoltativi)"
+    },
+    {
+      "type": "textarea",
+      "id": "title",
+      "label": "Titolo"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Sottotitolo"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Testo del bottone"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Link del bottone"
+    }
+  ],
+  "presets": [{ "name": "Apertura a blocchi" }]
+}
+{% endschema %}

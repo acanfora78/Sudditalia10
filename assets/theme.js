@@ -152,6 +152,7 @@
 
         if (variant.media_id) {
           var media = document.querySelector('[data-media-id="' + variant.media_id + '"]');
+          if (media) media.dispatchEvent(new CustomEvent('stage:show', { bubbles: true }));
           if (media && media.scrollIntoView && window.matchMedia('(max-width: 989px)').matches) {
             media.scrollIntoView({ block: 'nearest', inline: 'start', behavior: 'smooth' });
           }

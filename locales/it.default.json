@@ -61,6 +61,9 @@
     },
     "featured_collection": {
       "placeholder_title": "Nome del prodotto"
+    },
+    "social": {
+      "follow": "Seguici"
     }
   },
   "collections": {
@@ -80,7 +83,9 @@
       "increase": "Aumenta quantità",
       "variant": "Variante",
       "taxes_included": "Tasse incluse.",
-      "shipping_policy_html": "<a href=\"{{ link }}\">Spedizione</a> calcolata al checkout."
+      "shipping_policy_html": "<a href=\"{{ link }}\">Spedizione</a> calcolata al checkout.",
+      "media_gallery": "Foto del prodotto",
+      "show_media": "Mostra la foto {{ number }}"
     },
     "facets": {
       "filter": "Filtra",
