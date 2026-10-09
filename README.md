@@ -39,7 +39,15 @@ restano in trasparenza ai lati. Bottone Fronte / Retro per vedere il modello di 
   fronte con le braccia lungo i fianchi, sfondo chiaro, 1024 × 1536. Incluso nel tema come
   `assets/modello-fronte.webp` (ritaglio dalla testa a metà coscia).
 - Primo capo fatto: felpa zip nera con la S gotica sul petto e la stella sulla manica
-  → `capo-fronte-felpa-zip-S.png` (allegato). Da capire a quale prodotto dello store corrisponde.
+  → `capo-fronte-felpa-zip-S.png`. Corrisponde alla **Diamond Hoodie** (`diamond-hoodie`), che non è
+  tra le 4 felpe collegate ora alla hero: va aggiunta come blocco "Capo".
+
+## Cartella `foto/` (materiale per generare i capi indossati)
+- `modello-fronte-base.png`: modello frontale intero, 1024 × 1536, sfondo grigio chiaro #E9EAEC uniforme.
+  È questa la foto da dare all'AI insieme alla foto prodotto. L'originale aveva una scacchiera
+  "finta" disegnata nei pixel (non vera trasparenza), che l'AI avrebbe copiato nel risultato.
+- `modello-fronte-trasparente.png`: stessa foto con vera trasparenza (PNG con canale alfa).
+- `prodotto-diamond-hoodie-fronte.webp`: foto prodotto della Diamond Hoodie, fronte.
 
 Prompt usato per generare il modello vestito (con allegate foto modello + foto prodotto):
 > Usa la prima immagine come base: stessa persona, stessa posa, stessa inquadratura, stessa luce,
