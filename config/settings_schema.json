@@ -24,6 +24,13 @@
       },
       {
         "type": "color",
+        "id": "color_stage",
+        "label": "Set (sfondo dei capi)",
+        "info": "Lo sfondo chiaro dietro le foto dei prodotti e dietro il modello: come uno studio illuminato dentro un sito scuro.",
+        "default": "#E7E5E0"
+      },
+      {
+        "type": "color",
         "id": "color_text",
         "label": "Testo",
         "default": "#0E1A33"

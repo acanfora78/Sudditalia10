@@ -3,6 +3,10 @@
     <intro-blocchi>      apertura a blocchi, con ingresso da film: la foto si compone a rettangoli e,
                          scorrendo, si separa e sparisce
     scorrimento morbido  inerzia con mouse e trackpad (Impostazioni tema → Movimento)
+    titoli di testa      i titoli entrano parola per parola; le immagini si scoprono dal basso
+    [data-marquee]       fascia con la scritta gigante che scorre e accelera con lo scroll
+    cursore              un cerchio con una parola (Trascina, Vedi) dove c'è qualcosa da fare
+    sipario              un telo scuro copre e scopre lo schermo tra una pagina e l'altra
     [data-pixel-reveal]  passaggio "a pixel": quando la sezione entra nello schermo, una griglia di
                          quadratini del colore di fondo si scioglie in ordine casuale e la scopre
     <product-stage>      foto centrale della pagina prodotto: foto stesa -> modello che indossa il capo
@@ -244,7 +248,208 @@
     window.addEventListener('resize', set);
   }
 
-  function init() { headerHeight(); pixelReveal(); smoothScroll(); }
+  /* ------------------------------------------------------------------
+     Titoli di testa: i titoli entrano parola per parola, dal basso
+     ------------------------------------------------------------------ */
+  function textReveal() {
+    if (reduce || !('IntersectionObserver' in window)) return;
+    var els = document.querySelectorAll('main h2, .os__title, .pe__headline, .ib__title, .footer__wordmark, .mq-title');
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.2 });
+    els.forEach(function (el) {
+      if (el.closest('.cine') || el.classList.contains('rv')) return;
+      // solo titoli fatti di testo (al massimo con degli a capo): non si tocca altro markup
+      for (var k = 0; k < el.children.length; k++) if (el.children[k].tagName !== 'BR') return;
+      var n = 0;
+      var frag = document.createDocumentFragment();
+      Array.prototype.slice.call(el.childNodes).forEach(function (node) {
+        if (node.nodeType !== 3) { frag.appendChild(node.cloneNode()); return; }
+        node.textContent.split(/(\s+)/).forEach(function (part) {
+          if (!part) return;
+          if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+          var w = document.createElement('span');
+          w.className = 'rv-w';
+          var i = document.createElement('span');
+          i.className = 'rv-i';
+          i.style.setProperty('--i', n++);
+          i.textContent = part;
+          w.appendChild(i);
+          frag.appendChild(w);
+        });
+      });
+      el.textContent = '';
+      el.appendChild(frag);
+      el.classList.add('rv');
+      io.observe(el);
+    });
+  }
+
+  /* ------------------------------------------------------------------
+     Immagini che si scoprono dal basso, con un leggero zoom all'indietro
+     ------------------------------------------------------------------ */
+  function mediaReveal() {
+    if (reduce || !('IntersectionObserver' in window)) return;
+    var els = Array.prototype.slice.call(document.querySelectorAll('.card__media, .tile__media, .social__card'))
+      .filter(function (el) { return el.getBoundingClientRect().top > window.innerHeight * 0.85; });
+    if (!els.length) return;
+    // si osserva il contenitore: l'immagine ritagliata a zero per il browser non è "visibile"
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target._rvMedia.classList.add('is-in');
+        io.unobserve(e.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    els.forEach(function (el) {
+      var item = el.closest('li, article, .tile') || el.parentElement;
+      var idx = item.parentElement ? Array.prototype.indexOf.call(item.parentElement.children, item) : 0;
+      el.style.setProperty('--d', ((idx % 5) * 0.09).toFixed(2) + 's');
+      el.classList.add('rv-m');
+      item._rvMedia = el;
+      io.observe(item);
+    });
+  }
+
+  /* ------------------------------------------------------------------
+     Fascia scorrevole: va da sola e accelera (e si inclina) con lo scroll
+     ------------------------------------------------------------------ */
+  function marquee() {
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-marquee]'));
+    if (!rows.length || reduce) return;
+    var state = rows.map(function (r) {
+      return { row: r, track: r.firstElementChild, dir: parseFloat(r.dataset.marquee) || -1, x: null, visible: false };
+    });
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          state.forEach(function (st) { if (st.row === e.target) st.visible = e.isIntersecting; });
+        });
+      });
+      state.forEach(function (st) { io.observe(st.row); });
+    } else state.forEach(function (st) { st.visible = true; });
+
+    var lastY = window.scrollY;
+    var vel = 0;
+    function frame() {
+      var y = window.scrollY;
+      vel += ((y - lastY) - vel) * 0.12;
+      lastY = y;
+      var skew = clamp(-vel * 0.12, -7, 7);
+      state.forEach(function (st) {
+        if (!st.visible) return;
+        var half = st.track.scrollWidth / 2;
+        if (!half) return;
+        if (st.x === null) st.x = st.dir > 0 ? -half : 0;
+        st.x += st.dir * (0.55 + Math.abs(vel) * 0.45);
+        if (st.dir < 0 && st.x <= -half) st.x += half;
+        if (st.dir > 0 && st.x >= 0) st.x -= half;
+        st.track.style.transform = 'translate3d(' + st.x.toFixed(1) + 'px,0,0) skewX(' + skew.toFixed(2) + 'deg)';
+      });
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ------------------------------------------------------------------
+     Cursore: un cerchio con una parola dove c'è qualcosa da fare
+     (Trascina sulla hero, Vedi sui prodotti). Solo con mouse o trackpad.
+     ------------------------------------------------------------------ */
+  function cursor() {
+    if (reduce || !window.matchMedia('(pointer: fine)').matches) return;
+    var labels = (window.theme && theme.strings && theme.strings.cursor) || {};
+    [['.os__stage', labels.drag || 'Trascina'], ['.card__link', labels.view || 'Vedi'],
+     ['.social__card', labels.open || 'Apri'], ['.tile', labels.explore || 'Scopri']].forEach(function (z) {
+      document.querySelectorAll(z[0]).forEach(function (el) { if (!el.dataset.cursor) el.dataset.cursor = z[1]; });
+    });
+    var c = document.createElement('div');
+    c.className = 'cursor';
+    c.setAttribute('aria-hidden', 'true');
+    c.innerHTML = '<span></span>';
+    document.body.appendChild(c);
+    var label = c.firstChild;
+    var tx = -100, ty = -100, x = -100, y = -100;
+    window.addEventListener('pointermove', function (e) { tx = e.clientX; ty = e.clientY; }, { passive: true });
+    document.addEventListener('pointerover', function (e) {
+      var z = e.target.closest && e.target.closest('[data-cursor]');
+      if (z) { label.textContent = z.dataset.cursor; c.classList.add('is-on'); }
+      else c.classList.remove('is-on');
+    });
+    document.addEventListener('pointerdown', function () { c.classList.add('is-down'); });
+    document.addEventListener('pointerup', function () { c.classList.remove('is-down'); });
+    (function loop() {
+      x += (tx - x) * 0.2;
+      y += (ty - y) * 0.2;
+      c.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+      requestAnimationFrame(loop);
+    })();
+  }
+
+  /* ------------------------------------------------------------------
+     Sipario tra le pagine: un telo scuro sale, si cambia pagina, si riapre
+     ------------------------------------------------------------------ */
+  function curtain() {
+    var root = document.documentElement;
+    if (root.classList.contains('curtain-in')) {
+      requestAnimationFrame(function () { requestAnimationFrame(function () { root.classList.add('curtain-out'); }); });
+      setTimeout(function () { root.classList.remove('curtain-in', 'curtain-out'); }, 1000);
+    }
+    if (reduce) return;
+    var leave = null;
+    document.addEventListener('click', function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a || a.target === '_blank' || a.hasAttribute('download') || a.closest('[data-no-curtain]')) return;
+      var href = a.getAttribute('href');
+      if (!href || href.charAt(0) === '#' || /^(mailto|tel|sms|javascript):/i.test(href)) return;
+      var url = new URL(a.href, location.href);
+      if (url.origin !== location.origin) return;
+      if (url.pathname === location.pathname && url.search === location.search) return;
+      e.preventDefault();
+      try { sessionStorage.setItem('sud-curtain', '1'); } catch (err) {}
+      if (!leave) {
+        leave = document.createElement('div');
+        leave.className = 'curtain-leave';
+        leave.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(leave);
+      }
+      requestAnimationFrame(function () { leave.classList.add('is-on'); });
+      setTimeout(function () { location.href = a.href; }, 560);
+    });
+    // tornando indietro col browser la pagina può riapparire dalla cache: si toglie il telo
+    window.addEventListener('pageshow', function (e) { if (e.persisted && leave) leave.classList.remove('is-on'); });
+  }
+
+  /* testo che riempie esattamente la larghezza (il nome gigante del footer) */
+  function fitText() {
+    var els = document.querySelectorAll('[data-fit-text]');
+    if (!els.length) return;
+    function fit() {
+      els.forEach(function (el) {
+        el.style.fontSize = '100px';
+        var w = el.scrollWidth;
+        var box = el.parentElement.clientWidth;
+        if (w) el.style.fontSize = (100 * box / w).toFixed(2) + 'px';
+      });
+    }
+    fit();
+    window.addEventListener('resize', fit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  }
+
+  function init() {
+    headerHeight();
+    fitText();
+    pixelReveal();
+    textReveal();
+    mediaReveal();
+    marquee();
+    cursor();
+    curtain();
+    smoothScroll();
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

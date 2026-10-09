@@ -246,12 +246,14 @@ html.cine-on { overflow: hidden; }
 }
 
 /* --- Pagina prodotto a 3 colonne ----------------------------------------- */
+/* la colonna centrale è un set illuminato: dentro i colori tornano scuri su chiaro */
+.pe__stage { --color-text: #0b0b0c; --color-border: rgba(11, 11, 12, .16); color: #0b0b0c; }
 .pe {
   display: grid;
   gap: 28px;
   padding: 0 clamp(16px, 4vw, 56px) 56px;
 }
-.pe__stage { display: block; order: -1; margin-inline: calc(clamp(16px, 4vw, 56px) * -1); background: var(--color-surface); }
+.pe__stage { display: block; order: -1; margin-inline: calc(clamp(16px, 4vw, 56px) * -1); background: var(--color-stage, var(--color-surface)); }
 .pe__eyebrow { margin: 0 0 14px; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--color-muted); }
 .pe__headline { margin: 0 0 22px; font-size: clamp(2rem, 3.4vw, 3.3rem); line-height: .98; text-wrap: balance; }
 .pe__description { max-width: 44ch; font-size: .95rem; color: var(--color-muted); }
@@ -276,7 +278,7 @@ html.cine-on { overflow: hidden; }
   display: grid;
   place-items: center;
   opacity: 0;
-  background: var(--color-surface);
+  background: var(--color-stage, var(--color-surface));
   transition: opacity .8s ease;
 }
 .pe__slide.is-active { opacity: 1; z-index: 1; }
@@ -328,10 +330,142 @@ html.cine-on { overflow: hidden; }
   }
 }
 
+/* ==========================================================================
+   Sala buia, set illuminato
+   Il sito è scuro come una sala; i capi stanno su "set" chiari (Impostazioni tema → Colori → Set).
+   ========================================================================== */
+::selection { background: var(--color-text); color: var(--color-bg); }
+html { scrollbar-color: color-mix(in srgb, var(--color-text) 22%, transparent) var(--color-bg); }
+main h2 { letter-spacing: -.012em; }
+
+/* set chiari dietro le foto prodotto: il bianco delle foto si fonde col set */
+.card__media,
+.tile__media,
+.product__media,
+.cart__media { background: var(--color-stage, var(--color-surface)); }
+.card__media img,
+.tile__media img,
+.cart__media img { mix-blend-mode: multiply; }
+
+/* header traslucido, come un vetro scuro sopra il film */
+.section-header {
+  background: color-mix(in srgb, var(--color-bg) 74%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+/* bottoni: maiuscoletto spaziato */
+.btn { text-transform: uppercase; letter-spacing: .1em; font-size: .78rem; }
+
+/* la hero è uno schermo illuminato nella sala */
+.section-outfit-slider { padding-inline: clamp(8px, 1.2vw, 18px); }
+.section-outfit-slider outfit-slider { border-radius: 6px; overflow: hidden; }
+
+/* vignettatura sull'apertura */
+.ib__sticky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(0, 0, 0, .55) 100%);
+}
+
+/* --- Titoli di testa ----------------------------------------------------- */
+.rv-w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .1em; margin-bottom: -.1em; }
+.rv-i { display: inline-block; transform: translateY(108%); transition: transform 1s cubic-bezier(.2, .8, .2, 1) calc(var(--i, 0) * .05s); }
+.rv.is-in .rv-i { transform: none; }
+
+/* --- Immagini che si scoprono -------------------------------------------- */
+.rv-m { transition: clip-path 1.15s cubic-bezier(.7, 0, .2, 1) var(--d, 0s); }
+.rv-m img, .rv-m video { transition: transform 1.6s cubic-bezier(.2, .7, .2, 1) var(--d, 0s); }
+.rv-m:not(.is-in) { clip-path: inset(100% 0 0 0); }
+.rv-m:not(.is-in) img, .rv-m:not(.is-in) video { transform: scale(1.18); }
+
+/* --- Fascia scorrevole --------------------------------------------------- */
+.mq {
+  display: grid;
+  gap: .04em;
+  padding-block: clamp(40px, 7vw, 110px);
+  overflow: hidden;
+  font-family: var(--font-heading-family);
+  font-weight: var(--font-heading-weight);
+  font-size: clamp(3.4rem, 12.5vw, 13.5rem);
+  line-height: .92;
+  text-transform: uppercase;
+  letter-spacing: -.02em;
+}
+.mq__row { white-space: nowrap; }
+.mq__track { display: inline-flex; align-items: center; gap: .32em; padding-right: .32em; will-change: transform; }
+.mq__star { display: inline-grid; }
+.mq__star .icon { width: .42em; height: .42em; }
+.mq__row--outline { color: transparent; -webkit-text-stroke: 1px var(--color-text); }
+.mq__row--outline .mq__star { color: var(--color-muted); }
+
+/* --- Cursore ------------------------------------------------------------- */
+[data-cursor] { cursor: none; }
+.cursor { position: fixed; top: 0; left: 0; z-index: 1500; pointer-events: none; }
+.cursor span {
+  position: absolute;
+  top: -46px;
+  left: -46px;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border: 1px solid rgba(237, 234, 227, .3);
+  border-radius: 50%;
+  background: #0b0b0c;
+  color: #edeae3;
+  font: 700 .68rem/1 var(--font-body-family);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  transform: scale(0);
+  transition: transform .4s cubic-bezier(.2, .8, .2, 1);
+}
+.cursor.is-on span { transform: scale(1); }
+.cursor.is-on.is-down span { transform: scale(.86); }
+
+/* --- Sipario tra le pagine ----------------------------------------------- */
+html.curtain-in body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #050505;
+  pointer-events: none;
+  transition: transform .95s cubic-bezier(.77, 0, .18, 1);
+}
+html.curtain-out body::before { transform: translateY(-100%); }
+.curtain-leave {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #050505;
+  transform: translateY(100%);
+  transition: transform .55s cubic-bezier(.77, 0, .18, 1);
+}
+.curtain-leave.is-on { transform: none; }
+
+/* --- Nome gigante nel footer --------------------------------------------- */
+.footer__wordmark {
+  margin: clamp(40px, 7vw, 96px) 0 clamp(8px, 1vw, 16px);
+  overflow: hidden;
+  font-family: var(--font-heading-family);
+  font-weight: var(--font-heading-weight);
+  font-size: 15vw;
+  line-height: .78;
+  letter-spacing: -.035em;
+  white-space: nowrap;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ib__tile, .pe__slide, .px-cover span { transition: none; }
   .ib__zoom, .grain, body[data-grain="all"]::after { animation: none; }
   .cine { display: none !important; }
+  html.curtain-in body::before { display: none; }
   .js .ib:not(.is-in) .ib__tile { opacity: 1; transform: none; }
   .ib { height: auto; }
   .ib__sticky { position: relative; }

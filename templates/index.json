@@ -14,8 +14,14 @@
       "settings": {
         "collection": "hoodies",
         "title": "",
-        "subtitle": ""
+        "subtitle": "",
+        "bg_color": "#E7E5E0",
+        "text_color": "#0B0B0C"
       }
+    },
+    "marquee": {
+      "type": "fascia-scorrevole",
+      "settings": {}
     },
     "social": {
       "type": "striscia-social",
@@ -112,6 +118,7 @@
   "order": [
     "intro",
     "hero",
+    "marquee",
     "social",
     "featured",
     "collections"

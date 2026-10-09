@@ -38,6 +38,12 @@
       "enter": "Entra con la password",
       "label": "Password",
       "submit": "Entra"
+    },
+    "cursor": {
+      "drag": "Trascina",
+      "view": "Vedi",
+      "open": "Apri",
+      "explore": "Scopri"
     }
   },
   "sections": {

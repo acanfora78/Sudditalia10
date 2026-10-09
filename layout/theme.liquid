@@ -37,6 +37,7 @@
       :root {
         --color-bg: {{ settings.color_bg }};
         --color-surface: {{ settings.color_surface }};
+        --color-stage: {{ settings.color_stage | default: '#E7E5E0' }};
         --color-text: {{ settings.color_text }};
         --color-muted: {{ settings.color_muted }};
         --color-border: {{ settings.color_border }};
@@ -63,6 +64,12 @@
 
     <script>
       document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
+      try {
+        if (sessionStorage.getItem('sud-curtain') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          document.documentElement.classList.add('curtain-in');
+        }
+        sessionStorage.removeItem('sud-curtain');
+      } catch (e) {}
       window.theme = {
         routes: {
           cart: {{ routes.cart_url | json }},
@@ -74,7 +81,13 @@
           soldOut: {{ 'products.product.sold_out' | t | json }},
           unavailable: {{ 'products.product.unavailable' | t | json }},
           added: {{ 'products.product.added_to_cart' | t | json }},
-          cartError: {{ 'cart.general.error' | t | json }}
+          cartError: {{ 'cart.general.error' | t | json }},
+          cursor: {
+            drag: {{ 'general.cursor.drag' | t | json }},
+            view: {{ 'general.cursor.view' | t | json }},
+            open: {{ 'general.cursor.open' | t | json }},
+            explore: {{ 'general.cursor.explore' | t | json }}
+          }
         }
       };
     </script>

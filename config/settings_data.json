@@ -1,12 +1,12 @@
 {
   "current": {
-    "color_bg": "#E9EAEC",
-    "color_surface": "#F5F6F7",
-    "color_text": "#0E1A33",
-    "color_muted": "#5C6578",
-    "color_border": "#CDD1D8",
-    "color_accent": "#1F6FE0",
-    "color_accent_text": "#FFFFFF",
+    "color_bg": "#0B0B0C",
+    "color_surface": "#151516",
+    "color_text": "#EDEAE3",
+    "color_muted": "#8F8C85",
+    "color_border": "#2A2927",
+    "color_accent": "#EDEAE3",
+    "color_accent_text": "#0B0B0C",
     "font_heading": "archivo_n7",
     "font_body": "archivo_n4",
     "heading_uppercase": true,
@@ -20,6 +20,7 @@
     "social_instagram": "https://www.instagram.com/sudditalia.clothing",
     "social_tiktok": "https://www.tiktok.com/@sudditalia.clothing",
     "smooth_scroll": true,
-    "film_grain": "intro"
+    "film_grain": "all",
+    "color_stage": "#E7E5E0"
   }
 }

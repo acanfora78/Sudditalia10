@@ -97,6 +97,12 @@ Prompt usato per generare il modello vestito (con allegate foto modello + foto p
 - **Video nell'apertura**: `foto/video/apertura-computer.mp4` (computer) e `apertura-telefono.mp4`
   (telefono, verticale). Su Shopify si caricano in Contenuti → File con lo stesso nome.
 - **Impostazioni tema → Movimento**: scorrimento morbido (mouse e trackpad) e grana della pellicola.
+- **Sala buia, set illuminato**: sito scuro (nero #0B0B0C, testo osso #EDEAE3) e capi su set chiari
+  (Impostazioni tema → Colori → Set). La hero è incorniciata come uno schermo.
+- **Titoli di testa** (i titoli entrano parola per parola), **immagini che si scoprono** dal basso,
+  **fascia scorrevole** (`sections/fascia-scorrevole.liquid`: scritta gigante piena e a contorno con la
+  stella del brand, accelera e si inclina con lo scroll), **cursore** con parola (Trascina, Vedi, Apri),
+  **sipario** tra una pagina e l'altra, **nome gigante** in fondo al footer, grana su tutto il sito.
 - Da fare: la **finestra che si apre** (servono 2 foto: un dettaglio e una foto intera).
 
 ## Anteprima senza Shopify (`strumenti/anteprima/`)

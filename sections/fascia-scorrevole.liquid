@@ -1,0 +1,58 @@
+{%- comment -%}
+  Fascia con la scritta gigante che scorre.
+  Due righe in direzioni opposte (una piena, una solo contorno) separate dalla stella del brand.
+  Si muovono da sole e accelerano quando si scorre la pagina (assets/effetti.js, [data-marquee]).
+{%- endcomment -%}
+{%- liquid
+  assign text = section.settings.text | default: shop.name | upcase
+  assign text_2 = section.settings.text_2 | default: text | upcase
+-%}
+<div class="mq" aria-label="{{ text | escape }}" role="img">
+  {%- for row in (1..2) -%}
+    {%- liquid
+      assign row_text = text
+      if row == 2
+        assign row_text = text_2
+      endif
+      if row == 2 and section.settings.single_row
+        break
+      endif
+    -%}
+    <div class="mq__row{% if row == 2 %} mq__row--outline{% endif %}" data-marquee="{% if row == 1 %}-1{% else %}1{% endif %}" aria-hidden="true">
+      <div class="mq__track">
+        {%- for i in (1..6) -%}
+          <span class="mq__item">{{ row_text }}</span><span class="mq__star">{% render 'icon', name: 'star' %}</span>
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- endfor -%}
+</div>
+
+{% schema %}
+{
+  "name": "Fascia scorrevole",
+  "tag": "section",
+  "class": "section-marquee",
+  "settings": [
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Scritta",
+      "info": "Se vuota usa il nome del negozio."
+    },
+    {
+      "type": "text",
+      "id": "text_2",
+      "label": "Scritta della seconda riga",
+      "info": "Se vuota ripete la prima."
+    },
+    {
+      "type": "checkbox",
+      "id": "single_row",
+      "label": "Solo una riga",
+      "default": false
+    }
+  ],
+  "presets": [{ "name": "Fascia scorrevole" }]
+}
+{% endschema %}

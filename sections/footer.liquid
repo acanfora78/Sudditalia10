@@ -71,6 +71,16 @@
       {%- endfor -%}
     </div>
 
+    {%- liquid
+      assign wordmark = section.settings.wordmark
+      if wordmark == blank
+        assign wordmark = shop.name | split: ' ' | first
+      endif
+    -%}
+    {%- if section.settings.show_wordmark -%}
+      <p class="footer__wordmark" aria-hidden="true" data-fit-text>{{ wordmark | upcase }}</p>
+    {%- endif -%}
+
     <div class="footer__bottom">
       <p>&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}</p>
       {%- if shop.policies.size > 0 -%}
@@ -97,6 +107,18 @@
   "class": "section-footer",
   "max_blocks": 4,
   "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_wordmark",
+      "label": "Nome gigante in fondo",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "wordmark",
+      "label": "Testo del nome gigante",
+      "info": "Se vuoto usa la prima parola del nome del negozio."
+    },
     {
       "type": "text",
       "id": "tagline",
