@@ -180,9 +180,11 @@
         if (w === self.lastW && coarse && Math.abs(h - self.lastH) < 160) return;
         self.lastW = w;
         self.lastH = h;
-        self.measure();
-        self.kick();
+        // un fotogramma dopo: prima il tema aggiorna --header-h
+        cancelAnimationFrame(self._rz);
+        self._rz = requestAnimationFrame(function () { self.measure(); self.kick(); });
       });
+      this.cleanup.push(function () { cancelAnimationFrame(self._rz); });
       // la pagina sopra cambia altezza (immagini, font, sezioni ricaricate nell'editor)
       if ('ResizeObserver' in window) {
         var ro = new ResizeObserver(function () { self.measureTop(); self.dirty = true; self.kick(); });
@@ -465,7 +467,7 @@
       var touching = false;
       function schedule() {
         clearTimeout(timer);
-        if (!touching) timer = setTimeout(snap, 170);
+        if (!touching && self.visible) timer = setTimeout(snap, 170);
       }
       function snap() {
         if (touching || !self.visible || self.dataset.mode !== 'pin') return;
