@@ -125,6 +125,11 @@
         el.style.zIndex = active > 0.5 ? 3 : 2;
         el.style.transform =
           'translate3d(' + (d * this.gap * 100).toFixed(2) + '%,0,0) scale(' + scale.toFixed(4) + ')';
+        // il modello vestito non scorre col capo: resta fermo al centro e sfuma sul posto
+        var undo = full > 0
+          ? 'scale(' + (1 / scale).toFixed(4) + ') translate3d(' + (-d * this.gap * 100).toFixed(2) + '%,0,0)'
+          : 'none';
+        if (undo !== el._undo) { el.style.setProperty('--full-undo', undo); el._undo = undo; }
       }
       // il modello di base sparisce sotto il modello vestito (solo se il capo ha il file doppio)
       if (this.model) {

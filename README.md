@@ -56,6 +56,8 @@ Un file per prodotto e per vista, con l'handle del prodotto (l'ultima parte dell
 - `modello-fronte-trasparente.png`: stessa foto con vera trasparenza (PNG con canale alfa).
 - `prodotto-diamond-hoodie-fronte.webp`: foto prodotto della Diamond Hoodie, fronte.
 - `vestito-diamond-hoodie-fronte.webp`: modello che indossa la Diamond Hoodie (generata con AI).
+- File doppi pronti (fronte): Diamond Hoodie, Black on Black, Sky Blue Shark, Yellow Shark,
+  Hoodie "I Need Money Not Rumors" (`capo-fronte-<handle>.png`). Manca la Pink Shark.
 - `capo-fronte-diamond-hoodie.png`: **file doppio pronto** (1248 × 980) da caricare nel metafield
   `custom.capo_fronte` della Diamond Hoodie. `anteprima-diamond-hoodie-fronte.png` mostra il controllo.
 

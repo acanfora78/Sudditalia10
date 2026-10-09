@@ -92,7 +92,7 @@
 }
 .os__sprite--right img { left: -100%; }
 /* il modello vestito compare solo quando il capo è al centro (lo regola lo script) */
-.os__full { opacity: var(--full, 0); }
+.os__full { opacity: var(--full, 0); transform: var(--full-undo, none); }
 .os__look--first { --full: 1; }
 
 .os__views {
