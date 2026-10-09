@@ -1,31 +1,73 @@
+{%- comment -%}
+  Prodotti in evidenza.
+  Intestazione da titoli di testa: nome della collezione gigante che scivola con lo scroll,
+  numero dei prodotti, linea che si disegna e "Vedi tutto" con la freccia.
+  Computer: griglia con le colonne pari sfalsate in parallasse. Telefono: striscia da scorrere
+  col dito con la barra di avanzamento.
+{%- endcomment -%}
+{{ 'griglie.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'griglie.js' | asset_url }}" defer></script>
+
 {%- liquid
   assign collection = section.settings.collection
   assign limit = section.settings.products_to_show
+  assign columns = section.settings.columns
+  assign heading = section.settings.title | default: collection.title
+  assign count = 0
+  if collection != blank
+    assign count = collection.products_count
+  endif
+  assign card_vw = 100 | divided_by: columns
 -%}
-<div class="section-spacing">
-  <div class="page-width">
-    <div class="section-head">
-      <h2>{{ section.settings.title | default: collection.title }}</h2>
-      {%- if collection != blank and section.settings.link_label != blank -%}
-        <a class="link-underline" href="{{ collection.url }}">{{ section.settings.link_label }}</a>
-      {%- endif -%}
-    </div>
+{%- capture sizes -%}(max-width: 749px) 72vw, {{ card_vw }}vw{%- endcapture -%}
 
-    <div class="grid" style="--cols: {{ section.settings.columns }};">
-      {%- if collection != blank and collection.products.size > 0 -%}
-        {%- for product in collection.products limit: limit -%}
-          {% render 'product-card', product: product %}
-        {%- endfor -%}
-      {%- else -%}
-        {%- for i in (1..section.settings.columns) -%}
-          <div class="card">
-            <div class="card__media">{{ 'product-' | append: i | placeholder_svg_tag: 'placeholder-svg' }}</div>
-            <div class="card__info">
-              <h3 class="card__title">{{ 'sections.featured_collection.placeholder_title' | t }}</h3>
-            </div>
-          </div>
-        {%- endfor -%}
-      {%- endif -%}
+<div class="fc section-spacing">
+  <div class="page-width">
+    <header class="g-head" data-g-in>
+      <div class="g-head__top">
+        {%- if heading != blank -%}
+          <h2 class="g-head__title" data-g-drift="5">{{ heading | escape }}</h2>
+        {%- endif -%}
+        {%- if section.settings.show_count and count > 0 -%}
+          <span class="g-head__count" aria-hidden="true">({% if count < 10 %}0{% endif %}{{ count }})</span>
+        {%- endif -%}
+      </div>
+      <div class="g-head__bar">
+        {%- if section.settings.show_count and count > 0 -%}
+          <p class="g-head__meta">{{ 'products.facets.count' | t: count: count }}</p>
+        {%- endif -%}
+        <span class="g-head__rule" aria-hidden="true"></span>
+        {%- if collection != blank and section.settings.link_label != blank -%}
+          <a class="g-link" href="{{ collection.url }}">
+            <span class="g-link__label">{{ section.settings.link_label | escape }}</span>
+            <span class="g-link__arrow">{% render 'icon', name: 'arrow' %}</span>
+          </a>
+        {%- endif -%}
+      </div>
+    </header>
+
+    <div class="g-rail fc__rail" data-g-rail>
+      <ul class="g-rail__track fc__track" data-g-track {% if section.settings.stagger %}data-g-lift{% endif %} role="list" style="--cols: {{ columns }};">
+        {%- if collection != blank and collection.products.size > 0 -%}
+          {%- for product in collection.products limit: limit -%}
+            <li class="g-rail__item">{% render 'product-card', product: product, sizes: sizes %}</li>
+          {%- endfor -%}
+        {%- else -%}
+          {%- for i in (1..columns) -%}
+            <li class="g-rail__item">
+              <div class="card g-card fc__placeholder">
+                <div class="card__media g-card__media">
+                  <div class="g-card__zoom">{{ 'product-' | append: i | placeholder_svg_tag: 'placeholder-svg' }}</div>
+                </div>
+                <div class="card__info g-card__info">
+                  <h3 class="card__title g-card__title">{{ 'sections.featured_collection.placeholder_title' | t }}</h3>
+                </div>
+              </div>
+            </li>
+          {%- endfor -%}
+        {%- endif -%}
+      </ul>
+      <div class="g-rail__bar" aria-hidden="true"><span class="g-rail__thumb" data-g-thumb></span></div>
     </div>
   </div>
 </div>
@@ -53,6 +95,12 @@
       "default": "Vedi tutto"
     },
     {
+      "type": "checkbox",
+      "id": "show_count",
+      "label": "Mostra il numero dei prodotti",
+      "default": true
+    },
+    {
       "type": "range",
       "id": "products_to_show",
       "label": "Prodotti da mostrare",
@@ -64,11 +112,18 @@
     {
       "type": "range",
       "id": "columns",
-      "label": "Colonne su desktop",
+      "label": "Colonne su computer",
       "min": 2,
       "max": 5,
       "step": 1,
       "default": 4
+    },
+    {
+      "type": "checkbox",
+      "id": "stagger",
+      "label": "Colonne sfalsate in movimento",
+      "info": "Su computer le colonne pari scendono e risalgono mentre la pagina scorre.",
+      "default": true
     }
   ],
   "presets": [

@@ -1,38 +1,83 @@
-<div class="section-spacing">
-  <div class="page-width">
-    {%- if section.settings.title != blank -%}
-      <div class="section-head">
-        <h2>{{ section.settings.title }}</h2>
-        {%- if section.settings.link_label != blank -%}
-          <a class="link-underline" href="{{ routes.collections_url }}">{{ section.settings.link_label }}</a>
-        {%- endif -%}
-      </div>
-    {%- endif -%}
+{%- comment -%}
+  Collezioni a pannelli alti.
+  Computer (mouse): pannelli affiancati a fisarmonica, quello sotto il puntatore si allarga; il nome
+  è verticale nei pannelli chiusi e diventa orizzontale quando il pannello si apre.
+  Telefono: striscia di pannelli alti da scorrere col dito, a scatto.
+  Le immagini stanno su un set chiaro (multiply): le foto prodotto su bianco si fondono col set,
+  le foto ambientate restano piene. Tutta la parte animata è in griglie.js / griglie.css.
+{%- endcomment -%}
+{{ 'griglie.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'griglie.js' | asset_url }}" defer></script>
 
-    <div class="collection-tiles" style="--cols: {{ section.blocks.size | at_most: 4 | at_least: 2 }};">
-      {%- for block in section.blocks -%}
-        {%- liquid
-          assign collection = block.settings.collection
-          assign image = block.settings.image | default: collection.featured_image | default: collection.products.first.featured_media.preview_image
-          assign tile_title = block.settings.title | default: collection.title
-        -%}
-        <a class="tile" href="{{ collection.url | default: routes.collections_url }}" {{ block.shopify_attributes }}>
-          <div class="tile__media">
-            {%- if image != blank -%}
-              {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 50vw, 25vw', widths: '300, 480, 640, 800, 1000', alt: '' %}
-            {%- else -%}
-              {{ 'collection-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
+{%- liquid
+  assign n = section.blocks.size
+  case n
+    when 1
+      assign open_share = '1'
+    when 2
+      assign open_share = '.62'
+    when 3
+      assign open_share = '.56'
+    else
+      assign open_share = '.42'
+  endcase
+-%}
+
+<div class="cl section-spacing" data-g-acc>
+  <div class="page-width">
+    {%- if section.settings.title != blank or section.settings.link_label != blank -%}
+      <header class="g-head" data-g-in>
+        {%- if section.settings.title != blank -%}
+          <div class="g-head__top">
+            <h2 class="g-head__title" data-g-drift="-5">{{ section.settings.title | escape }}</h2>
+            {%- if n > 1 -%}
+              <span class="g-head__count" aria-hidden="true">({% if n < 10 %}0{% endif %}{{ n }})</span>
             {%- endif -%}
           </div>
-          <h3 class="tile__title">
-            {{ tile_title | default: block.settings.placeholder }}
-            {%- if collection != blank -%}
-              <span class="tile__count">{{ collection.products_count }}</span>
-            {%- endif -%}
-          </h3>
-        </a>
-      {%- endfor -%}
-    </div>
+        {%- endif -%}
+        <div class="g-head__bar">
+          <span class="g-head__rule" aria-hidden="true"></span>
+          {%- if section.settings.link_label != blank -%}
+            <a class="g-link" href="{{ routes.collections_url }}">
+              <span class="g-link__label">{{ section.settings.link_label | escape }}</span>
+              <span class="g-link__arrow">{% render 'icon', name: 'arrow' %}</span>
+            </a>
+          {%- endif -%}
+        </div>
+      </header>
+    {%- endif -%}
+
+    {%- if n > 0 -%}
+      <ul class="cl__panels{% if n == 1 %} cl__panels--single{% endif %}" data-g-acc-list role="list" style="--n: {{ n }}; --open: {{ open_share }};">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign collection = block.settings.collection
+            assign image = block.settings.image | default: collection.featured_image | default: collection.products.first.featured_media.preview_image
+            assign tile_title = block.settings.title | default: collection.title | default: block.settings.placeholder
+          -%}
+          <li class="cl__item" {{ block.shopify_attributes }}>
+            <a class="cl__panel" href="{{ collection.url | default: routes.collections_url }}">
+              <div class="cl__media">
+                {%- if image != blank -%}
+                  {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 94vw, (max-width: 989px) 54vw, 52vw', widths: '400, 600, 800, 1000, 1200, 1500, 1800', class: 'cl__img', alt: '' %}
+                {%- else -%}
+                  {{ 'collection-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
+                {%- endif -%}
+              </div>
+              <span class="cl__shade" aria-hidden="true"></span>
+              <div class="cl__top">
+                <span class="cl__index" aria-hidden="true">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
+                {%- if collection != blank -%}
+                  <span class="cl__count">{{ 'products.facets.count' | t: count: collection.products_count }}</span>
+                {%- endif -%}
+              </div>
+              <h3 class="cl__title"><span class="cl__title-in">{{ tile_title | escape }}</span></h3>
+              <span class="cl__cta" aria-hidden="true">{% render 'icon', name: 'arrow' %}</span>
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
   </div>
 </div>
 
@@ -53,6 +98,10 @@
       "id": "link_label",
       "label": "Testo del link a tutte le collezioni",
       "default": "Tutte le collezioni"
+    },
+    {
+      "type": "paragraph",
+      "content": "Su computer i pannelli si aprono a fisarmonica al passaggio del mouse; sul telefono diventano una striscia da scorrere col dito."
     }
   ],
   "blocks": [
@@ -69,7 +118,7 @@
           "type": "image_picker",
           "id": "image",
           "label": "Immagine",
-          "info": "Se vuota usa l'immagine della collezione o del suo primo prodotto."
+          "info": "Se vuota usa l'immagine della collezione o del suo primo prodotto. Meglio verticale."
         },
         {
           "type": "text",
