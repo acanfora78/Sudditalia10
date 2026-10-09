@@ -187,8 +187,8 @@
 }
 .g-card.is-tilt .g-card__glare { opacity: .9; }
 .g-card__link:focus-visible .card__media--swap .card__second { clip-path: polygon(-30% 0, 130% 0, 100% 100%, -30% 100%); }
-.g-card__link:focus-visible { outline: none; }
-.g-card__link:focus-visible .g-card__media { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+.g-card__link:focus-visible { outline-offset: 5px; }
+.g-card__link:focus-visible .g-card__line { transform: none; }
 
 /* badge: saldi in blu elettrico col numero vero, esaurito come vetro scuro */
 .g-badge {
@@ -293,7 +293,7 @@
   display: flex;
   gap: clamp(10px, 1.2vw, 18px);
   margin: 0 calc(clamp(16px, 4vw, 56px) * -1);
-  padding: 4px clamp(16px, 4vw, 56px) 8px;
+  padding: 8px clamp(16px, 4vw, 56px) 10px;
   list-style: none;
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -306,6 +306,7 @@
 @media (pointer: coarse) {
   .g-rail__track { scroll-snap-type: x mandatory; }
 }
+.g-rail.is-gliding .g-rail__track { scroll-snap-type: none; }
 .g-rail.is-dragging .g-rail__track { cursor: grabbing; user-select: none; -webkit-user-select: none; }
 .g-rail.is-dragging .g-rail__track a { pointer-events: none; }
 .g-rail__track img { -webkit-user-drag: none; }
@@ -421,6 +422,7 @@
   color: var(--color-text);
   -webkit-tap-highlight-color: transparent;
 }
+.cl__panel:focus-visible { outline-offset: -6px; }
 .cl__media {
   position: absolute;
   inset: 0;
@@ -564,6 +566,8 @@
 
 /* --- Prodotti correlati -------------------------------------------------- */
 product-recommendations { display: block; }
+/* finché i consigliati non arrivano (o se non ce ne sono) la sezione non lascia un vuoto */
+.rp:has(.rp__recs:empty) { padding-block: 0; }
 .rp .g-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; }
 .rp__track .g-rail__item { width: min(72vw, 330px); }
 @media (min-width: 750px) {

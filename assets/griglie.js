@@ -278,9 +278,15 @@
       target = clamp(target, 0, max);
       if (reduce) { track.scrollLeft = target; return; }
       var pos = track.scrollLeft;
+      // durante la corsa lo scatto del browser (telefono) resta spento, poi torna
+      root.classList.add('is-gliding');
       (function step() {
         pos += (target - pos) * 0.14;
-        if (Math.abs(target - pos) < 0.5) { track.scrollLeft = target; return; }
+        if (Math.abs(target - pos) < 0.5) {
+          track.scrollLeft = target;
+          root.classList.remove('is-gliding');
+          return;
+        }
         track.scrollLeft = pos;
         anim = raf(step);
       })();
@@ -301,6 +307,10 @@
       }
       glideTo(target);
     }
+    // il dito o la rotella fermano subito una corsa in atto
+    function stopGlide() { cancelAnimationFrame(anim); root.classList.remove('is-gliding'); }
+    track.addEventListener('touchstart', stopGlide, { passive: true });
+    track.addEventListener('wheel', stopGlide, { passive: true });
     if (prev) prev.addEventListener('click', function () { page(-1); });
     if (next) next.addEventListener('click', function () { page(1); });
 
@@ -309,7 +319,7 @@
       var drag = null, moved = false;
       track.addEventListener('pointerdown', function (e) {
         if (e.pointerType !== 'mouse' || e.button !== 0 || max <= 2) return;
-        cancelAnimationFrame(anim);
+        stopGlide();
         drag = { x: e.clientX, left: track.scrollLeft, lx: e.clientX, lt: performance.now(), v: 0 };
         moved = false;
         window.addEventListener('pointermove', onMove, { passive: true });
