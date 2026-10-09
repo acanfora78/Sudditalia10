@@ -7,6 +7,7 @@
     ~0.55        finestra aperta: entrano etichetta, titolo, sottotitolo, bottone, prodotti (classe .is-open)
     0.60 – 1.00  il video continua a muoversi piano; alla fine si scurisce per legarsi alla sezione dopo
   All'arrivo sullo schermo: le lettere salgono dal basso e la finestra si apre come un otturatore.
+  Col mouse la scena dentro la finestra segue appena il puntatore.
   Lavora solo quando la sezione è sullo schermo; misura una volta (e a ogni ridimensionamento).
   Con "riduci movimento" non fa niente: il CSS mostra video e testi fermi, senza blocco.
 */
@@ -16,6 +17,7 @@
 
   var reduceMq = window.matchMedia('(prefers-reduced-motion: reduce)');
   var mobileMq = window.matchMedia('(max-width: 749px)');
+  var fineMq = window.matchMedia('(hover: hover) and (pointer: fine)');
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function range(v, a, b) { return clamp((v - a) / (b - a), 0, 1); }
@@ -50,6 +52,7 @@
       this.count = this.querySelector('[data-fc-count]');
       this.bar = this.querySelector('[data-fc-bar]');
       this.dim = this.querySelector('[data-fc-dim]');
+      this.par = this.querySelector('[data-fc-par]');
       this.lines = this.fill ? Array.prototype.slice.call(this.fill.querySelectorAll('[data-fc-line]')) : [];
       this.ghostLines = this.ghost ? Array.prototype.slice.call(this.ghost.querySelectorAll('[data-fc-line]')) : [];
       this.isLogo = this.classList.contains('fc--logo');
@@ -88,6 +91,16 @@
         self._resizeRaf = requestAnimationFrame(function () { self._resizeRaf = 0; self.measure(true); });
       };
       this._onMq = function () { self.measure(true); self.playVideo(self.visible); };
+      // mouse: la scena dentro la finestra segue appena il puntatore (profondità)
+      this.pt = { x: 0, y: 0, tx: 0, ty: 0 };
+      this._parTick = this.parTick.bind(this);
+      this._onPointer = function (e) {
+        if (!self.visible || !self.par || e.pointerType !== 'mouse' || !fineMq.matches) return;
+        self.pt.tx = (e.clientX / (self.vw || window.innerWidth)) * 2 - 1;
+        self.pt.ty = (e.clientY / (self.vh || window.innerHeight)) * 2 - 1;
+        if (!self._parRaf) self._parRaf = requestAnimationFrame(self._parTick);
+      };
+      window.addEventListener('pointermove', this._onPointer, { passive: true });
       window.addEventListener('scroll', this._onScroll, { passive: true });
       window.addEventListener('resize', this._onResize, { passive: true });
       window.addEventListener('load', this._onResize);
@@ -130,6 +143,7 @@
     disconnectedCallback() {
       if (!this._live) return;
       this._live = false;
+      window.removeEventListener('pointermove', this._onPointer);
       window.removeEventListener('scroll', this._onScroll);
       window.removeEventListener('resize', this._onResize);
       window.removeEventListener('load', this._onResize);
@@ -139,13 +153,16 @@
       if (this.ro) this.ro.disconnect();
       cancelAnimationFrame(this._raf);
       cancelAnimationFrame(this._resizeRaf);
-      this._raf = this._resizeRaf = 0;
+      cancelAnimationFrame(this._parRaf);
+      this._raf = this._resizeRaf = this._parRaf = 0;
       this.videos.forEach(function (v) { v.pause(); });
     }
 
     startIntro() {
       if (this.introStart) return;
       this.introStart = performance.now();
+      // arrivati già dentro (pagina ricaricata più in basso, o si risale da sotto): niente otturatore
+      if (this.dist && (window.scrollY - this.top) / this.dist > .2) this.introStart -= INTRO_MS;
       this.classList.add('is-in');
       this.request();
     }
@@ -207,6 +224,17 @@
         l.style.fontSize = fs.toFixed(2) + 'px';
         if (self.ghostLines[i]) self.ghostLines[i].style.fontSize = fs.toFixed(2) + 'px';
       });
+    }
+
+    // spostamento morbido verso il puntatore; si ferma da solo quando arriva
+    parTick() {
+      this._parRaf = 0;
+      if (!this._live) return;
+      var pt = this.pt;
+      pt.x += (pt.tx - pt.x) * .07;
+      pt.y += (pt.ty - pt.y) * .07;
+      if (Math.abs(pt.tx - pt.x) > .002 || Math.abs(pt.ty - pt.y) > .002) this._parRaf = requestAnimationFrame(this._parTick);
+      this.par.style.transform = 'translate3d(' + (pt.x * -12).toFixed(2) + 'px,' + (pt.y * -8).toFixed(2) + 'px,0) scale(1.02)';
     }
 
     request() {
@@ -287,7 +315,7 @@
         }
       }
 
-      if (this.hud) this.hud.style.opacity = (1 - range(p, .3, .5)).toFixed(3);
+      if (this.hud) this.hud.style.opacity = (1 - range(p, .2, .36)).toFixed(3);
       if (this.bar) this.bar.style.transform = 'scaleX(' + eo.toFixed(4) + ')';
       if (this.count) {
         var n = String(Math.round(eo * 100));

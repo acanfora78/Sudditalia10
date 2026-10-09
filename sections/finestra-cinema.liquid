@@ -123,6 +123,7 @@
 
     <div class="fc__window" data-fc-window>
       <div class="fc__media" data-fc-media>
+        <div class="fc__par" data-fc-par>
         {%- if image != blank -%}
           {% render 'responsive-image', image: image, sizes: '100vw', widths: '750, 1000, 1400, 1800, 2400', class: 'fc__img', alt: image.alt %}
         {%- endif -%}
@@ -139,6 +140,7 @@
         {%- if image == blank and video == blank -%}
           {{ 'lifestyle-2' | placeholder_svg_tag: 'fc__ph' }}
         {%- endif -%}
+        </div>
       </div>
       <div class="fc__shade" aria-hidden="true"></div>
       <div class="fc__dim" aria-hidden="true" data-fc-dim></div>

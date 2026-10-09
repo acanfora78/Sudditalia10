@@ -39,7 +39,8 @@
   overflow: hidden;
   background: var(--color-surface);
 }
-.fc__media { position: absolute; inset: 0; }
+.fc__media,
+.fc__par { position: absolute; inset: 0; }
 .fc__media img,
 .fc__media video,
 .fc__media .fc__ph {
@@ -140,6 +141,8 @@
   will-change: clip-path;
 }
 .fc.is-ready .fc__media { transform: scale(1.3); will-change: transform; }
+/* col mouse la scena dentro la finestra si sposta appena (lo script lo fa solo con puntatore preciso) */
+.fc.is-ready .fc__par { transform: scale(1.02); }
 
 .fc.is-ready .fc__word,
 .fc.is-ready .fc__layout {
