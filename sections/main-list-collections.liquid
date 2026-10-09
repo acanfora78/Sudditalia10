@@ -1,31 +1,409 @@
+{%- comment -%}
+  Tutte le collezioni: schermate impilate.
+  Ogni collezione è un pannello a tutto schermo che resta fermo sotto l'header; scorrendo, il pannello
+  successivo sale e si appoggia sopra, quello sotto si rimpicciolisce e si scurisce, come carte di un mazzo.
+  Su computer un indice laterale porta a ogni collezione e segna quella a schermo.
+  Con "riduci movimento" i pannelli sono statici, uno sotto l'altro.
+  Collezioni: quelle scelte con i blocchi (nell'ordine dei blocchi) oppure tutte, con l'ordine scelto.
+{%- endcomment -%}
+{{ 'elenco-collezioni.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'elenco-collezioni.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign use_blocks = false
+  for block in section.blocks
+    if block.settings.collection != blank
+      assign use_blocks = true
+      break
+    endif
+  endfor
+
+  unless use_blocks
+    case section.settings.sort
+      when 'date', 'date_reversed'
+        assign collections = collections | sort: 'published_at'
+      when 'products_high', 'products_low'
+        assign collections = collections | sort: 'all_products_count'
+    endcase
+    if section.settings.sort == 'products_high' or section.settings.sort == 'date_reversed' or section.settings.sort == 'alphabetical_reversed'
+      assign collections = collections | reverse
+    endif
+  endunless
+
+  assign title = section.settings.title
+  if title == blank
+    assign title = 'collections.title' | t
+  endif
+  assign cta_label = section.settings.cta_label
+  if cta_label == blank
+    assign cta_label = 'general.cursor.explore' | t
+  endif
+-%}
+
 {%- paginate collections by 24 -%}
-  <div class="page-width">
-    <div class="page-head">
-      <h1>{{ 'collections.title' | t }}</h1>
-    </div>
-    <div class="collection-tiles" style="--cols: 4;">
-      {%- for collection in collections -%}
-        {%- assign image = collection.featured_image | default: collection.products.first.featured_media.preview_image -%}
-        <a class="tile" href="{{ collection.url }}">
-          <div class="tile__media">
-            {%- if image != blank -%}
-              {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 50vw, 25vw', widths: '300, 480, 640, 800, 1000', alt: '' %}
+  {%- comment -%} primo giro: quante collezioni si vedono (per "01 / 09" e per l'indice) {%- endcomment -%}
+  {%- liquid
+    if use_blocks
+      assign items = section.blocks
+    else
+      assign items = collections
+    endif
+
+    assign shown = 0
+    for item in items
+      if use_blocks
+        assign c = item.settings.collection
+      else
+        assign c = item
+      endif
+      if c == blank
+        continue
+      endif
+      if section.settings.hide_empty and c.all_products_count == 0
+        continue
+      endif
+      assign shown = shown | plus: 1
+    endfor
+
+    assign offset = 0
+    assign total = shown
+    if use_blocks == false and paginate.pages > 1
+      assign offset = paginate.current_offset | default: 0
+      assign total = paginate.items | default: shown
+    endif
+    assign total_pad = total
+    if total < 10
+      assign total_pad = '0' | append: total
+    endif
+    assign show_index = false
+    if section.settings.show_index and shown > 1 and shown <= 14
+      assign show_index = true
+    endif
+  -%}
+
+  <elenco-collezioni class="ec" data-ec>
+    <header class="ec__intro page-width">
+      <p class="ec__eyebrow">
+        <span>{{ shop.name | escape }}</span>
+        <span class="ec__eyebrow-line" aria-hidden="true"></span>
+        <span>{{ total_pad }} {{ section.settings.collections_label | escape }}</span>
+      </p>
+      <div class="ec__title-wrap">
+        <h1 class="ec__title" data-fit-text>
+          <span class="visually-hidden">{{ title | escape }}</span>
+          {%- assign letters = title | split: '' -%}
+          {%- for l in letters -%}
+            {%- if l == ' ' -%}
+              <span class="ec__space" aria-hidden="true"> </span>
             {%- else -%}
-              {{ 'collection-1' | placeholder_svg_tag: 'placeholder-svg' }}
+              <span class="ec__l" aria-hidden="true"><span style="--i: {{ forloop.index0 }};">{{ l }}</span></span>
             {%- endif -%}
-          </div>
-          <h2 class="tile__title">{{ collection.title }} <span class="tile__count">{{ collection.products_count }}</span></h2>
-        </a>
-      {%- endfor -%}
-    </div>
-    {% render 'pagination', paginate: paginate %}
-  </div>
+          {%- endfor -%}
+        </h1>
+      </div>
+      <div class="ec__intro-bottom">
+        {%- if section.settings.text != blank -%}
+          <div class="ec__text">{{ section.settings.text }}</div>
+        {%- endif -%}
+        {%- if shown > 1 -%}
+          <p class="ec__hint" aria-hidden="true"><span class="ec__hint-line"></span>{{ section.settings.scroll_label | escape }}</p>
+        {%- endif -%}
+      </div>
+    </header>
+
+    {%- if shown > 0 -%}
+      <div class="ec__wrap" data-ec-wrap style="--ec-n: {{ shown }};">
+        {%- if show_index -%}
+          <nav class="ec__index" aria-label="{{ section.settings.index_label | escape }}">
+            <div class="ec__index-frame">
+              <ol class="ec__index-list">
+                {%- assign n = 0 -%}
+                {%- for item in items -%}
+                  {%- liquid
+                    if use_blocks
+                      assign c = item.settings.collection
+                    else
+                      assign c = item
+                    endif
+                    if c == blank
+                      continue
+                    endif
+                    if section.settings.hide_empty and c.all_products_count == 0
+                      continue
+                    endif
+                    assign n = n | plus: 1
+                    assign num = offset | plus: n
+                  -%}
+                  <li>
+                    <a class="ec__index-link" href="#ec-{{ section.id }}-{{ n }}" data-ec-link="{{ n | minus: 1 }}" data-no-curtain>
+                      <span class="ec__index-num">{% if num < 10 %}0{% endif %}{{ num }}</span>
+                      <span class="ec__index-name">{{ c.title | escape }}</span>
+                    </a>
+                  </li>
+                {%- endfor -%}
+              </ol>
+            </div>
+          </nav>
+        {%- endif -%}
+
+        <ol class="ec__stack" data-ec-stack>
+          {%- assign n = 0 -%}
+          {%- for item in items -%}
+            {%- liquid
+              if use_blocks
+                assign c = item.settings.collection
+              else
+                assign c = item
+              endif
+              if c == blank
+                continue
+              endif
+              if section.settings.hide_empty and c.all_products_count == 0
+                continue
+              endif
+              assign n = n | plus: 1
+              assign num = offset | plus: n
+
+              assign image = c.featured_image
+              if use_blocks and item.settings.image != blank
+                assign image = item.settings.image
+              endif
+              assign set_style = false
+              if section.settings.panel_style == 'set' or image == blank
+                assign set_style = true
+              endif
+              if c.all_products_count == 1
+                assign count_label = section.settings.product_label
+              else
+                assign count_label = section.settings.products_label
+              endif
+              assign loading = 'lazy'
+              if n == 1
+                assign loading = 'eager'
+              endif
+            -%}
+            <li class="ec__panel{% if set_style %} ec__panel--set{% endif %}" id="ec-{{ section.id }}-{{ n }}" data-ec-panel {% if use_blocks %}{{ item.shopify_attributes }}{% endif %}>
+              <div class="ec__card" data-ec-card>
+                <div class="ec__media" data-ec-media>
+                  {%- if set_style -%}
+                    <div class="ec__set">
+                      {%- assign k = 0 -%}
+                      {%- for p in c.products limit: 3 -%}
+                        {%- if p.featured_media != blank -%}
+                          {%- assign k = k | plus: 1 -%}
+                          <div class="ec__set-item">
+                            {% render 'responsive-image', image: p.featured_media.preview_image, sizes: '(max-width: 749px) 60vw, 30vw', widths: '360, 540, 720, 900, 1100', alt: '', loading: loading %}
+                          </div>
+                        {%- endif -%}
+                      {%- endfor -%}
+                      {%- if k == 0 -%}
+                        {{ 'collection-1' | placeholder_svg_tag: 'ec__placeholder' }}
+                      {%- endif -%}
+                    </div>
+                  {%- else -%}
+                    {% render 'responsive-image', image: image, sizes: '100vw', widths: '750, 1100, 1500, 1800, 2200, 2800', alt: '', loading: loading, class: 'ec__img' %}
+                  {%- endif -%}
+                </div>
+                <div class="ec__veil" aria-hidden="true"></div>
+                <div class="ec__shade" data-ec-shade aria-hidden="true"></div>
+
+                <a class="ec__hit" href="{{ c.url }}" tabindex="-1" aria-hidden="true" data-cursor="{{ cta_label | escape }}"></a>
+
+                <div class="ec__content">
+                  <p class="ec__num">
+                    <span class="ec__num-cur">{% if num < 10 %}0{% endif %}{{ num }}</span>
+                    <span class="ec__num-sep" aria-hidden="true">/</span>
+                    <span class="ec__num-tot">{{ total_pad }}</span>
+                  </p>
+
+                  <h2 class="ec__name">
+                    {%- assign words = c.title | split: ' ' -%}
+                    {%- for w in words -%}
+                      <span class="ec__w"><span class="ec__wi" style="--i: {{ forloop.index0 }};">{{ w | escape }}</span></span>{% unless forloop.last %} {% endunless %}
+                    {%- endfor -%}
+                  </h2>
+
+                  <div class="ec__foot">
+                    {%- if section.settings.show_products and set_style == false and c.products.size > 0 -%}
+                      <ul class="ec__peek" role="list">
+                        {%- for p in c.products limit: 3 -%}
+                          {%- if p.featured_media != blank -%}
+                            <li class="ec__peek-item" style="--k: {{ forloop.index0 }};">
+                              <a href="{{ p.url }}" class="ec__peek-link" tabindex="-1" aria-hidden="true">
+                                {% render 'responsive-image', image: p.featured_media.preview_image, sizes: '120px', widths: '160, 240, 320', alt: '' %}
+                              </a>
+                            </li>
+                          {%- endif -%}
+                        {%- endfor -%}
+                      </ul>
+                    {%- endif -%}
+                    <div class="ec__meta">
+                      <p class="ec__count"><span class="ec__count-n">{{ c.all_products_count }}</span> {{ count_label | escape }}</p>
+                      <a class="ec__cta" href="{{ c.url }}" data-cursor="{{ cta_label | escape }}">
+                        <span class="ec__cta-text">{{ cta_label | escape }}</span>
+                        <span class="visually-hidden">{{ c.title | escape }}</span>
+                        <span class="ec__cta-icon" aria-hidden="true">{% render 'icon', name: 'arrow' %}</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          {%- endfor -%}
+        </ol>
+      </div>
+    {%- else -%}
+      <div class="page-width ec__empty">
+        <p>{{ section.settings.empty_label | escape }}</p>
+      </div>
+    {%- endif -%}
+
+    {%- if use_blocks == false and paginate.pages > 1 -%}
+      <div class="page-width ec__pagination">
+        {% render 'pagination', paginate: paginate %}
+      </div>
+    {%- endif -%}
+  </elenco-collezioni>
 {%- endpaginate -%}
 
 {% schema %}
 {
   "name": "Elenco collezioni",
   "tag": "section",
-  "settings": []
+  "class": "section-elenco-collezioni",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Apertura"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titolo",
+      "info": "Vuoto: \"Collezioni\""
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Testo sotto il titolo"
+    },
+    {
+      "type": "text",
+      "id": "collections_label",
+      "label": "Parola dopo il numero delle collezioni",
+      "default": "collezioni"
+    },
+    {
+      "type": "text",
+      "id": "scroll_label",
+      "label": "Invito a scorrere",
+      "default": "Scorri"
+    },
+    {
+      "type": "header",
+      "content": "Collezioni"
+    },
+    {
+      "type": "paragraph",
+      "content": "Senza blocchi si vedono tutte le collezioni. Aggiungi dei blocchi \"Collezione\" per sceglierle e ordinarle a mano."
+    },
+    {
+      "type": "select",
+      "id": "sort",
+      "label": "Ordine (tutte le collezioni)",
+      "options": [
+        { "value": "alphabetical", "label": "Alfabetico, A-Z" },
+        { "value": "alphabetical_reversed", "label": "Alfabetico, Z-A" },
+        { "value": "date_reversed", "label": "Dalla più recente" },
+        { "value": "date", "label": "Dalla meno recente" },
+        { "value": "products_high", "label": "Più prodotti prima" },
+        { "value": "products_low", "label": "Meno prodotti prima" }
+      ],
+      "default": "alphabetical"
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_empty",
+      "label": "Nascondi le collezioni senza prodotti",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Pannelli"
+    },
+    {
+      "type": "select",
+      "id": "panel_style",
+      "label": "Sfondo dei pannelli",
+      "options": [
+        { "value": "image", "label": "Foto della collezione" },
+        { "value": "set", "label": "Primi prodotti sul set chiaro" }
+      ],
+      "default": "image",
+      "info": "Le collezioni senza foto mostrano sempre i primi prodotti sul set."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_products",
+      "label": "Mostra i primi prodotti in piccolo (computer)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_index",
+      "label": "Mostra l'indice laterale (computer)",
+      "default": true,
+      "info": "Con più di 14 collezioni l'indice non si vede."
+    },
+    {
+      "type": "text",
+      "id": "index_label",
+      "label": "Nome dell'indice (per i lettori di schermo)",
+      "default": "Indice delle collezioni"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Testo del bottone",
+      "default": "Scopri"
+    },
+    {
+      "type": "text",
+      "id": "product_label",
+      "label": "Parola dopo il numero (1 prodotto)",
+      "default": "prodotto"
+    },
+    {
+      "type": "text",
+      "id": "products_label",
+      "label": "Parola dopo il numero (più prodotti)",
+      "default": "prodotti"
+    },
+    {
+      "type": "text",
+      "id": "empty_label",
+      "label": "Messaggio senza collezioni",
+      "default": "Nessuna collezione da mostrare."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "Collezione",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collezione"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Foto del pannello",
+          "info": "Vuota: la foto della collezione."
+        }
+      ]
+    }
+  ]
 }
 {% endschema %}
