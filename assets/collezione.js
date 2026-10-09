@@ -149,9 +149,15 @@
     };
     this.on(window, 'scroll', this.onScroll, { passive: true });
     var resizeTimer = null;
+    var lastW = window.innerWidth;
     this.on(window, 'resize', function () {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function () { self.fitTitle(); self.measure(); self.applySizes(); self.update(); }, 120);
+      resizeTimer = setTimeout(function () {
+        // sul telefono la barra del browser che compare e sparisce cambia solo l'altezza: basta aggiornare lo schermo
+        if (window.innerWidth === lastW) { self.m.vh = window.innerHeight; self.update(); return; }
+        lastW = window.innerWidth;
+        self.fitTitle(); self.measure(); self.applySizes(); self.update();
+      }, 120);
     }, { passive: true });
     this.on(window, 'load', function () { self.measure(); self.update(); });
 
