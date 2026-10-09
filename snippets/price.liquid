@@ -1,0 +1,30 @@
+{%- comment -%}
+  Prezzo di un prodotto (o di una variante).
+  Parametri: product (obbligatorio), variant (opzionale: se presente mostra il prezzo della variante)
+{%- endcomment -%}
+{%- liquid
+  if variant
+    assign price = variant.price
+    assign compare = variant.compare_at_price
+    assign varies = false
+  else
+    assign price = product.price_min
+    assign compare = product.compare_at_price_min
+    assign varies = product.price_varies
+  endif
+-%}
+<span class="price{% if compare > price %} price--sale{% endif %}">
+  <span class="price__current">
+    {%- if varies -%}
+      {{ 'products.product.from_price' | t: price: price | money }}
+    {%- else -%}
+      {{ price | money }}
+    {%- endif -%}
+  </span>
+  {%- if compare > price -%}
+    <s class="price__compare">
+      <span class="visually-hidden">{{ 'products.product.regular_price' | t }}</span>
+      {{ compare | money }}
+    </s>
+  {%- endif -%}
+</span>

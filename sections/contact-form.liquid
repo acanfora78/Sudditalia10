@@ -1,0 +1,41 @@
+<div class="section-spacing">
+  <div class="page-width page-width--narrow">
+    {%- if section.settings.title != blank -%}
+      <h2>{{ section.settings.title }}</h2>
+    {%- endif -%}
+    {%- form 'contact', class: 'account-form', id: 'ContactForm' -%}
+      {%- if form.posted_successfully? -%}
+        <p class="form-message" role="status">{{ 'contact.form.success' | t }}</p>
+      {%- elsif form.errors -%}
+        <div class="form-message form-message--error" role="alert">{{ form.errors | default_errors }}</div>
+      {%- endif -%}
+      <label for="ContactName">{{ 'contact.form.name' | t }}</label>
+      <input id="ContactName" type="text" name="contact[name]" autocomplete="name" value="{{ form.name | default: customer.name }}">
+      <label for="ContactEmail">{{ 'contact.form.email' | t }}</label>
+      <input id="ContactEmail" type="email" name="contact[email]" autocomplete="email" required value="{{ form.email | default: customer.email }}">
+      <label for="ContactMessage">{{ 'contact.form.message' | t }}</label>
+      <textarea id="ContactMessage" name="contact[body]" rows="6" required>{{ form.body }}</textarea>
+      <button type="submit" class="btn" style="margin-top: 16px; align-self: flex-start;">{{ 'contact.form.send' | t }}</button>
+    {%- endform -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Modulo contatti",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titolo",
+      "default": "Scrivici"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Modulo contatti"
+    }
+  ]
+}
+{% endschema %}

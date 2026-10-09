@@ -1,0 +1,203 @@
+{
+  "general": {
+    "accessibility": {
+      "skip_to_content": "Salta al contenuto",
+      "previous": "Precedente",
+      "next": "Avanti"
+    },
+    "meta": {
+      "tags": "Con tag {{ tags }}",
+      "page": "Pagina {{ page }}"
+    },
+    "pagination": {
+      "label": "Pagine",
+      "previous": "Pagina precedente",
+      "next": "Pagina successiva"
+    },
+    "search": {
+      "title": "Cerca",
+      "placeholder": "Cerca un prodotto",
+      "submit": "Cerca",
+      "no_results": "Nessun risultato per \"{{ terms }}\". Prova con un'altra parola.",
+      "results_count": {
+        "one": "{{ count }} risultato per \"{{ terms }}\"",
+        "other": "{{ count }} risultati per \"{{ terms }}\""
+      }
+    },
+    "newsletter": {
+      "label": "Email",
+      "placeholder": "La tua email",
+      "submit": "Iscriviti"
+    },
+    "404": {
+      "text": "Questa pagina non esiste o è stata spostata.",
+      "button": "Vai allo shop"
+    },
+    "password": {
+      "message": "Stiamo per aprire. Lascia la tua email per sapere quando.",
+      "enter": "Entra con la password",
+      "label": "Password",
+      "submit": "Entra"
+    }
+  },
+  "sections": {
+    "header": {
+      "menu": "Menu",
+      "cart": "Carrello",
+      "search": "Cerca",
+      "account": "Account",
+      "view_all": "Vedi tutto"
+    },
+    "footer": {
+      "newsletter_success": "Iscrizione completata.",
+      "payment_methods": "Metodi di pagamento"
+    },
+    "outfit_slider": {
+      "view_product": "Vedi prodotto",
+      "model_alt": "Modello",
+      "view": "Vista",
+      "front": "Fronte",
+      "back": "Retro"
+    },
+    "featured_collection": {
+      "placeholder_title": "Nome del prodotto"
+    }
+  },
+  "collections": {
+    "title": "Collezioni"
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Aggiungi al carrello",
+      "added_to_cart": "Aggiunto al carrello",
+      "sold_out": "Esaurito",
+      "unavailable": "Non disponibile",
+      "on_sale": "In offerta",
+      "from_price": "da {{ price }}",
+      "regular_price": "Prezzo pieno",
+      "quantity": "Quantità",
+      "decrease": "Diminuisci quantità",
+      "increase": "Aumenta quantità",
+      "variant": "Variante",
+      "taxes_included": "Tasse incluse.",
+      "shipping_policy_html": "<a href=\"{{ link }}\">Spedizione</a> calcolata al checkout."
+    },
+    "facets": {
+      "filter": "Filtra",
+      "sort_by": "Ordina per",
+      "apply": "Applica",
+      "clear": "Rimuovi filtri",
+      "from": "Da",
+      "to": "A",
+      "active": "Filtri attivi",
+      "empty": "Nessun prodotto con questi filtri.",
+      "count": {
+        "one": "{{ count }} prodotto",
+        "other": "{{ count }} prodotti"
+      }
+    }
+  },
+  "cart": {
+    "general": {
+      "title": "Carrello",
+      "empty": "Il carrello è vuoto.",
+      "subtotal": "Subtotale",
+      "checkout": "Vai al checkout",
+      "remove": "Rimuovi",
+      "update": "Aggiorna carrello",
+      "view": "Vedi carrello",
+      "note": "Aggiungi una nota all'ordine",
+      "continue_shopping": "Continua lo shopping",
+      "taxes_included": "Tasse incluse. Spedizione calcolata al checkout.",
+      "taxes_at_checkout": "Tasse e spedizione calcolate al checkout.",
+      "error": "Non è stato possibile aggiungere il prodotto. Riprova."
+    }
+  },
+  "blogs": {
+    "article": {
+      "back": "Torna a {{ title }}"
+    }
+  },
+  "contact": {
+    "form": {
+      "name": "Nome",
+      "email": "Email",
+      "message": "Messaggio",
+      "send": "Invia messaggio",
+      "success": "Messaggio inviato. Ti rispondiamo al più presto."
+    }
+  },
+  "gift_cards": {
+    "issued": {
+      "title": "Ecco la tua gift card da {{ value }} per {{ shop }}!"
+    }
+  },
+  "customer": {
+    "log_out": "Esci",
+    "login": {
+      "title": "Accedi",
+      "email": "Email",
+      "password": "Password",
+      "sign_in": "Accedi",
+      "forgot_password": "Password dimenticata?",
+      "create_account": "Crea un account"
+    },
+    "recover_password": {
+      "title": "Recupera password",
+      "email": "Email",
+      "submit": "Invia"
+    },
+    "register": {
+      "title": "Crea account",
+      "first_name": "Nome",
+      "last_name": "Cognome",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Crea"
+    },
+    "reset_password": {
+      "title": "Reimposta password",
+      "password": "Nuova password",
+      "password_confirmation": "Conferma password",
+      "submit": "Reimposta"
+    },
+    "activate_account": {
+      "title": "Attiva account",
+      "subtext": "Crea la tua password per attivare l'account.",
+      "password": "Password",
+      "password_confirmation": "Conferma password",
+      "submit": "Attiva account",
+      "cancel": "Rifiuta invito"
+    },
+    "account": {
+      "title": "Il mio account",
+      "view_addresses": "Vedi indirizzi"
+    },
+    "orders": {
+      "title": "Ordini",
+      "order_number": "Ordine",
+      "date": "Data",
+      "total": "Totale",
+      "none": "Non hai ancora effettuato ordini."
+    },
+    "order": {
+      "title": "Ordine {{ name }}",
+      "product": "Prodotto",
+      "quantity": "Quantità",
+      "total": "Totale"
+    },
+    "addresses": {
+      "title": "Indirizzi",
+      "add_new": "Aggiungi un nuovo indirizzo",
+      "first_name": "Nome",
+      "last_name": "Cognome",
+      "address1": "Indirizzo",
+      "city": "Città",
+      "zip": "CAP",
+      "country": "Paese",
+      "add": "Aggiungi",
+      "edit": "Modifica",
+      "delete": "Elimina"
+    }
+  }
+}

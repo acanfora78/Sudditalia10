@@ -1,0 +1,36 @@
+{%- comment -%}
+  Un capo della hero "capi sul modello".
+  Parametri:
+    front, back  immagini del capo di fronte e di spalle (vedi outfit-layer)
+    title, url   nome e link del prodotto
+    index        posizione (1 = primo)
+    attrs        attributi del blocco per il Theme Editor (opzionale)
+    x, y, scale  allineamento fine (opzionali)
+{%- endcomment -%}
+{%- liquid
+  assign look_x = x | default: 0
+  assign look_y = y | default: 0
+  assign look_scale = scale | default: 100
+  assign eager = false
+  if index <= 2
+    assign eager = true
+  endif
+-%}
+<div
+  class="os__look{% if index == 1 %} os__look--first{% endif %}"
+  data-os-look
+  data-url="{{ url }}"
+  data-title="{{ title | escape }}"
+  {{ attrs }}
+>
+  <div class="os__look-inner" style="--look-x: {{ look_x }}%; --look-y: {{ look_y }}%; --look-scale: {{ look_scale | divided_by: 100.0 }};">
+    <div class="os__view os__view--front">
+      {% render 'outfit-layer', image: front, title: title, eager: eager %}
+    </div>
+    {%- if back != blank -%}
+      <div class="os__view os__view--back">
+        {% render 'outfit-layer', image: back, title: title %}
+      </div>
+    {%- endif -%}
+  </div>
+</div>

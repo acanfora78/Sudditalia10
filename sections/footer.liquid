@@ -1,0 +1,169 @@
+<footer class="footer">
+  <div class="page-width">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        <p class="footer__name">{{ shop.name }}</p>
+        {%- if section.settings.tagline != blank -%}
+          <p class="footer__tagline">{{ section.settings.tagline }}</p>
+        {%- endif -%}
+        <ul class="footer__social">
+          {%- if settings.social_instagram != blank -%}
+            <li><a href="{{ settings.social_instagram }}" target="_blank" rel="noopener" aria-label="Instagram">{% render 'icon', name: 'instagram' %}</a></li>
+          {%- endif -%}
+          {%- if settings.social_tiktok != blank -%}
+            <li><a href="{{ settings.social_tiktok }}" target="_blank" rel="noopener" aria-label="TikTok">{% render 'icon', name: 'tiktok' %}</a></li>
+          {%- endif -%}
+          {%- if settings.social_facebook != blank -%}
+            <li><a href="{{ settings.social_facebook }}" target="_blank" rel="noopener" aria-label="Facebook">{% render 'icon', name: 'facebook' %}</a></li>
+          {%- endif -%}
+          {%- if settings.social_youtube != blank -%}
+            <li><a href="{{ settings.social_youtube }}" target="_blank" rel="noopener" aria-label="YouTube">{% render 'icon', name: 'youtube' %}</a></li>
+          {%- endif -%}
+        </ul>
+      </div>
+
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+          {%- when 'menu' -%}
+            <nav class="footer__col" aria-label="{{ block.settings.title | escape }}" {{ block.shopify_attributes }}>
+              {%- if block.settings.title != blank -%}
+                <h2 class="footer__heading">{{ block.settings.title }}</h2>
+              {%- endif -%}
+              <ul>
+                {%- for link in block.settings.menu.links -%}
+                  <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+                {%- endfor -%}
+              </ul>
+            </nav>
+          {%- when 'text' -%}
+            <div class="footer__col" {{ block.shopify_attributes }}>
+              {%- if block.settings.title != blank -%}
+                <h2 class="footer__heading">{{ block.settings.title }}</h2>
+              {%- endif -%}
+              <div class="rte">{{ block.settings.text }}</div>
+            </div>
+          {%- when 'newsletter' -%}
+            <div class="footer__col footer__col--wide" {{ block.shopify_attributes }}>
+              {%- if block.settings.title != blank -%}
+                <h2 class="footer__heading">{{ block.settings.title }}</h2>
+              {%- endif -%}
+              {%- if block.settings.text != blank -%}
+                <p>{{ block.settings.text }}</p>
+              {%- endif -%}
+              {%- form 'customer', class: 'newsletter', id: 'FooterNewsletter' -%}
+                <input type="hidden" name="contact[tags]" value="newsletter">
+                {%- if form.posted_successfully? -%}
+                  <p class="form-message" role="status">{{ 'sections.footer.newsletter_success' | t }}</p>
+                {%- else -%}
+                  {%- if form.errors -%}
+                    <p class="form-message form-message--error" role="alert">{{ form.errors | default_errors }}</p>
+                  {%- endif -%}
+                  <div class="newsletter__row">
+                    <label class="visually-hidden" for="FooterEmail">{{ 'general.newsletter.label' | t }}</label>
+                    <input id="FooterEmail" type="email" name="contact[email]" placeholder="{{ 'general.newsletter.placeholder' | t }}" autocomplete="email" required>
+                    <button type="submit">{{ 'general.newsletter.submit' | t }}</button>
+                  </div>
+                {%- endif -%}
+              {%- endform -%}
+            </div>
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+
+    <div class="footer__bottom">
+      <p>&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}</p>
+      {%- if shop.policies.size > 0 -%}
+        <ul class="footer__policies">
+          {%- for policy in shop.policies -%}
+            <li><a href="{{ policy.url }}">{{ policy.title }}</a></li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+      {%- if section.settings.show_payment -%}
+        <ul class="footer__payments" aria-label="{{ 'sections.footer.payment_methods' | t }}">
+          {%- for type in shop.enabled_payment_types -%}
+            <li>{{ type | payment_type_svg_tag: class: 'payment-icon' }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "class": "section-footer",
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "Frase sotto il nome",
+      "default": "Streetwear dal Sud. Made in Italy."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment",
+      "label": "Mostra i metodi di pagamento",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "menu",
+      "name": "Menu",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Titolo",
+          "default": "Shop"
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": "Menu",
+          "default": "footer"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Testo",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Titolo",
+          "default": "Contatti"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Testo"
+        }
+      ]
+    },
+    {
+      "type": "newsletter",
+      "name": "Newsletter",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Titolo",
+          "default": "Newsletter"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Testo",
+          "default": "Nuovi drop e anteprime, prima di tutti."
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

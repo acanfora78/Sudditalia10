@@ -1,0 +1,140 @@
+{%- paginate collection.products by section.settings.products_per_page -%}
+  <div class="page-width">
+    <div class="page-head">
+      <h1>{{ collection.title }}</h1>
+      {%- if collection.description != blank -%}
+        <div class="page-head__text rte">{{ collection.description }}</div>
+      {%- endif -%}
+    </div>
+
+    <form class="toolbar" method="get" action="{{ collection.url }}" data-filters-form>
+      {%- if collection.filters.size > 0 -%}
+        <details class="filters">
+          <summary>{{ 'products.facets.filter' | t }} {% render 'icon', name: 'chevron' %}</summary>
+          <div class="filters__panel">
+            {%- for filter in collection.filters -%}
+              {%- case filter.type -%}
+                {%- when 'list', 'boolean' -%}
+                  <fieldset class="filters__group">
+                    <legend>{{ filter.label }}</legend>
+                    {%- if filter.type == 'boolean' -%}
+                      <label class="filters__option">
+                        <input type="checkbox" name="{{ filter.param_name }}" value="{{ filter.true_value.value }}" {% if filter.true_value.active %}checked{% endif %}>
+                        {{ filter.true_value.label }}
+                      </label>
+                    {%- else -%}
+                      {%- for value in filter.values -%}
+                        <label class="filters__option{% if value.count == 0 and value.active == false %} filters__option--disabled{% endif %}">
+                          <input type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %}checked{% endif %} {% if value.count == 0 and value.active == false %}disabled{% endif %}>
+                          {{ value.label }} <span class="text-muted">({{ value.count }})</span>
+                        </label>
+                      {%- endfor -%}
+                    {%- endif -%}
+                  </fieldset>
+                {%- when 'price_range' -%}
+                  <fieldset class="filters__group">
+                    <legend>{{ filter.label }}</legend>
+                    <div class="filters__price">
+                      <div>
+                        <label for="FilterPriceMin">{{ 'products.facets.from' | t }}</label>
+                        <input id="FilterPriceMin" type="number" name="{{ filter.min_value.param_name }}" min="0" step="1" inputmode="numeric" placeholder="0" {% if filter.min_value.value %}value="{{ filter.min_value.value | divided_by: 100 }}"{% endif %}>
+                      </div>
+                      <div>
+                        <label for="FilterPriceMax">{{ 'products.facets.to' | t }}</label>
+                        <input id="FilterPriceMax" type="number" name="{{ filter.max_value.param_name }}" min="0" step="1" inputmode="numeric" placeholder="{{ filter.range_max | divided_by: 100 | ceil }}" {% if filter.max_value.value %}value="{{ filter.max_value.value | divided_by: 100 }}"{% endif %}>
+                      </div>
+                    </div>
+                  </fieldset>
+              {%- endcase -%}
+            {%- endfor -%}
+            <div class="filters__actions">
+              <button type="submit" class="btn">{{ 'products.facets.apply' | t }}</button>
+              <a class="link-underline" href="{{ collection.url }}?sort_by={{ collection.sort_by | default: collection.default_sort_by }}">{{ 'products.facets.clear' | t }}</a>
+            </div>
+          </div>
+        </details>
+      {%- endif -%}
+
+      <p class="toolbar__count">{{ 'products.facets.count' | t: count: collection.products_count }}</p>
+
+      <div class="toolbar__sort">
+        <label for="SortBy">{{ 'products.facets.sort_by' | t }}</label>
+        <select id="SortBy" name="sort_by">
+          {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
+          {%- for option in collection.sort_options -%}
+            <option value="{{ option.value }}" {% if option.value == sort_by %}selected{% endif %}>{{ option.name }}</option>
+          {%- endfor -%}
+        </select>
+        <noscript><button type="submit" class="link-underline">{{ 'products.facets.apply' | t }}</button></noscript>
+      </div>
+    </form>
+
+    {%- assign has_active = false -%}
+    {%- capture active_html -%}
+      {%- for filter in collection.filters -%}
+        {%- if filter.type == 'price_range' -%}
+          {%- if filter.min_value.value != nil or filter.max_value.value != nil -%}
+            {%- assign has_active = true -%}
+            <a href="{{ filter.url_to_remove }}">
+              {{ filter.min_value.value | default: 0 | money }} – {{ filter.max_value.value | default: filter.range_max | money }}
+              {% render 'icon', name: 'close' %}
+            </a>
+          {%- endif -%}
+        {%- else -%}
+          {%- for value in filter.active_values -%}
+            {%- assign has_active = true -%}
+            <a href="{{ value.url_to_remove }}">{{ value.label }} {% render 'icon', name: 'close' %}</a>
+          {%- endfor -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endcapture -%}
+    {%- if has_active -%}
+      <div class="active-filters" aria-label="{{ 'products.facets.active' | t }}">{{ active_html }}</div>
+    {%- endif -%}
+
+    {%- if collection.products.size > 0 -%}
+      <div class="grid" style="--cols: {{ section.settings.columns }};">
+        {%- for product in collection.products -%}
+          {%- if forloop.index <= 4 -%}
+            {% render 'product-card', product: product, eager: true %}
+          {%- else -%}
+            {% render 'product-card', product: product %}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+      {% render 'pagination', paginate: paginate %}
+    {%- else -%}
+      <div class="empty-state">
+        <p>{{ 'products.facets.empty' | t }}</p>
+        <a class="btn btn--outline" href="{{ collection.url }}">{{ 'products.facets.clear' | t }}</a>
+      </div>
+    {%- endif -%}
+  </div>
+{%- endpaginate -%}
+
+{% schema %}
+{
+  "name": "Collezione",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Prodotti per pagina",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Colonne su desktop",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 4
+    }
+  ]
+}
+{% endschema %}

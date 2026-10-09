@@ -1,0 +1,31 @@
+{%- paginate collections by 24 -%}
+  <div class="page-width">
+    <div class="page-head">
+      <h1>{{ 'collections.title' | t }}</h1>
+    </div>
+    <div class="collection-tiles" style="--cols: 4;">
+      {%- for collection in collections -%}
+        {%- assign image = collection.featured_image | default: collection.products.first.featured_media.preview_image -%}
+        <a class="tile" href="{{ collection.url }}">
+          <div class="tile__media">
+            {%- if image != blank -%}
+              {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 50vw, 25vw', widths: '300, 480, 640, 800, 1000', alt: '' %}
+            {%- else -%}
+              {{ 'collection-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            {%- endif -%}
+          </div>
+          <h2 class="tile__title">{{ collection.title }} <span class="tile__count">{{ collection.products_count }}</span></h2>
+        </a>
+      {%- endfor -%}
+    </div>
+    {% render 'pagination', paginate: paginate %}
+  </div>
+{%- endpaginate -%}
+
+{% schema %}
+{
+  "name": "Elenco collezioni",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

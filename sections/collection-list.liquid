@@ -1,0 +1,108 @@
+<div class="section-spacing">
+  <div class="page-width">
+    {%- if section.settings.title != blank -%}
+      <div class="section-head">
+        <h2>{{ section.settings.title }}</h2>
+        {%- if section.settings.link_label != blank -%}
+          <a class="link-underline" href="{{ routes.collections_url }}">{{ section.settings.link_label }}</a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="collection-tiles" style="--cols: {{ section.blocks.size | at_most: 4 | at_least: 2 }};">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign collection = block.settings.collection
+          assign image = block.settings.image | default: collection.featured_image | default: collection.products.first.featured_media.preview_image
+          assign tile_title = block.settings.title | default: collection.title
+        -%}
+        <a class="tile" href="{{ collection.url | default: routes.collections_url }}" {{ block.shopify_attributes }}>
+          <div class="tile__media">
+            {%- if image != blank -%}
+              {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 50vw, 25vw', widths: '300, 480, 640, 800, 1000', alt: '' %}
+            {%- else -%}
+              {{ 'collection-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
+            {%- endif -%}
+          </div>
+          <h3 class="tile__title">
+            {{ tile_title | default: block.settings.placeholder }}
+            {%- if collection != blank -%}
+              <span class="tile__count">{{ collection.products_count }}</span>
+            {%- endif -%}
+          </h3>
+        </a>
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Collezioni",
+  "tag": "section",
+  "max_blocks": 8,
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titolo",
+      "default": "Collezioni"
+    },
+    {
+      "type": "text",
+      "id": "link_label",
+      "label": "Testo del link a tutte le collezioni",
+      "default": "Tutte le collezioni"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "Collezione",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collezione"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Immagine",
+          "info": "Se vuota usa l'immagine della collezione o del suo primo prodotto."
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Nome (se diverso dalla collezione)"
+        },
+        {
+          "type": "text",
+          "id": "placeholder",
+          "label": "Nome segnaposto",
+          "default": "Collezione"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collezioni",
+      "blocks": [
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

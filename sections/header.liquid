@@ -1,0 +1,148 @@
+{%- liquid
+  assign menu = section.settings.menu
+-%}
+{%- if section.settings.announcement != blank -%}
+  <div class="announcement">
+    {%- if section.settings.announcement_link != blank -%}
+      <a href="{{ section.settings.announcement_link }}">{{ section.settings.announcement }}</a>
+    {%- else -%}
+      <span>{{ section.settings.announcement }}</span>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+<header class="header page-width">
+  <div class="header__left">
+    <details class="menu-drawer" data-menu-drawer>
+      <summary class="header__icon" aria-label="{{ 'sections.header.menu' | t }}">
+        <span class="menu-drawer__open">{% render 'icon', name: 'menu' %}</span>
+        <span class="menu-drawer__close">{% render 'icon', name: 'close' %}</span>
+      </summary>
+      <nav class="menu-drawer__panel" aria-label="{{ 'sections.header.menu' | t }}">
+        <ul class="menu-drawer__list">
+          {%- for link in menu.links -%}
+            <li>
+              {%- if link.links != blank -%}
+                <details {% if link.child_active %}open{% endif %}>
+                  <summary>{{ link.title }} {% render 'icon', name: 'chevron' %}</summary>
+                  <ul>
+                    <li><a href="{{ link.url }}">{{ 'sections.header.view_all' | t }}</a></li>
+                    {%- for child in link.links -%}
+                      <li><a href="{{ child.url }}" {% if child.current %}aria-current="page"{% endif %}>{{ child.title }}</a></li>
+                    {%- endfor -%}
+                  </ul>
+                </details>
+              {%- else -%}
+                <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+        {%- if shop.customer_accounts_enabled -%}
+          <a class="menu-drawer__account" href="{{ routes.account_url }}">{{ 'sections.header.account' | t }}</a>
+        {%- endif -%}
+      </nav>
+    </details>
+
+    <nav class="header__nav" aria-label="{{ 'sections.header.menu' | t }}">
+      <ul>
+        {%- for link in menu.links -%}
+          <li>
+            {%- if link.links != blank -%}
+              <details class="header__dropdown" data-dropdown>
+                <summary {% if link.active or link.child_active %}class="is-active"{% endif %}>{{ link.title }}</summary>
+                <ul>
+                  {%- for child in link.links -%}
+                    <li><a href="{{ child.url }}" {% if child.current %}aria-current="page"{% endif %}>{{ child.title }}</a></li>
+                  {%- endfor -%}
+                </ul>
+              </details>
+            {%- else -%}
+              <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+    </nav>
+  </div>
+
+  <a class="header__logo" href="{{ routes.root_url }}">
+    {%- if section.settings.logo != blank -%}
+      {%- assign logo_w = section.settings.logo_width -%}
+      <img
+        src="{{ section.settings.logo | image_url: width: logo_w }}"
+        srcset="{{ section.settings.logo | image_url: width: logo_w }} 1x, {{ section.settings.logo | image_url: width: logo_w | times: 2 }} 2x"
+        width="{{ logo_w }}"
+        height="{{ logo_w | divided_by: section.settings.logo.aspect_ratio | round }}"
+        alt="{{ section.settings.logo.alt | default: shop.name | escape }}"
+        loading="eager"
+      >
+    {%- else -%}
+      {{ shop.name }}
+    {%- endif -%}
+  </a>
+
+  <div class="header__right">
+    <details class="header__search" data-dropdown>
+      <summary class="header__icon" aria-label="{{ 'sections.header.search' | t }}">{% render 'icon', name: 'search' %}</summary>
+      <form class="header__search-form" action="{{ routes.search_url }}" method="get" role="search">
+        <label class="visually-hidden" for="HeaderSearch">{{ 'general.search.placeholder' | t }}</label>
+        <input id="HeaderSearch" type="search" name="q" placeholder="{{ 'general.search.placeholder' | t }}" autocomplete="off">
+        <button type="submit" class="header__icon" aria-label="{{ 'general.search.submit' | t }}">{% render 'icon', name: 'arrow' %}</button>
+      </form>
+    </details>
+    {%- if shop.customer_accounts_enabled -%}
+      <a class="header__icon header__account" href="{{ routes.account_url }}" aria-label="{{ 'sections.header.account' | t }}">{% render 'icon', name: 'account' %}</a>
+    {%- endif -%}
+    <a class="header__icon header__cart" href="{{ routes.cart_url }}" aria-label="{{ 'sections.header.cart' | t }}">
+      {% render 'icon', name: 'cart' %}
+      <span class="header__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+    </a>
+  </div>
+</header>
+
+{% schema %}
+{
+  "name": "Header",
+  "class": "section-header",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo",
+      "info": "Se vuoto viene mostrato il nome del negozio."
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "Larghezza logo",
+      "min": 60,
+      "max": 260,
+      "step": 10,
+      "unit": "px",
+      "default": 140
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "header",
+      "content": "Barra annunci"
+    },
+    {
+      "type": "text",
+      "id": "announcement",
+      "label": "Testo",
+      "info": "Lascia vuoto per nascondere la barra."
+    },
+    {
+      "type": "url",
+      "id": "announcement_link",
+      "label": "Link"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,208 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "Sudditalia",
+    "theme_version": "2.0.0",
+    "theme_author": "Farge Studio",
+    "theme_documentation_url": "https://fargestudio.it",
+    "theme_support_url": "https://fargestudio.it"
+  },
+  {
+    "name": "Colori",
+    "settings": [
+      {
+        "type": "color",
+        "id": "color_bg",
+        "label": "Sfondo",
+        "default": "#E9EAEC"
+      },
+      {
+        "type": "color",
+        "id": "color_surface",
+        "label": "Riquadri (sfondo foto prodotto)",
+        "default": "#F5F6F7"
+      },
+      {
+        "type": "color",
+        "id": "color_text",
+        "label": "Testo",
+        "default": "#0E1A33"
+      },
+      {
+        "type": "color",
+        "id": "color_muted",
+        "label": "Testo secondario",
+        "default": "#5C6578"
+      },
+      {
+        "type": "color",
+        "id": "color_border",
+        "label": "Linee",
+        "default": "#CDD1D8"
+      },
+      {
+        "type": "color",
+        "id": "color_accent",
+        "label": "Accento (offerte, focus)",
+        "default": "#1F6FE0"
+      },
+      {
+        "type": "color",
+        "id": "color_accent_text",
+        "label": "Testo su accento",
+        "default": "#FFFFFF"
+      }
+    ]
+  },
+  {
+    "name": "Tipografia",
+    "settings": [
+      {
+        "type": "font_picker",
+        "id": "font_heading",
+        "label": "Font titoli",
+        "default": "archivo_n7"
+      },
+      {
+        "type": "font_picker",
+        "id": "font_body",
+        "label": "Font testo",
+        "default": "archivo_n4"
+      },
+      {
+        "type": "checkbox",
+        "id": "heading_uppercase",
+        "label": "Titoli in maiuscolo",
+        "default": true
+      },
+      {
+        "type": "range",
+        "id": "font_body_size",
+        "label": "Dimensione testo",
+        "min": 13,
+        "max": 18,
+        "step": 1,
+        "unit": "px",
+        "default": 15
+      }
+    ]
+  },
+  {
+    "name": "Layout",
+    "settings": [
+      {
+        "type": "range",
+        "id": "page_width",
+        "label": "Larghezza massima",
+        "min": 1100,
+        "max": 1800,
+        "step": 50,
+        "unit": "px",
+        "default": 1600
+      },
+      {
+        "type": "range",
+        "id": "spacing_sections",
+        "label": "Spazio tra le sezioni",
+        "min": 32,
+        "max": 160,
+        "step": 8,
+        "unit": "px",
+        "default": 96
+      },
+      {
+        "type": "range",
+        "id": "corner_radius",
+        "label": "Raggio angoli",
+        "min": 0,
+        "max": 16,
+        "step": 1,
+        "unit": "px",
+        "default": 2
+      }
+    ]
+  },
+  {
+    "name": "Schede prodotto",
+    "settings": [
+      {
+        "type": "select",
+        "id": "card_ratio",
+        "label": "Formato immagine",
+        "default": "4 / 5",
+        "options": [
+          {
+            "value": "1 / 1",
+            "label": "Quadrato"
+          },
+          {
+            "value": "4 / 5",
+            "label": "Verticale 4:5"
+          },
+          {
+            "value": "3 / 4",
+            "label": "Verticale 3:4"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "card_fit",
+        "label": "Adattamento immagine",
+        "default": "contain",
+        "options": [
+          {
+            "value": "contain",
+            "label": "Intera (con margine)"
+          },
+          {
+            "value": "cover",
+            "label": "Riempi (ritaglia)"
+          }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "card_second_image",
+        "label": "Seconda immagine al passaggio del mouse",
+        "default": true
+      }
+    ]
+  },
+  {
+    "name": "Social",
+    "settings": [
+      {
+        "type": "text",
+        "id": "social_instagram",
+        "label": "Instagram (link)"
+      },
+      {
+        "type": "text",
+        "id": "social_tiktok",
+        "label": "TikTok (link)"
+      },
+      {
+        "type": "text",
+        "id": "social_facebook",
+        "label": "Facebook (link)"
+      },
+      {
+        "type": "text",
+        "id": "social_youtube",
+        "label": "YouTube (link)"
+      }
+    ]
+  },
+  {
+    "name": "Favicon",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon",
+        "info": "Consigliata 96 × 96 px, PNG."
+      }
+    ]
+  }
+]

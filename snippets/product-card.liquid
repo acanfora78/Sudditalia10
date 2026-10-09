@@ -1,0 +1,37 @@
+{%- comment -%}
+  Scheda prodotto per le griglie.
+  Parametri: product (obbligatorio), sizes (opzionale), eager (opzionale: carica subito l'immagine)
+{%- endcomment -%}
+{%- liquid
+  assign sizes = sizes | default: '(max-width: 749px) 50vw, 25vw'
+  assign first = product.featured_media.preview_image
+  assign second = product.media[1].preview_image
+  assign loading = 'lazy'
+  if eager
+    assign loading = 'eager'
+  endif
+-%}
+<article class="card">
+  <a class="card__link" href="{{ product.url }}">
+    <div class="card__media{% if second != blank and settings.card_second_image %} card__media--swap{% endif %}">
+      {%- if first != blank -%}
+        {% render 'responsive-image', image: first, sizes: sizes, widths: '240, 360, 480, 640, 800, 1000', loading: loading, alt: product.title %}
+        {%- if second != blank and settings.card_second_image -%}
+          {% render 'responsive-image', image: second, sizes: sizes, widths: '240, 360, 480, 640, 800, 1000', class: 'card__second', alt: '' %}
+        {%- endif -%}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+      {%- endif -%}
+
+      {%- if product.available == false -%}
+        <span class="badge">{{ 'products.product.sold_out' | t }}</span>
+      {%- elsif product.compare_at_price_min > product.price_min -%}
+        <span class="badge badge--sale">{{ 'products.product.on_sale' | t }}</span>
+      {%- endif -%}
+    </div>
+    <div class="card__info">
+      <h3 class="card__title">{{ product.title }}</h3>
+      {% render 'price', product: product %}
+    </div>
+  </a>
+</article>

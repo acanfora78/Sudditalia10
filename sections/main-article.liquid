@@ -1,0 +1,25 @@
+<article class="page-width page-width--narrow">
+  <div class="page-head">
+    <p class="text-muted text-small">{{ article.published_at | time_tag: format: 'date' }}</p>
+    <h1>{{ article.title }}</h1>
+  </div>
+  {%- if article.image != blank -%}
+    <div class="article__media">
+      {% render 'responsive-image', image: article.image, sizes: '(max-width: 820px) 100vw, 820px', widths: '480, 820, 1200, 1640', loading: 'eager' %}
+    </div>
+  {%- endif -%}
+  <div class="rte">{{ article.content }}</div>
+  <a class="link-underline article__back" href="{{ blog.url }}">{{ 'blogs.article.back' | t: title: blog.title }}</a>
+</article>
+
+<script type="application/ld+json">
+  {{ article | structured_data }}
+</script>
+
+{% schema %}
+{
+  "name": "Articolo",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

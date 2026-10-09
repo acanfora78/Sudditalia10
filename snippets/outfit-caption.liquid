@@ -1,0 +1,15 @@
+{%- comment -%}
+  Didascalia di un capo della hero.
+  Parametri: title, url, product (opzionale), index, show_price, link_label
+{%- endcomment -%}
+<div class="os__caption{% if index == 1 %} is-active{% endif %}" data-os-caption aria-hidden="{% if index == 1 %}false{% else %}true{% endif %}">
+  {%- if title != blank -%}
+    <span class="os__caption-title">{{ title }}</span>
+  {%- endif -%}
+  {%- if product != blank and show_price -%}
+    <span class="os__caption-price">{% render 'price', product: product %}</span>
+  {%- endif -%}
+  {%- if url != blank and link_label != blank -%}
+    <a class="os__caption-link" href="{{ url }}" {% unless index == 1 %}tabindex="-1"{% endunless %}>{{ link_label }}</a>
+  {%- endif -%}
+</div>

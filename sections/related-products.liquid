@@ -1,0 +1,55 @@
+<div class="section-spacing">
+  <div class="page-width">
+    <product-recommendations data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.products_to_show }}&intent=related">
+      {%- if recommendations.performed and recommendations.products_count > 0 -%}
+        <div class="section-head">
+          <h2>{{ section.settings.title }}</h2>
+        </div>
+        <div class="grid" style="--cols: 4;">
+          {%- for product in recommendations.products -%}
+            {% render 'product-card', product: product %}
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </product-recommendations>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var el = document.currentScript.previousElementSibling.querySelector('product-recommendations');
+    if (!el || el.children.length || !window.fetch) return;
+    fetch(el.dataset.url)
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var fresh = doc.querySelector('product-recommendations');
+        if (fresh && fresh.innerHTML.trim()) el.innerHTML = fresh.innerHTML;
+      })
+      .catch(function () { /* senza consigliati la pagina resta completa */ });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Prodotti correlati",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titolo",
+      "default": "Potrebbe piacerti"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Prodotti da mostrare",
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "default": 4
+    }
+  ]
+}
+{% endschema %}

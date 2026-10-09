@@ -1,0 +1,68 @@
+<div class="section-spacing">
+  <div class="page-width">
+    {%- if section.settings.heading != blank -%}
+      <h2 class="statement{% if section.settings.align == 'center' %} statement--center{% endif %}">{{ section.settings.heading }}</h2>
+    {%- endif -%}
+    {%- if section.settings.text != blank or section.settings.button_label != blank -%}
+      <div class="statement__text">
+        {%- if section.settings.text != blank -%}
+          <div class="rte">{{ section.settings.text }}</div>
+        {%- endif -%}
+        {%- if section.settings.button_label != blank -%}
+          <a class="btn statement__cta" href="{{ section.settings.button_link }}">{{ section.settings.button_label }}</a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Frase in grande",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Frase",
+      "default": "Un grattacielo si costruisce un mattone alla volta."
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Testo"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Testo del bottone"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Link del bottone"
+    },
+    {
+      "type": "select",
+      "id": "align",
+      "label": "Allineamento",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "Sinistra"
+        },
+        {
+          "value": "center",
+          "label": "Centro"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Frase in grande"
+    }
+  ]
+}
+{% endschema %}

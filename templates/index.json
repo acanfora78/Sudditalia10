@@ -1,0 +1,104 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero-outfit-slider",
+      "blocks": {
+        "look1": {
+          "type": "look",
+          "settings": {
+            "product": "sky-blue-shark-zip-boxy"
+          }
+        },
+        "look2": {
+          "type": "look",
+          "settings": {
+            "product": "yellow-shark-zip-boxy"
+          }
+        },
+        "look3": {
+          "type": "look",
+          "settings": {
+            "product": "pink-shark-zip-boxy"
+          }
+        },
+        "look4": {
+          "type": "look",
+          "settings": {
+            "product": "black-on-black-boxy-zip-hoodie"
+          }
+        }
+      },
+      "block_order": [
+        "look1",
+        "look2",
+        "look3",
+        "look4"
+      ],
+      "settings": {
+        "title": "The Hoodie\nCollection",
+        "subtitle": "Boxy fit, 100% cotone, Made in Italy."
+      }
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+        "collection": "hoodies",
+        "title": "Hoodie",
+        "products_to_show": 4,
+        "columns": 4
+      }
+    },
+    "collections": {
+      "type": "collection-list",
+      "blocks": {
+        "c1": {
+          "type": "collection",
+          "settings": {
+            "collection": "t-shirts"
+          }
+        },
+        "c2": {
+          "type": "collection",
+          "settings": {
+            "collection": "long-shorts"
+          }
+        },
+        "c3": {
+          "type": "collection",
+          "settings": {
+            "collection": "giacche"
+          }
+        },
+        "c4": {
+          "type": "collection",
+          "settings": {
+            "collection": "accessori"
+          }
+        }
+      },
+      "block_order": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "settings": {
+        "title": "Collezioni"
+      }
+    },
+    "statement": {
+      "type": "rich-text",
+      "settings": {
+        "heading": "Un grattacielo si costruisce un mattone alla volta.",
+        "button_label": "Chi siamo",
+        "button_link": "shopify://pages/about-us"
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "featured",
+    "collections",
+    "statement"
+  ]
+}
