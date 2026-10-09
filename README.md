@@ -77,6 +77,18 @@ Prompt usato per generare il modello vestito (con allegate foto modello + foto p
 > all'originale. Il capo deve calzare in modo naturale, con pieghe realistiche. Non cambiare viso,
 > capelli, braccia e mani. Formato verticale 1024×1536.
 
+## Anteprima senza Shopify (`strumenti/anteprima/`)
+Fa girare i file Liquid veri del tema con i dati veri presi dal sito pubblico (prodotti, prezzi,
+taglie, collezioni, immagini) e crea un sito statico: home, collezioni, prodotti, carrello.
+```
+python3 strumenti/anteprima/scarica_dati.py          # scarica i dati dello store
+cd strumenti/anteprima && npm install && node genera.mjs   # crea build/index.html
+```
+Nella hero entrano anche le felpe senza foto indossata (sagoma grigia al posto del capo); con
+`node genera.mjs --solo-pronti` si comporta come sullo store vero. Carrello, ricerca e account non
+funzionano; i menu sono ricostruiti dalle collezioni della home. Quando arriva un nuovo file
+`foto/capo-fronte-<handle>.png`, basta rilanciare `node genera.mjs`.
+
 ## Cosa manca
 1. Caricare il tema sullo store e provarlo davvero (Shopify CLI: `shopify theme dev`).
 2. Creare i metafield `capo_fronte` e `capo_retro` e caricare il file della felpa.

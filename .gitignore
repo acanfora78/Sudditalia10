@@ -2,3 +2,6 @@
 .shopify/
 node_modules/
 *.log
+strumenti/anteprima/dati/
+strumenti/anteprima/build/
+strumenti/anteprima/node_modules/

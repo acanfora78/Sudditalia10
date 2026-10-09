@@ -1,0 +1,8 @@
+{
+  "name": "sudditalia-anteprima",
+  "private": true,
+  "type": "module",
+  "description": "Anteprima statica del tema Sudditalia senza Shopify",
+  "scripts": { "genera": "node genera.mjs" },
+  "dependencies": { "liquidjs": "10.16.7" }
+}
