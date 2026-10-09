@@ -4,7 +4,9 @@
 
   Il movimento sta in griglie.css + griglie.js (caricati dalla sezione che usa la scheda):
   inclinazione 3D col riflesso di luce, seconda foto a tendina diagonale, titolo e prezzo che
-  scorrono, entrata a cascata. Senza quei file la scheda resta pulita con lo stile base di theme.css.
+  scorrono, entrata a cascata. Senza quei file la scheda resta pulita con lo stile base di theme.css
+  (le copie del testo che scorre hanno l'attributo hidden: le mostra solo griglie.css).
+  "Seconda foto" è attiva se l'impostazione del tema non è spenta (!= false: attiva anche se manca).
   Le foto si scoprono dal basso con l'effetto del tema (effetti.js, .card__media): qui non si
   anima di nuovo l'immagine, si muovono la scheda e il suo involucro (.g-card__zoom).
   Lo sconto in percentuale compare solo se tutte le varianti hanno lo stesso prezzo: così il numero
@@ -19,7 +21,7 @@
     assign loading = 'eager'
   endif
   assign swap = false
-  if second != blank and settings.card_second_image
+  if second != blank and settings.card_second_image != false
     assign swap = true
   endif
   assign on_sale = false
@@ -30,7 +32,7 @@
   if on_sale and product.price_varies == false
     assign v = product.selected_or_first_available_variant
     if v.compare_at_price > v.price
-      assign sale_pct = v.compare_at_price | minus: v.price | times: 100 | divided_by: v.compare_at_price
+      assign sale_pct = v.compare_at_price | minus: v.price | times: 100 | divided_by: v.compare_at_price | floor
     endif
   endif
 -%}
@@ -54,7 +56,7 @@
       {%- elsif on_sale -%}
         <span class="badge badge--sale g-badge g-badge--sale">
           {%- if sale_pct > 0 -%}
-            <span class="g-badge__pct">&minus;{{ sale_pct }}%</span>
+            <span class="g-badge__pct">&minus;{{ sale_pct }}%</span>{{ ' ' }}
           {%- endif -%}
           <span class="g-badge__label">{{ 'products.product.on_sale' | t }}</span>
         </span>
@@ -65,13 +67,13 @@
       <h3 class="card__title g-card__title">
         <span class="g-roll">
           <span class="g-roll__in">{{ product.title }}</span>
-          <span class="g-roll__copy" aria-hidden="true">{{ product.title }}</span>
+          <span class="g-roll__copy" aria-hidden="true" hidden>{{ product.title }}</span>
         </span>
       </h3>
       <div class="g-card__price">
         <span class="g-roll">
           <span class="g-roll__in">{% render 'price', product: product %}</span>
-          <span class="g-roll__copy" aria-hidden="true">{% render 'price', product: product %}</span>
+          <span class="g-roll__copy" aria-hidden="true" hidden>{% render 'price', product: product %}</span>
         </span>
       </div>
       <span class="g-card__line" aria-hidden="true"></span>
