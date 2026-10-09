@@ -14,8 +14,8 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  height: max(540px, calc(var(--ch-h, 85) * 1vh));
-  height: max(540px, calc(var(--ch-h, 85) * 1svh));
+  height: max(480px, calc(var(--ch-h, 85) * 1vh));
+  height: max(480px, calc(var(--ch-h, 85) * 1svh));
   margin-top: calc(var(--header-h, 64px) * -1);
   padding: calc(var(--header-h, 64px) + 24px) 0 clamp(28px, 5.5vh, 72px);
   overflow: hidden;
@@ -726,8 +726,10 @@ html.cf-lock { overflow: hidden; }
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
-.pagination__now { font-size: clamp(2rem, 6vw, 2.6rem); letter-spacing: -.03em; }
-.pagination__sep { width: 28px; height: 1px; background: var(--color-muted); transform: rotate(-60deg); }
+/* theme.css dà a tutti gli span della paginazione la forma di un bottone: qui no */
+.pagination--cine .pagination__status span { display: block; min-width: 0; height: auto; border-radius: 0; }
+.pagination--cine .pagination__status .pagination__now { font-size: clamp(2rem, 6vw, 2.6rem); letter-spacing: -.03em; }
+.pagination--cine .pagination__status .pagination__sep { width: 28px; height: 1px; background: var(--color-muted); transform: rotate(-60deg); }
 .pagination__all { color: var(--color-muted); font-size: 1rem; }
 @media (min-width: 750px) {
   .pagination--cine .pagination__list { display: flex; }
