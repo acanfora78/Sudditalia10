@@ -97,7 +97,7 @@
     entries.forEach(function (e) { if (e.isIntersecting) batch.push(e.target); });
     batch.sort(byDomOrder).forEach(function (card, i) {
       cardIO.unobserve(card);
-      var d = (i * 0.09).toFixed(2) + 's';
+      var d = (Math.min(i, 6) * 0.09).toFixed(2) + 's';
       card.style.setProperty('--cd', d);
       var media = card.querySelector('.card__media');
       if (media) media.style.setProperty('--d', d);   // ritardo della foto (effetti.js) = ritardo della scheda
