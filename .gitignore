@@ -5,3 +5,4 @@ node_modules/
 strumenti/anteprima/dati/
 strumenti/anteprima/build/
 strumenti/anteprima/node_modules/
+.claude/worktrees/
