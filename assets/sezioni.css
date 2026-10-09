@@ -8,7 +8,7 @@
 
 /* --- Bottoni in più ------------------------------------------------------ */
 .btn--small { min-height: 40px; padding-inline: 18px; font-size: .85rem; }
-.btn--light { background: #fff; border-color: #fff; color: #0e0e0e; }
+.btn--light { background: #fff; border-color: #fff; color: var(--color-bg); }
 .btn--light:hover { background: transparent; color: #fff; }
 
 /* --- Apertura a blocchi -------------------------------------------------- */
@@ -78,7 +78,7 @@
   right: 0;
   z-index: 4;
   height: calc(max(0, 1 - var(--p) * 4) * 9vh);
-  background: #050505;
+  background: var(--color-bg);
   pointer-events: none;
 }
 .ib__bar--top { top: 0; }
@@ -92,7 +92,7 @@
   .ib__video--mobile { display: block; }
 }
 .ib__video video { width: 100%; height: 100%; object-fit: cover; object-position: var(--ib-pos, 50% 50%); }
-.ib--video .ib__tile { display: none; background: #050505; }
+.ib--video .ib__tile { display: none; background: var(--color-bg); }
 .js .ib--video .ib__tile { display: block; }
 .js .ib--video:not(.is-in) .ib__tile { opacity: 1; transform: none; }
 .ib--video.is-in .ib__tile { opacity: 0; transform: translate(calc(var(--dx, 0%) * -2.5), calc(var(--dy, 0%) * -2.5)); }
@@ -153,7 +153,7 @@ html.cine-on { overflow: hidden; }
   left: 0;
   right: 0;
   height: 50.5%;
-  background: #050505;
+  background: var(--color-bg);
   animation: cine-open-top 1.2s cubic-bezier(.77, 0, .18, 1) var(--t-open) forwards;
 }
 .cine__bar--top { top: 0; }
@@ -188,6 +188,88 @@ html.cine-on { overflow: hidden; }
 @keyframes cine-title-out { to { opacity: 0; letter-spacing: .28em; filter: blur(5px); } }
 .cine .grain { z-index: 3; opacity: .14; }
 .cine.is-skip { opacity: 0; transition: opacity .45s ease; pointer-events: none; }
+
+/* --- Ingresso tra le nuvole --------------------------------------------- */
+/* 4,6 s: nuvole che si diradano, logo che appare, la camera vola attraverso il logo e le nuvole si aprono */
+.cine--sky { --sky-t: 4.6s; display: none; background: none; cursor: pointer; }
+.js .cine--sky { display: block; animation: sky-out var(--sky-t) linear forwards; }
+.sky__bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 45%, rgba(170, 205, 255, .55), transparent 70%),
+    linear-gradient(180deg, var(--sky-top, #0b2763) 0%, var(--sky-mid, #2453a8) 55%, var(--sky-low, #79a6e3) 100%);
+}
+.sky__cloud {
+  position: absolute;
+  inset: -12%;
+  width: 124%;
+  height: 124%;
+  max-width: none;
+  object-fit: cover;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.sky__cloud--far { animation: sky-far var(--sky-t) cubic-bezier(.4, 0, .2, 1) forwards; }
+.sky__cloud--left { animation: sky-left var(--sky-t) cubic-bezier(.6, 0, .2, 1) forwards; }
+.sky__cloud--right { animation: sky-right var(--sky-t) cubic-bezier(.6, 0, .2, 1) forwards; }
+.sky__cloud--near-left { animation: sky-near-left var(--sky-t) cubic-bezier(.65, 0, .25, 1) forwards; }
+.sky__cloud--near-right { animation: sky-near-right var(--sky-t) cubic-bezier(.65, 0, .25, 1) forwards; }
+.sky__logo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  animation: sky-logo var(--sky-t) cubic-bezier(.5, 0, .2, 1) forwards;
+}
+.sky__logo img {
+  width: min(62vw, 820px);
+  height: auto;
+  filter: drop-shadow(0 10px 30px rgba(6, 22, 66, .55)) drop-shadow(0 2px 4px rgba(6, 22, 66, .35));
+}
+.sky__flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 48%, rgba(255, 255, 255, .95), rgba(225, 238, 255, .6) 40%, transparent 72%);
+  opacity: 0;
+  animation: sky-flash var(--sky-t) ease forwards;
+}
+@keyframes sky-out { 0%, 74% { opacity: 1; } 96%, 100% { opacity: 0; } }
+@keyframes sky-far {
+  0% { transform: scale(1.05) translateY(2%); }
+  55% { transform: scale(1.18) translateY(0); }
+  100% { transform: scale(1.9); opacity: .4; }
+}
+@keyframes sky-left {
+  0% { transform: translateX(10%) scale(1.1); }
+  45% { transform: translateX(-4%) scale(1.15); }
+  85%, 100% { transform: translateX(-75%) scale(1.8); }
+}
+@keyframes sky-right {
+  0% { transform: translateX(-10%) scale(1.1); }
+  45% { transform: translateX(4%) scale(1.15); }
+  85%, 100% { transform: translateX(75%) scale(1.8); }
+}
+@keyframes sky-near-left {
+  0% { transform: translateX(32%) scale(1.45); }
+  38% { transform: translateX(2%) scale(1.3); }
+  52% { transform: translateX(-2%) scale(1.32); }
+  82%, 100% { transform: translateX(-95%) scale(2.6); }
+}
+@keyframes sky-near-right {
+  0% { transform: translateX(-32%) scale(1.45); }
+  38% { transform: translateX(-2%) scale(1.3); }
+  52% { transform: translateX(2%) scale(1.32); }
+  82%, 100% { transform: translateX(95%) scale(2.6); }
+}
+@keyframes sky-logo {
+  0%, 10% { opacity: 0; transform: translateY(4%) scale(.84); filter: blur(14px); }
+  38% { opacity: 1; transform: none; filter: blur(0); }
+  56% { opacity: 1; transform: scale(1.06); filter: blur(0); }
+  86% { opacity: 0; transform: scale(6); filter: blur(10px); }
+  100% { opacity: 0; transform: scale(6); }
+}
+@keyframes sky-flash { 0%, 62% { opacity: 0; } 74% { opacity: .55; } 92%, 100% { opacity: 0; } }
 
 /* --- Passaggio a pixel --------------------------------------------------- */
 .px-cover {
@@ -247,7 +329,7 @@ html.cine-on { overflow: hidden; }
 
 /* --- Pagina prodotto a 3 colonne ----------------------------------------- */
 /* la colonna centrale è un set illuminato: dentro i colori tornano scuri su chiaro */
-.pe__stage { --color-text: #0b0b0c; --color-border: rgba(11, 11, 12, .16); color: #0b0b0c; }
+.pe__stage { --color-text: var(--color-stage-text, #0b1a3a); --color-border: rgba(11, 26, 58, .16); color: var(--color-stage-text, #0b1a3a); }
 .pe {
   display: grid;
   gap: 28px;
@@ -414,10 +496,10 @@ main h2 { letter-spacing: -.012em; }
   place-items: center;
   width: 92px;
   height: 92px;
-  border: 1px solid rgba(237, 234, 227, .3);
+  border: 1px solid color-mix(in srgb, var(--color-text) 30%, transparent);
   border-radius: 50%;
-  background: #0b0b0c;
-  color: #edeae3;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
   font: 700 .68rem/1 var(--font-body-family);
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -433,7 +515,7 @@ html.curtain-in body::before {
   position: fixed;
   inset: 0;
   z-index: 2000;
-  background: #050505;
+  background: var(--color-bg);
   pointer-events: none;
   transition: transform .95s cubic-bezier(.77, 0, .18, 1);
 }
@@ -442,7 +524,7 @@ html.curtain-out body::before { transform: translateY(-100%); }
   position: fixed;
   inset: 0;
   z-index: 2000;
-  background: #050505;
+  background: var(--color-bg);
   transform: translateY(100%);
   transition: transform .55s cubic-bezier(.77, 0, .18, 1);
 }

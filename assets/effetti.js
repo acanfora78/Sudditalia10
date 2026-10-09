@@ -66,6 +66,8 @@
         var self = this;
         var n = parseInt(cine.style.getPropertyValue('--n'), 10) || 10;
         var open = 0.3 + n * 0.055 + 0.9 + 0.35;               // secondi, come --t-open
+        // ingresso tra le nuvole: il sito si scopre quando la camera attraversa il logo
+        if (cine.dataset.cineDuration) open = parseFloat(cine.dataset.cineDuration) - 1.15;
         var zoom = this.querySelector('.ib__zoom');
         if (zoom) zoom.style.setProperty('--kb-delay', open + 's');
         var timers = [];

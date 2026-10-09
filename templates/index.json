@@ -6,7 +6,8 @@
         "image": "shopify://shop_images/apertura.jpg",
         "focus": "50% 30%",
         "video": "shopify://files/videos/apertura-computer.mp4",
-        "video_mobile": "shopify://files/videos/apertura-telefono.mp4"
+        "video_mobile": "shopify://files/videos/apertura-telefono.mp4",
+        "cinema_style": "nuvole"
       }
     },
     "hero": {
@@ -15,8 +16,8 @@
         "collection": "hoodies",
         "title": "",
         "subtitle": "",
-        "bg_color": "#E7E5E0",
-        "text_color": "#0B0B0C"
+        "bg_color": "#E4EBF5",
+        "text_color": "#06132F"
       }
     },
     "marquee": {

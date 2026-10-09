@@ -37,16 +37,39 @@
   style="--ib-cols: {{ cols }}; --ib-rows: {{ rows }}; --ib-scroll: {{ section.settings.scroll_height }}vh; --ib-pos: {{ section.settings.focus }};"
 >
   {%- if section.settings.cinema -%}
-    <div class="cine" data-cine aria-hidden="true" style="--n: {{ letters.size }};">
-      <div class="cine__bar cine__bar--top"></div>
-      <div class="cine__bar cine__bar--bottom"></div>
-      <p class="cine__title">
-        {%- for ch in letters -%}
-          <span style="--i: {{ forloop.index0 }};">{% if ch == ' ' %}&nbsp;{% else %}{{ ch }}{% endif %}</span>
-        {%- endfor -%}
-      </p>
-      <div class="grain"></div>
-    </div>
+    {%- if section.settings.cinema_style == 'nuvole' -%}
+      {%- comment -%}
+        Ingresso tra le nuvole: cielo blu, il logo appare tra le nuvole, poi la "camera" vola
+        attraverso il logo e le nuvole si aprono di lato come un sipario, scoprendo il sito.
+      {%- endcomment -%}
+      <div class="cine cine--sky" data-cine data-cine-duration="4.6" aria-hidden="true">
+        <div class="sky__bg"></div>
+        <img class="sky__cloud sky__cloud--far" src="{{ 'nuvola-sfondo.webp' | asset_url }}" alt="" width="1920" height="1080">
+        <img class="sky__cloud sky__cloud--left" src="{{ 'nuvola-sinistra.webp' | asset_url }}" alt="" width="1920" height="1080">
+        <img class="sky__cloud sky__cloud--right" src="{{ 'nuvola-destra.webp' | asset_url }}" alt="" width="1920" height="1080">
+        <div class="sky__logo">
+          {%- if section.settings.cinema_logo != blank -%}
+            <img src="{{ section.settings.cinema_logo | image_url: width: 1400 }}" alt="" width="{{ section.settings.cinema_logo.width }}" height="{{ section.settings.cinema_logo.height }}">
+          {%- else -%}
+            <img src="{{ 'logo-ingresso.png' | asset_url }}" alt="" width="762" height="316">
+          {%- endif -%}
+        </div>
+        <img class="sky__cloud sky__cloud--near-left" src="{{ 'nuvola-vicina-sinistra.webp' | asset_url }}" alt="" width="1920" height="1080">
+        <img class="sky__cloud sky__cloud--near-right" src="{{ 'nuvola-vicina-destra.webp' | asset_url }}" alt="" width="1920" height="1080">
+        <div class="sky__flash"></div>
+      </div>
+    {%- else -%}
+      <div class="cine" data-cine aria-hidden="true" style="--n: {{ letters.size }};">
+        <div class="cine__bar cine__bar--top"></div>
+        <div class="cine__bar cine__bar--bottom"></div>
+        <p class="cine__title">
+          {%- for ch in letters -%}
+            <span style="--i: {{ forloop.index0 }};">{% if ch == ' ' %}&nbsp;{% else %}{{ ch }}{% endif %}</span>
+          {%- endfor -%}
+        </p>
+        <div class="grain"></div>
+      </div>
+    {%- endif -%}
     <script>
       // già visto in questa visita, o "riduci movimento": niente ingresso
       try {
@@ -155,9 +178,25 @@
       "default": true
     },
     {
+      "type": "select",
+      "id": "cinema_style",
+      "label": "Tipo di ingresso",
+      "options": [
+        { "value": "nuvole", "label": "Logo tra le nuvole" },
+        { "value": "titolo", "label": "Scritta su nero" }
+      ],
+      "default": "nuvole"
+    },
+    {
+      "type": "image_picker",
+      "id": "cinema_logo",
+      "label": "Logo dell'ingresso (nuvole)",
+      "info": "PNG chiaro con sfondo trasparente. Se vuoto usa il logo Sudditalia incluso nel tema."
+    },
+    {
       "type": "text",
       "id": "cinema_text",
-      "label": "Scritta dell'ingresso",
+      "label": "Scritta dell'ingresso (su nero)",
       "info": "Se vuota usa il nome del negozio."
     },
     {

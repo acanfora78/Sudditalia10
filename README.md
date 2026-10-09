@@ -103,6 +103,11 @@ Prompt usato per generare il modello vestito (con allegate foto modello + foto p
   **fascia scorrevole** (`sections/fascia-scorrevole.liquid`: scritta gigante piena e a contorno con la
   stella del brand, accelera e si inclina con lo scroll), **cursore** con parola (Trascina, Vedi, Apri),
   **sipario** tra una pagina e l'altra, **nome gigante** in fondo al footer, grana su tutto il sito.
+- **Colori blu**: blu notte #06132F, testo #EEF3FB, accento #3D7BFF, set azzurro ghiaccio #E4EBF5.
+- **Ingresso tra le nuvole** (Apertura → Tipo di ingresso): cielo blu, il logo Sudditalia appare tra le
+  nuvole, la camera lo attraversa e le nuvole si aprono di lato scoprendo il sito (4,6 s, una volta per
+  visita). Nuvole generate da `strumenti/genera_nuvole.py` (`assets/nuvola-*.webp`), logo preso dal sito
+  attuale (`assets/logo-ingresso.png`, sostituibile dall'editor).
 - Da fare: la **finestra che si apre** (servono 2 foto: un dettaglio e una foto intera).
 
 ## Anteprima senza Shopify (`strumenti/anteprima/`)
