@@ -34,7 +34,7 @@
   style="--gc-n: {{ panel_count }};"
   data-speed="{{ section.settings.speed | default: 110 }}"
   data-cursor-drag="{{ drag_label | escape }}"
-  {% if title != blank %}aria-label="{{ title | escape }}"{% endif %}
+  {% if title != blank %}role="region" aria-label="{{ title | escape }}"{% endif %}
 >
   <div class="gc__pin">
     {%- if title != blank or section.settings.eyebrow != blank -%}
@@ -402,7 +402,7 @@
           "type": "select",
           "id": "align",
           "label": "Posizione in altezza",
-          "info": "Per i formati più bassi della pista.",
+          "info": "Sul computer, per i formati più bassi della pista. Sul telefono i pannelli stanno sempre a metà altezza.",
           "options": [
             { "value": "auto", "label": "Alternata" },
             { "value": "start", "label": "In alto" },

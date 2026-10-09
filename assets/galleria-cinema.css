@@ -27,7 +27,8 @@
 @supports (height: 100svh) {
   .gc { --gc-vh: 100svh; }
 }
-.gc--no-title { --gc-intro: var(--gc-gutter); }
+/* senza titolo la pista parte subito, lasciando spazio al numero del primo pannello */
+.gc.gc--no-title { --gc-intro: clamp(64px, 12vw, 220px); }
 
 /* --------------------------------------------------------------------------
    Titolo d'apertura
@@ -362,9 +363,10 @@
 .gc__panel--q { --ar: 1; --hf: .84; }
 .gc__panel--o { --ar: 1.5; --hf: .72; }
 .gc__panel--w { --ar: 2.2; --hf: .62; }
+/* altezza dalla pista, larghezza al massimo --mw: la proporzione resta sempre quella del formato */
 .gc[data-mode="pin"] .gc__box {
-  width: calc(var(--gc-h) * var(--hf) * var(--ar));
-  height: calc(var(--gc-h) * var(--hf));
+  width: min(calc(var(--gc-h) * var(--hf) * var(--ar)), var(--mw, 86vw));
+  height: min(calc(var(--gc-h) * var(--hf)), calc(var(--mw, 86vw) / var(--ar)));
 }
 .gc[data-mode="pin"] .gc__frame { will-change: transform; transform-origin: 50% 60%; }
 .gc[data-mode="pin"] .gc__media { inset: 0 -14%; will-change: transform; }
@@ -484,15 +486,16 @@
     --gc-top: 60px;
     --gc-bottom: 68px;
     --gc-gap: 11vw;
-    --gc-intro: 82vw;
+    --gc-intro: 92vw;                            /* il primo pannello aspetta fuori scena, si vede solo il suo numero */
   }
-  .gc__panel--v { --ar: .6; --hf: .92; }
-  .gc__panel--q { --ar: .9; --hf: .64; }
-  .gc__panel--o { --ar: 1.3; --hf: .5; }
-  .gc__panel--w { --ar: 1.7; --hf: .42; }
-  .gc[data-mode="pin"] .gc__box { width: min(calc(var(--gc-h) * var(--hf) * var(--ar)), var(--mw, 80vw)); }
-  .gc__panel--o,
-  .gc__panel--w { --mw: 88vw; }
+  .gc.gc--no-title { --gc-intro: 11vw; }
+  /* un pannello alla volta: tutti a metà altezza, più calmo da leggere */
+  .gc[data-mode="pin"] .gc__panel,
+  .gc[data-mode="pin"] .gc__panel--end { justify-content: center; }
+  .gc__panel--v { --ar: .64; --hf: .9; --mw: 78vw; }
+  .gc__panel--q { --ar: .9; --hf: .7; --mw: 80vw; }
+  .gc__panel--o { --ar: 1.3; --hf: .56; --mw: 88vw; }
+  .gc__panel--w { --ar: 1.7; --hf: .46; --mw: 88vw; }
   .gc[data-mode="pin"] .gc__intro { width: 100vw; padding-right: 22vw; }
   .gc[data-mode="pin"] .gc__title { font-size: clamp(2.6rem, 13.5vw, 4.2rem); }
   .gc__num { font-size: clamp(4rem, 21vw, 6rem); translate: -22% -62%; }

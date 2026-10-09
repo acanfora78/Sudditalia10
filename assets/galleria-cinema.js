@@ -199,8 +199,16 @@
       // si lavora solo quando la sezione è vicina allo schermo
       var io = new IntersectionObserver(function (en) {
         self.visible = en[0].isIntersecting;
-        if (self.visible) { self.dirty = true; self.kick(); } else self.syncVideos();
-      }, { rootMargin: '20% 0px' });
+        if (self.visible) {
+          // le foto fuori dalla pista (a destra, ritagliate) il browser non le caricherebbe in anticipo
+          if (!self._eager) {
+            self._eager = true;
+            Array.prototype.forEach.call(self.track.querySelectorAll('img[loading="lazy"]'), function (img) { img.loading = 'eager'; });
+          }
+          self.dirty = true;
+          self.kick();
+        } else self.syncVideos();
+      }, { rootMargin: '60% 0px' });
       io.observe(this);
       this.cleanup.push(function () { io.disconnect(); });
 
@@ -208,6 +216,7 @@
 
       this.bindDrag();
       this.bindWheel();
+      this.bindSnap();
       this.bindFocus();
       this.bindEditor();
       this.kick();
@@ -221,7 +230,11 @@
       this.headerTop = parseFloat(getComputedStyle(this.pin).top) || 0;
       this.track.style.paddingRight = '';
       var self = this;
-      this.panels.forEach(function (p) { p.left = p.el.offsetLeft; p.w = p.el.offsetWidth; });
+      this.panels.forEach(function (p) {
+        p.left = p.el.offsetLeft;
+        p.w = p.el.offsetWidth;
+        p.open = p.left + p.w <= vw;   // già tutto a schermo all'inizio: niente otturatore
+      });
       var last = this.panels[this.panels.length - 1];
       // senza finale: spazio dopo l'ultimo pannello perché possa arrivare al centro
       if (!this.querySelector('[data-gc-end]')) {
@@ -322,7 +335,7 @@
         if (pn.frame) {
           pn.frame.style.transform = frameT;
           // otturatore: la parte destra resta chiusa finché il pannello non entra davvero
-          var r = clamp((left - vw * 0.42) / (vw * 0.44), 0, 1);
+          var r = pn.open ? 0 : clamp((left - vw * 0.42) / (vw * 0.44), 0, 1);
           r = Math.round(r * r * (3 - 2 * r) * 1000) / 10;
           if (r !== pn.clip) { pn.clip = r; pn.frame.style.clipPath = r > 0 ? 'inset(0 ' + r + '% 0 0)' : ''; }
         }
@@ -441,6 +454,44 @@
       }, true);
       this.on(pin, 'dragstart', function (e) { e.preventDefault(); });
       this.cleanup.push(function () { cancelAnimationFrame(inertia); });
+    }
+
+    /* col dito: quando lo scorrimento si ferma dentro la pista, il pannello più vicino va al centro
+       (come uno scroll-snap, ma sullo scroll della pagina che muove la pista) */
+    bindSnap() {
+      if (!coarse) return;
+      var self = this;
+      var timer = 0;
+      var touching = false;
+      function schedule() {
+        clearTimeout(timer);
+        if (!touching) timer = setTimeout(snap, 170);
+      }
+      function snap() {
+        if (touching || !self.visible || self.dataset.mode !== 'pin') return;
+        var rg = self.range();
+        var y = window.scrollY;
+        if (y <= rg[0] + 2 || y >= rg[1] - 2) return;   // all'inizio e alla fine si esce liberamente
+        var x = ((y - rg[0]) / self.len) * self.dist;
+        var best = 0;
+        var bestD = x;                                   // il titolo d'apertura (x = 0)
+        for (var i = 0; i < self.panels.length; i++) {
+          var p = self.panels[i];
+          var c = clamp(p.left + p.w / 2 - self.vw / 2, 0, self.dist);
+          if (Math.abs(c - x) < bestD) { bestD = Math.abs(c - x); best = c; }
+        }
+        if (self.dist - x < bestD) best = self.dist;    // il finale
+        var ty = Math.round(rg[0] + (best / self.dist) * self.len);
+        if (Math.abs(ty - y) < 3) return;
+        window.scrollTo({ top: ty, behavior: 'smooth' });
+      }
+      function down() { touching = true; clearTimeout(timer); }
+      function up() { touching = false; schedule(); }
+      this.on(window, 'touchstart', down, { passive: true });
+      this.on(window, 'touchend', up, { passive: true });
+      this.on(window, 'touchcancel', up, { passive: true });
+      this.on(window, 'scroll', schedule, { passive: true });
+      this.cleanup.push(function () { clearTimeout(timer); });
     }
 
     /* swipe orizzontale del trackpad: diventa scroll della pagina, solo mentre la pista è bloccata */
