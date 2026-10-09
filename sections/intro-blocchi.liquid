@@ -71,14 +71,14 @@
       </div>
     {%- endif -%}
     <script>
-      // già visto in questa visita, o "riduci movimento": niente ingresso
-      try {
-        if (sessionStorage.getItem('sud-cine') || matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          document.currentScript.previousElementSibling.remove();
-        } else {
-          document.documentElement.classList.add('cine-on');
-        }
-      } catch (e) { document.currentScript.previousElementSibling.remove(); }
+      // "riduci movimento", o già visto in questa visita (se si mostra una volta per visita): niente ingresso.
+      // Se il browser non lascia leggere la memoria della sessione, l'ingresso si mostra.
+      (function (cine, onlyOnce) {
+        var seen = false;
+        try { seen = onlyOnce && !!sessionStorage.getItem('sud-cine'); } catch (e) {}
+        if (seen || matchMedia('(prefers-reduced-motion: reduce)').matches) cine.remove();
+        else document.documentElement.classList.add('cine-on');
+      })(document.currentScript.previousElementSibling, {{ section.settings.cinema_once | json }});
     </script>
   {%- endif -%}
 
@@ -175,6 +175,13 @@
       "id": "cinema",
       "label": "Ingresso da film",
       "info": "Schermo nero, la scritta entra lettera per lettera, poi le barre si aprono sulla foto. Si vede una volta per visita.",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "cinema_once",
+      "label": "Mostra l'ingresso una volta per visita",
+      "info": "Se tolto, l'ingresso si vede ogni volta che si apre la home.",
       "default": true
     },
     {

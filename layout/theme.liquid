@@ -64,7 +64,8 @@
     {{ 'sezioni.css' | asset_url | stylesheet_tag }}
 
     <script>
-      document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
+      document.documentElement.classList.remove('no-js');
+      document.documentElement.classList.add('js');
       try {
         if (sessionStorage.getItem('sud-curtain') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
           document.documentElement.classList.add('curtain-in');

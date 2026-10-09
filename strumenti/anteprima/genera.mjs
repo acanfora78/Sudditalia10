@@ -310,15 +310,16 @@ function template(nome) {
     const handles = collezioni[HERO_COLLEZIONE].products.map((p) => p.handle);
     hero.blocks = Object.fromEntries(handles.map((h, i) => [`look${i}`, { type: 'look', settings: { product: h } }]));
     hero.block_order = handles.map((_, i) => `look${i}`);
+    if (t.sections.intro) t.sections.intro.settings = { ...t.sections.intro.settings, cinema_once: false };
     hero.settings = { ...hero.settings, title: collezioni[HERO_COLLEZIONE].title,
       subtitle: collezioni[HERO_COLLEZIONE].description.replace(/<[^>]+>/g, '') };
   }
   return t;
 }
 
-const AVVISO = `<div class="anteprima-avviso" role="note">Anteprima del tema · prodotti e prezzi presi da sudditalia.it · carrello e ricerca disattivati</div>
+const AVVISO = `<div class="anteprima-avviso" role="note">Anteprima del tema · prodotti e prezzi presi da sudditalia.it · carrello e ricerca disattivati<a class="anteprima-rivedi" href="index.html" data-no-curtain>↻ Rivedi l'intro</a></div>
 <style>.anteprima-avviso{background:var(--color-text);color:var(--color-bg);font:500 12px/1.4 var(--font-body-family);
-padding:6px 16px;text-align:center}</style>`;
+padding:6px 16px;text-align:center}.anteprima-rivedi{margin-left:14px;text-decoration:underline;text-underline-offset:3px;font-weight:700}</style>`;
 
 async function pagina(file, nomeTemplate, extra, titolo) {
   const t = template(nomeTemplate);
