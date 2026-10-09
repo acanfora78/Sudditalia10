@@ -529,7 +529,21 @@
     height: 100%;
     transition: transform 1s cubic-bezier(.77, 0, .18, 1), clip-path 1s cubic-bezier(.77, 0, .18, 1);
   }
-  .cl__panels.is-acc .cl__media { transition: transform 1s cubic-bezier(.77, 0, .18, 1); }
+  /* i pannelli chiusi sono un poco più vicini e più bui; quello che si apre arretra e si accende */
+  .cl__panels.is-acc .cl__media {
+    transform: translate3d(var(--shift, 0px), 0, 0) scale(1.08);
+    transition: transform 1.1s cubic-bezier(.77, 0, .18, 1);
+  }
+  .cl__panels.is-acc .is-open .cl__media { transform: translate3d(var(--shift, 0px), 0, 0); }
+  .cl__shade::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-bg);
+    opacity: 0;
+    transition: opacity .9s ease;
+  }
+  .cl__panels.is-acc .cl__item:not(.is-open) .cl__shade::after { opacity: .3; }
   .cl__panels.is-acc .cl__title {
     transform: translate3d(.92em, 0, 0) rotate(-90deg);
     transition: transform 1s cubic-bezier(.77, 0, .18, 1);
@@ -545,7 +559,8 @@
   .cl__panels.is-setting .cl__item,
   .cl__panels.is-setting .cl__media,
   .cl__panels.is-setting .cl__title,
-  .cl__panels.is-setting .cl__cta { transition: none !important; }
+  .cl__panels.is-setting .cl__cta,
+  .cl__panels.is-setting .cl__shade::after { transition: none !important; }
 }
 
 /* entrata dei pannelli: salgono dal basso uno dopo l'altro */
