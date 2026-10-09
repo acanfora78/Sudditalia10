@@ -125,17 +125,22 @@
   /* ------------------------------------------------------------------
      Scheda prodotto
      ------------------------------------------------------------------ */
-  function card(el) {
-    if (el._g) return;
-    el._g = true;
-    var media = el.querySelector('.card__media');
-    if (cardIO && belowFold(el)) {
-      el.classList.add('g-pre');
-      // effetti.js scopre le foto già presenti all'apertura; per quelle arrivate dopo lo fa .g-m
-      if (media && !media.classList.contains('rv-m')) media.classList.add('g-m');
-      cardIO.observe(el);
-    }
-    if (!reduce && media && finePointer.matches) tilt(el, media);
+  function cards(root) {
+    var list = Array.prototype.filter.call(root.querySelectorAll('.g-card'), function (el) { return !el._g; });
+    if (!list.length) return;
+    // prima tutte le misure, poi tutte le modifiche: niente ricalcoli a catena
+    var below = cardIO ? list.map(belowFold) : [];
+    list.forEach(function (el, i) {
+      el._g = true;
+      var media = el.querySelector('.card__media');
+      if (below[i]) {
+        el.classList.add('g-pre');
+        // effetti.js scopre le foto già presenti all'apertura; per quelle arrivate dopo lo fa .g-m
+        if (media && !media.classList.contains('rv-m')) media.classList.add('g-m');
+        cardIO.observe(el);
+      }
+      if (!reduce && media && finePointer.matches) tilt(el, media);
+    });
   }
 
   function tilt(el, media) {
@@ -538,7 +543,7 @@
 
   function scan(root) {
     root = root || document;
-    each(root, '.g-card', card);
+    cards(root);
     each(root, '[data-g-in]', enter);
     each(root, '[data-g-drift]', drift);
     each(root, '[data-g-lift]', lift);

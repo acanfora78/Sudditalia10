@@ -52,14 +52,25 @@
         {%- for block in section.blocks -%}
           {%- liquid
             assign collection = block.settings.collection
-            assign image = block.settings.image | default: collection.featured_image | default: collection.products.first.featured_media.preview_image
+            assign image = block.settings.image | default: collection.featured_image
+            assign product_shot = false
+            if image == blank and collection != blank
+              assign image = collection.products.first.featured_media.preview_image
+              if image != blank
+                assign product_shot = true
+              endif
+            endif
             assign tile_title = block.settings.title | default: collection.title | default: block.settings.placeholder
+            assign img_class = 'cl__img'
+            if product_shot
+              assign img_class = 'cl__img cl__img--product'
+            endif
           -%}
           <li class="cl__item" {{ block.shopify_attributes }}>
             <a class="cl__panel" href="{{ collection.url | default: routes.collections_url }}">
               <div class="cl__media">
                 {%- if image != blank -%}
-                  {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 94vw, (max-width: 989px) 54vw, 52vw', widths: '400, 600, 800, 1000, 1200, 1500, 1800', class: 'cl__img', alt: '' %}
+                  {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 94vw, (max-width: 989px) 54vw, 52vw', widths: '400, 600, 800, 1000, 1200, 1500, 1800', class: img_class, alt: '' %}
                 {%- else -%}
                   {{ 'collection-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
                 {%- endif -%}

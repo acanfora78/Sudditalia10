@@ -19,7 +19,7 @@
 .g-head__title {
   margin: 0;
   min-width: 0;
-  font-size: clamp(2.6rem, 9.4vw, 9.5rem);
+  font-size: clamp(2.8rem, 11.5vw, 9rem);
   line-height: .86;
   letter-spacing: -.035em;
   overflow-wrap: anywhere;
@@ -440,6 +440,8 @@
   will-change: transform;
 }
 .cl__media .placeholder-svg { color: var(--color-stage-text); }
+/* foto prodotto su bianco (collezione senza immagine): il capo intero, posato sul set */
+.cl__img.cl__img--product { top: 9%; left: 6%; width: 88%; height: 66%; object-fit: contain; }
 .cl__shade {
   position: absolute;
   inset: 0;
