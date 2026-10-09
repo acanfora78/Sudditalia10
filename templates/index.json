@@ -4,7 +4,9 @@
       "type": "intro-blocchi",
       "settings": {
         "image": "shopify://shop_images/apertura.jpg",
-        "focus": "50% 30%"
+        "focus": "50% 30%",
+        "video": "shopify://files/videos/apertura-computer.mp4",
+        "video_mobile": "shopify://files/videos/apertura-telefono.mp4"
       }
     },
     "hero": {
@@ -41,11 +43,19 @@
           "settings": {
             "image": "shopify://shop_images/instagram-4.jpg"
           }
+        },
+        "video1": {
+          "type": "post",
+          "settings": {
+            "video": "shopify://files/videos/apertura-telefono.mp4",
+            "image": "shopify://shop_images/instagram-2.jpg"
+          }
         }
       },
       "block_order": [
         "post1",
         "post2",
+        "video1",
         "post3",
         "post4"
       ],

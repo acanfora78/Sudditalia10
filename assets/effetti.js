@@ -1,6 +1,8 @@
 /*
   Effetti del tema Sudditalia (senza librerie):
-    <intro-blocchi>      apertura a blocchi: la foto si compone a rettangoli e, scorrendo, si separa e sparisce
+    <intro-blocchi>      apertura a blocchi, con ingresso da film: la foto si compone a rettangoli e,
+                         scorrendo, si separa e sparisce
+    scorrimento morbido  inerzia con mouse e trackpad (Impostazioni tema → Movimento)
     [data-pixel-reveal]  passaggio "a pixel": quando la sezione entra nello schermo, una griglia di
                          quadratini del colore di fondo si scioglie in ordine casuale e la scopre
     <product-stage>      foto centrale della pagina prodotto: foto stesa -> modello che indossa il capo
@@ -29,7 +31,17 @@
           t.style.setProperty('--dy', side === 2 ? dist : side === 3 ? '-' + dist : '0%');
           t.style.setProperty('--delay', (rand(0, 0.55) + (i % 2) * 0.08).toFixed(2) + 's');
         });
-        requestAnimationFrame(function () { requestAnimationFrame(function () { self.classList.add('is-in'); }); });
+        // due video (computer / telefono): si tiene solo quello adatto, l'altro non si scarica
+        var vids = this.querySelectorAll('[data-ib-video]');
+        if (vids.length > 1) {
+          var keep = window.matchMedia('(max-width: 749px)').matches ? 'mobile' : 'desktop';
+          vids.forEach(function (v) { if (v.dataset.ibVideo !== keep) v.remove(); });
+        }
+        if (reduce) this.querySelectorAll('.ib__video video').forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); });
+
+        var cine = this.querySelector('[data-cine]');
+        if (cine) this.playCine(cine);
+        else requestAnimationFrame(function () { requestAnimationFrame(function () { self.classList.add('is-in'); }); });
         if (reduce) return;
 
         this._onScroll = function () {
@@ -44,6 +56,36 @@
         window.addEventListener('scroll', this._onScroll, { passive: true });
         window.addEventListener('resize', this._onScroll);
         this._onScroll();
+      }
+      // ingresso da film: i tempi vengono da sezioni.css (lettere, poi barre che si aprono)
+      playCine(cine) {
+        var self = this;
+        var n = parseInt(cine.style.getPropertyValue('--n'), 10) || 10;
+        var open = 0.3 + n * 0.055 + 0.9 + 0.35;               // secondi, come --t-open
+        var zoom = this.querySelector('.ib__zoom');
+        if (zoom) zoom.style.setProperty('--kb-delay', open + 's');
+        var timers = [];
+        var done = false;
+        // i rettangoli compongono la foto mentre le barre si aprono
+        timers.push(setTimeout(function () { self.classList.add('is-in'); }, (open + 0.15) * 1000));
+        function finish() {
+          if (done) return;
+          done = true;
+          timers.forEach(clearTimeout);
+          self.classList.add('is-in');
+          document.documentElement.classList.remove('cine-on');
+          try { sessionStorage.setItem('sud-cine', '1'); } catch (e) {}
+          cine.remove();
+          ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { window.removeEventListener(t, skip); });
+        }
+        function skip() {
+          if (done) return;
+          cine.classList.add('is-skip');
+          if (zoom) zoom.style.setProperty('--kb-delay', '0s');
+          setTimeout(finish, 450);
+        }
+        timers.push(setTimeout(finish, (open + 1.25) * 1000));
+        ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) { window.addEventListener(t, skip, { passive: true }); });
       }
       disconnectedCallback() {
         window.removeEventListener('scroll', this._onScroll);
@@ -151,6 +193,58 @@
     });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pixelReveal);
-  else pixelReveal();
+  /* ------------------------------------------------------------------
+     Scorrimento morbido (mouse e trackpad; sul telefono resta quello normale)
+     Solo i gesti verticali: quelli orizzontali restano alla hero e alle strisce.
+     ------------------------------------------------------------------ */
+  function smoothScroll() {
+    if (reduce || document.body.dataset.smoothScroll !== 'true') return;
+    if (window.matchMedia('(pointer: coarse)').matches) return;
+    var target = window.scrollY;
+    var current = target;
+    var running = false;
+    var EASE = 0.1;
+
+    function limit() { return document.documentElement.scrollHeight - window.innerHeight; }
+    function scrollsInside(el) {
+      for (; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        if (el.hasAttribute && el.hasAttribute('data-native-scroll')) return true;
+        var oy = getComputedStyle(el).overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1) return true;
+      }
+      return false;
+    }
+    function tick() {
+      current += (target - current) * EASE;
+      if (Math.abs(target - current) < 0.5) { current = target; running = false; }
+      window.scrollTo({ top: current, behavior: 'instant' });
+      if (running) requestAnimationFrame(tick);
+    }
+    window.addEventListener('wheel', function (e) {
+      if (e.defaultPrevented || e.ctrlKey) return;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      if (document.documentElement.classList.contains('cine-on')) return;
+      if (scrollsInside(e.target)) return;
+      e.preventDefault();
+      var d = e.deltaY * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? window.innerHeight : 1);
+      if (!running) target = current = window.scrollY;
+      target = clamp(target + d, 0, limit());
+      if (!running) { running = true; requestAnimationFrame(tick); }
+    }, { passive: false });
+    // tastiera, barra di scorrimento, link interni: si riparte da dove è la pagina
+    window.addEventListener('scroll', function () { if (!running) target = current = window.scrollY; }, { passive: true });
+  }
+
+  /* altezza dell'header fisso, per le sezioni che devono stare sotto (apertura) */
+  function headerHeight() {
+    var h = document.querySelector('.section-header');
+    if (!h) return;
+    var set = function () { document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px'); };
+    set();
+    window.addEventListener('resize', set);
+  }
+
+  function init() { headerHeight(); pixelReveal(); smoothScroll(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

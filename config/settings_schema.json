@@ -123,6 +123,42 @@
     ]
   },
   {
+    "name": "Movimento",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Effetti cinematografici. Chi ha attivato \"riduci movimento\" sul dispositivo li vede sempre spenti."
+      },
+      {
+        "type": "checkbox",
+        "id": "smooth_scroll",
+        "label": "Scorrimento morbido",
+        "info": "Con mouse e trackpad la pagina scorre con inerzia. Sul telefono resta lo scorrimento normale.",
+        "default": true
+      },
+      {
+        "type": "select",
+        "id": "film_grain",
+        "label": "Grana della pellicola",
+        "options": [
+          {
+            "value": "none",
+            "label": "Spenta"
+          },
+          {
+            "value": "intro",
+            "label": "Solo sull'apertura"
+          },
+          {
+            "value": "all",
+            "label": "Su tutto il sito"
+          }
+        ],
+        "default": "intro"
+      }
+    ]
+  },
+  {
     "name": "Schede prodotto",
     "settings": [
       {

@@ -1,49 +1,116 @@
 {%- comment -%}
-  Apertura a blocchi.
-  Una foto a tutto schermo che si compone a rettangoli quando si apre la pagina.
-  Scorrendo, i rettangoli si separano (si vedono le linee della griglia) e la foto si
-  rimpicciolisce e sparisce, lasciando il posto alla sezione successiva.
-  L'effetto è in assets/effetti.js (elemento <intro-blocchi>).
+  Apertura a blocchi, con ingresso da film.
+
+  Ingresso da film (facoltativo, una volta per visita):
+    schermo nero, la scritta entra lettera per lettera, poi due barre nere si aprono come un
+    sipario sulla foto (o sul video). Un clic, un tasto o lo scroll lo saltano.
+  Poi:
+    con la foto, i rettangoli entrano da lati diversi e compongono l'immagine;
+    con il video, i rettangoli neri si spostano e lo scoprono.
+    Mentre la foto resta, zoom lento (come una ripresa) e barre cinema sopra e sotto.
+  Scorrendo:
+    le barre spariscono, la foto si divide in griglia, si rimpicciolisce e sparisce.
+  Effetti in assets/effetti.js (<intro-blocchi>), stili in assets/sezioni.css.
 {%- endcomment -%}
 {%- liquid
   assign image = section.settings.image
   assign image_mobile = section.settings.image_mobile | default: image
+  assign video = section.settings.video
+  assign video_mobile = section.settings.video_mobile
+  if video == blank and video_mobile != blank
+    assign video = video_mobile
+  endif
   assign cols = section.settings.cols
   assign rows = section.settings.rows
   assign last_col = cols | minus: 1
   assign last_row = rows | minus: 1
+  assign cine_text = section.settings.cinema_text | default: shop.name
+  assign letters = cine_text | upcase | split: ''
+  assign grain = false
+  if settings.film_grain == 'intro'
+    assign grain = true
+  endif
 -%}
 
 <intro-blocchi
-  class="ib"
+  class="ib{% if video != blank %} ib--video{% endif %}{% if section.settings.letterbox %} ib--letterbox{% endif %}"
   style="--ib-cols: {{ cols }}; --ib-rows: {{ rows }}; --ib-scroll: {{ section.settings.scroll_height }}vh; --ib-pos: {{ section.settings.focus }};"
 >
+  {%- if section.settings.cinema -%}
+    <div class="cine" data-cine aria-hidden="true" style="--n: {{ letters.size }};">
+      <div class="cine__bar cine__bar--top"></div>
+      <div class="cine__bar cine__bar--bottom"></div>
+      <p class="cine__title">
+        {%- for ch in letters -%}
+          <span style="--i: {{ forloop.index0 }};">{% if ch == ' ' %}&nbsp;{% else %}{{ ch }}{% endif %}</span>
+        {%- endfor -%}
+      </p>
+      <div class="grain"></div>
+    </div>
+    <script>
+      // già visto in questa visita, o "riduci movimento": niente ingresso
+      try {
+        if (sessionStorage.getItem('sud-cine') || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          document.currentScript.previousElementSibling.remove();
+        } else {
+          document.documentElement.classList.add('cine-on');
+        }
+      } catch (e) { document.currentScript.previousElementSibling.remove(); }
+    </script>
+  {%- endif -%}
+
   <div class="ib__sticky">
     <div class="ib__frame" data-ib-frame>
-      {%- for r in (0..last_row) -%}
-        {%- for c in (0..last_col) -%}
-          <div class="ib__tile" style="--c: {{ c }}; --r: {{ r }};" aria-hidden="{% if forloop.parentloop.first and forloop.first %}false{% else %}true{% endif %}">
-            {%- if image != blank -%}
-              <picture>
-                <source media="(max-width: 749px)" srcset="{{ image_mobile | image_url: width: 900 }}">
-                <img
-                  src="{{ image | image_url: width: 1800 }}"
-                  srcset="{{ image | image_url: width: 900 }} 900w, {{ image | image_url: width: 1400 }} 1400w, {{ image | image_url: width: 1800 }} 1800w, {{ image | image_url: width: 2400 }} 2400w"
-                  sizes="100vw"
-                  width="{{ image.width }}"
-                  height="{{ image.height }}"
-                  alt="{% if forloop.parentloop.first and forloop.first %}{{ image.alt | escape }}{% endif %}"
-                  {% if forloop.parentloop.first and forloop.first %}fetchpriority="high"{% endif %}
-                  loading="eager"
-                  decoding="async"
-                >
-              </picture>
-            {%- else -%}
-              {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
-            {%- endif -%}
+      <div class="ib__zoom">
+        {%- if video != blank -%}
+          {%- comment -%} due video: lo script tiene solo quello adatto allo schermo {%- endcomment -%}
+          <div class="ib__video{% if video_mobile != blank and video_mobile != video %} ib__video--desktop{% endif %}" data-ib-video="desktop">
+            {{ video | video_tag: autoplay: true, loop: true, muted: true, playsinline: true, controls: false, preload: 'metadata', image_size: '1800x' }}
           </div>
+          {%- if video_mobile != blank and video_mobile != video -%}
+            <div class="ib__video ib__video--mobile" data-ib-video="mobile">
+              {{ video_mobile | video_tag: autoplay: true, loop: true, muted: true, playsinline: true, controls: false, preload: 'metadata', image_size: '900x' }}
+            </div>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- for r in (0..last_row) -%}
+          {%- for c in (0..last_col) -%}
+            {%- liquid
+              assign first_tile = false
+              if forloop.parentloop.first and forloop.first
+                assign first_tile = true
+              endif
+            -%}
+            <div class="ib__tile" style="--c: {{ c }}; --r: {{ r }};" aria-hidden="{% if first_tile and video == blank %}false{% else %}true{% endif %}">
+              {%- if video == blank -%}
+                {%- if image != blank -%}
+                  <picture>
+                    <source media="(max-width: 749px)" srcset="{{ image_mobile | image_url: width: 900 }}">
+                    <img
+                      src="{{ image | image_url: width: 1800 }}"
+                      srcset="{{ image | image_url: width: 900 }} 900w, {{ image | image_url: width: 1400 }} 1400w, {{ image | image_url: width: 1800 }} 1800w, {{ image | image_url: width: 2400 }} 2400w"
+                      sizes="100vw"
+                      width="{{ image.width }}"
+                      height="{{ image.height }}"
+                      alt="{% if first_tile %}{{ image.alt | escape }}{% endif %}"
+                      {% if first_tile %}fetchpriority="high"{% endif %}
+                      loading="eager"
+                      decoding="async"
+                    >
+                  </picture>
+                {%- else -%}
+                  {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                {%- endif -%}
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
         {%- endfor -%}
-      {%- endfor -%}
+      </div>
+
+      {%- if video != blank -%}
+        <div class="ib__grid" aria-hidden="true"></div>
+      {%- endif -%}
 
       {%- if section.settings.title != blank or section.settings.subtitle != blank -%}
         <div class="ib__text">
@@ -59,6 +126,14 @@
         </div>
       {%- endif -%}
     </div>
+
+    {%- if section.settings.letterbox -%}
+      <div class="ib__bar ib__bar--top" aria-hidden="true"></div>
+      <div class="ib__bar ib__bar--bottom" aria-hidden="true"></div>
+    {%- endif -%}
+    {%- if grain -%}
+      <div class="grain" aria-hidden="true"></div>
+    {%- endif -%}
   </div>
 </intro-blocchi>
 
@@ -69,10 +144,50 @@
   "class": "section-intro-blocchi",
   "settings": [
     {
+      "type": "header",
+      "content": "Ingresso da film"
+    },
+    {
+      "type": "checkbox",
+      "id": "cinema",
+      "label": "Ingresso da film",
+      "info": "Schermo nero, la scritta entra lettera per lettera, poi le barre si aprono sulla foto. Si vede una volta per visita.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "cinema_text",
+      "label": "Scritta dell'ingresso",
+      "info": "Se vuota usa il nome del negozio."
+    },
+    {
+      "type": "checkbox",
+      "id": "letterbox",
+      "label": "Barre cinema sopra e sotto la foto",
+      "info": "Spariscono quando si inizia a scorrere.",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Foto o video"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Video",
+      "info": "Se c'è, si vede al posto della foto: senza audio, in loop. Meglio orizzontale, breve (10–20 s)."
+    },
+    {
+      "type": "video",
+      "id": "video_mobile",
+      "label": "Video per telefono (facoltativo)",
+      "info": "Verticale. Se vuoto, anche sul telefono si usa il video principale."
+    },
+    {
       "type": "image_picker",
       "id": "image",
       "label": "Foto",
-      "info": "Una foto d'atmosfera, almeno 2000 px di lato."
+      "info": "Una foto d'atmosfera, almeno 2000 px di lato. Con il video fa da copertina finché il video carica."
     },
     {
       "type": "image_picker",

@@ -71,6 +71,23 @@ function immagineSezione(valore) {
   return { src: nome, width: w, height: h, alt: '', aspect_ratio: w / h };
 }
 
+// video delle sezioni: "shopify://files/videos/<nome>" -> foto/video/<nome> (+ <nome>.jpg come copertina)
+function videoSezione(valore) {
+  const m = /^shopify:\/\/files\/videos\/(.+)$/.exec(valore || '');
+  if (!m) return null;
+  const sorgente = path.join(TEMA, 'foto', 'video', m[1]);
+  if (!fs.existsSync(sorgente)) return null;
+  fs.mkdirSync(path.join(OUT, 'video'), { recursive: true });
+  fs.copyFileSync(sorgente, path.join(OUT, 'video', m[1]));
+  const copertina = m[1].replace(/\.[^.]+$/, '.jpg');
+  let poster = null;
+  if (fs.existsSync(path.join(TEMA, 'foto', 'video', copertina))) {
+    fs.copyFileSync(path.join(TEMA, 'foto', 'video', copertina), path.join(OUT, 'video', copertina));
+    poster = `video/${copertina}`;
+  }
+  return { media_type: 'video', src: `video/${m[1]}`, preview_image: poster ? { src: poster } : null };
+}
+
 const prodotti = {};
 for (const p of Object.values(DATI.products)) {
   const media = p.images.map((im, i) => ({ id: p.id * 100 + i, media_type: 'image', alt: p.title, preview_image: img(im, p.title) }));
@@ -222,7 +239,13 @@ engine.registerFilter('font_modify', (f, prop, val) => ({ ...f, weight: val === 
 engine.registerFilter('font_url', () => '');
 engine.registerFilter('placeholder_svg_tag', (_, cls = '') =>
   `<svg class="${cls}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="100" fill="currentColor" opacity=".08"/></svg>`);
-for (const f of ['payment_type_svg_tag', 'payment_button', 'structured_data', 'default_errors', 'video_tag', 'external_video_tag', 'model_viewer_tag'])
+engine.registerFilter('video_tag', (v, ...a) => {
+  if (!v || !v.src) return '';
+  const o = kw(a);
+  const flag = (k) => (o[k] ? ` ${k}` : '');
+  return `<video src="${v.src}"${v.preview_image ? ` poster="${v.preview_image.src}"` : ''}${flag('autoplay')}${flag('loop')}${o.muted ? ' muted' : ''}${o.playsinline ? ' playsinline' : ''}${o.controls ? ' controls' : ''} preload="${o.preload || 'metadata'}"></video>`;
+});
+for (const f of ['payment_type_svg_tag', 'payment_button', 'structured_data', 'default_errors', 'external_video_tag', 'model_viewer_tag'])
   engine.registerFilter(f, () => '');
 engine.registerFilter('time_tag', (d, fmt) => `<time>${new Date(d).toLocaleDateString('it-IT')}</time>`);
 engine.registerFilter('handle', (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
@@ -247,7 +270,8 @@ function risolvi(def, valore) {
     case 'product': return valore ? prodotti[valore] || null : null;
     case 'link_list': return valore ? menus[valore] || { links: [] } : null;
     case 'image_picker': return immagineSezione(valore);
-    case 'page': case 'video': return null;
+    case 'video': return videoSezione(valore);
+    case 'page': return null;
     default: return valore ?? null;
   }
 }

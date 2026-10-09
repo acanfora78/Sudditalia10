@@ -92,6 +92,11 @@ Prompt usato per generare il modello vestito (con allegate foto modello + foto p
 - Effetti in `assets/effetti.js`, stili in `assets/sezioni.css`. Con "riduci movimento" sono spenti.
 - Foto delle sezioni in `foto/sezioni/`: su Shopify vanno caricate in Contenuti → File con lo stesso
   nome (`apertura.jpg`, `instagram-1.jpg` … `instagram-4.jpg`), così la home le trova da sola.
+- **Ingresso da film** (nell'apertura): schermo nero, la scritta entra lettera per lettera, poi le
+  barre si aprono come un sipario. Una volta per visita; un clic o un tasto lo saltano.
+- **Video nell'apertura**: `foto/video/apertura-computer.mp4` (computer) e `apertura-telefono.mp4`
+  (telefono, verticale). Su Shopify si caricano in Contenuti → File con lo stesso nome.
+- **Impostazioni tema → Movimento**: scorrimento morbido (mouse e trackpad) e grana della pellicola.
 - Da fare: la **finestra che si apre** (servono 2 foto: un dettaglio e una foto intera).
 
 ## Anteprima senza Shopify (`strumenti/anteprima/`)

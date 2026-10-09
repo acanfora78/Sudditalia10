@@ -18,6 +18,8 @@
     "card_fit": "contain",
     "card_second_image": true,
     "social_instagram": "https://www.instagram.com/sudditalia.clothing",
-    "social_tiktok": "https://www.tiktok.com/@sudditalia.clothing"
+    "social_tiktok": "https://www.tiktok.com/@sudditalia.clothing",
+    "smooth_scroll": true,
+    "film_grain": "intro"
   }
 }

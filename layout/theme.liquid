@@ -84,7 +84,7 @@
     {{ content_for_header }}
   </head>
 
-  <body class="template-{{ request.page_type | handle }}">
+  <body class="template-{{ request.page_type | handle }}" data-smooth-scroll="{{ settings.smooth_scroll }}" data-grain="{{ settings.film_grain }}">
     <a class="skip-link" href="#MainContent">{{ 'general.accessibility.skip_to_content' | t }}</a>
 
     {% sections 'header-group' %}
