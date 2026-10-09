@@ -40,7 +40,7 @@ restano in trasparenza ai lati. Bottone Fronte / Retro per vedere il modello di 
   `assets/modello-fronte.webp` (ritaglio dalla testa a metà coscia).
 - Primo capo fatto: felpa zip nera con la S gotica sul petto e la stella sulla manica
   → `capo-fronte-felpa-zip-S.png`. Corrisponde alla **Diamond Hoodie** (`diamond-hoodie`), che non è
-  tra le 4 felpe collegate ora alla hero: va aggiunta come blocco "Capo".
+  tra le 4 felpe collegate prima alla hero: ora è il primo blocco "Capo" in `templates/index.json`.
 
 ## Cartella `foto/` (materiale per generare i capi indossati)
 - `modello-fronte-base.png`: modello frontale intero, 1024 × 1536, sfondo grigio chiaro #E9EAEC uniforme.
@@ -48,6 +48,20 @@ restano in trasparenza ai lati. Bottone Fronte / Retro per vedere il modello di 
   "finta" disegnata nei pixel (non vera trasparenza), che l'AI avrebbe copiato nel risultato.
 - `modello-fronte-trasparente.png`: stessa foto con vera trasparenza (PNG con canale alfa).
 - `prodotto-diamond-hoodie-fronte.webp`: foto prodotto della Diamond Hoodie, fronte.
+- `vestito-diamond-hoodie-fronte.webp`: modello che indossa la Diamond Hoodie (generata con AI).
+- `capo-fronte-diamond-hoodie.png`: **file doppio pronto** (1248 × 980) da caricare nel metafield
+  `custom.capo_fronte` della Diamond Hoodie. `anteprima-diamond-hoodie-fronte.png` mostra il controllo.
+
+## `strumenti/prepara_capo.py`
+Crea il file doppio partendo dalla foto vestita (1024 × 1536, stessa posa della base):
+```
+pip install "rembg[cpu]" opencv-python-headless pillow numpy
+python strumenti/prepara_capo.py foto/vestito-XXX.png -o foto/capo-fronte-XXX.png -p anteprima.png
+```
+Scontorna la foto, toglie testa e pantaloni (tiene capo, mani e polsini) e ritaglia sulla tela di
+`assets/modello-fronte.webp`. Le righe di taglio `--testa` e `--orlo` sono stimate in automatico e
+stampate: se l'anteprima non va bene, correggile a mano. Al primo avvio scarica il modello di
+scontorno (circa 1 GB).
 
 Prompt usato per generare il modello vestito (con allegate foto modello + foto prodotto):
 > Usa la prima immagine come base: stessa persona, stessa posa, stessa inquadratura, stessa luce,

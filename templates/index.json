@@ -3,6 +3,12 @@
     "hero": {
       "type": "hero-outfit-slider",
       "blocks": {
+        "look0": {
+          "type": "look",
+          "settings": {
+            "product": "diamond-hoodie"
+          }
+        },
         "look1": {
           "type": "look",
           "settings": {
@@ -29,6 +35,7 @@
         }
       },
       "block_order": [
+        "look0",
         "look1",
         "look2",
         "look3",
