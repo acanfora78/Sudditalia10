@@ -2,18 +2,8 @@
   "sections": {
     "main": {
       "type": "main-product",
-      "blocks": {
-        "shipping": {
-          "type": "accordion",
-          "settings": {
-            "title": "Spedizioni e resi",
-            "text": "<p>Scrivi qui tempi di spedizione e condizioni di reso.</p>"
-          }
-        }
-      },
-      "block_order": [
-        "shipping"
-      ],
+      "blocks": {},
+      "block_order": [],
       "settings": {}
     },
     "related": {

@@ -31,8 +31,15 @@ restano in trasparenza ai lati. Bottone Fronte / Retro per vedere il modello di 
   compare il secondo, cioè la foto vestita vera.
 - Il file va nella scheda prodotto, in metafield di tipo File: `custom.capo_fronte` e
   `custom.capo_retro` (da creare in Impostazioni → Dati personalizzati → Prodotti).
-- La hero prende i capi dai blocchi "Capo" (prodotto scelto a mano) oppure da una collezione
-  (entrano i prodotti che hanno `capo_fronte`).
+- La hero prende i capi dalla collezione **`hoodies`** dello store ("Zip Hoodie & Hoodie"): entrano,
+  nell'ordine della collezione, i prodotti che hanno `capo_fronte`. Titolo e sottotitolo della hero
+  sono il nome e la descrizione della collezione. Nel tema non c'è nessun nome di prodotto scritto a
+  mano: per aggiungere o togliere un capo basta caricare (o togliere) il file nel metafield.
+  I blocchi "Capo" (prodotto scelto a mano) restano disponibili nell'editor, ma non sono usati.
+
+## Nomi dei file
+Un file per prodotto e per vista, con l'handle del prodotto (l'ultima parte dell'URL):
+`capo-fronte-<handle>.png` e `capo-retro-<handle>.png`, per esempio `capo-fronte-diamond-hoodie.png`.
 
 ## Immagini
 - Modello base frontale: uomo, t-shirt nera aderente, pantaloni neri, sneakers bianche, in piedi di
@@ -40,7 +47,7 @@ restano in trasparenza ai lati. Bottone Fronte / Retro per vedere il modello di 
   `assets/modello-fronte.webp` (ritaglio dalla testa a metà coscia).
 - Primo capo fatto: felpa zip nera con la S gotica sul petto e la stella sulla manica
   → `capo-fronte-felpa-zip-S.png`. Corrisponde alla **Diamond Hoodie** (`diamond-hoodie`), che non è
-  tra le 4 felpe collegate prima alla hero: ora è il primo blocco "Capo" in `templates/index.json`.
+  tra le 4 felpe collegate prima alla hero; ora la hero prende i capi dalla collezione `hoodies`.
 
 ## Cartella `foto/` (materiale per generare i capi indossati)
 - `modello-fronte-base.png`: modello frontale intero, 1024 × 1536, sfondo grigio chiaro #E9EAEC uniforme.

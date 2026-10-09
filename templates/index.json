@@ -2,55 +2,17 @@
   "sections": {
     "hero": {
       "type": "hero-outfit-slider",
-      "blocks": {
-        "look0": {
-          "type": "look",
-          "settings": {
-            "product": "diamond-hoodie"
-          }
-        },
-        "look1": {
-          "type": "look",
-          "settings": {
-            "product": "sky-blue-shark-zip-boxy"
-          }
-        },
-        "look2": {
-          "type": "look",
-          "settings": {
-            "product": "yellow-shark-zip-boxy"
-          }
-        },
-        "look3": {
-          "type": "look",
-          "settings": {
-            "product": "pink-shark-zip-boxy"
-          }
-        },
-        "look4": {
-          "type": "look",
-          "settings": {
-            "product": "black-on-black-boxy-zip-hoodie"
-          }
-        }
-      },
-      "block_order": [
-        "look0",
-        "look1",
-        "look2",
-        "look3",
-        "look4"
-      ],
       "settings": {
-        "title": "The Hoodie\nCollection",
-        "subtitle": "Boxy fit, 100% cotone, Made in Italy."
+        "collection": "hoodies",
+        "title": "",
+        "subtitle": ""
       }
     },
     "featured": {
       "type": "featured-collection",
       "settings": {
         "collection": "hoodies",
-        "title": "Hoodie",
+        "title": "",
         "products_to_show": 4,
         "columns": 4
       }
@@ -92,20 +54,11 @@
       "settings": {
         "title": "Collezioni"
       }
-    },
-    "statement": {
-      "type": "rich-text",
-      "settings": {
-        "heading": "Un grattacielo si costruisce un mattone alla volta.",
-        "button_label": "Chi siamo",
-        "button_link": "shopify://pages/about-us"
-      }
     }
   },
   "order": [
     "hero",
     "featured",
-    "collections",
-    "statement"
+    "collections"
   ]
 }

@@ -3,8 +3,9 @@
     <div class="footer__grid">
       <div class="footer__brand">
         <p class="footer__name">{{ shop.name }}</p>
-        {%- if section.settings.tagline != blank -%}
-          <p class="footer__tagline">{{ section.settings.tagline }}</p>
+        {%- assign tagline = section.settings.tagline | default: shop.description -%}
+        {%- if tagline != blank -%}
+          <p class="footer__tagline">{{ tagline | escape }}</p>
         {%- endif -%}
         <ul class="footer__social">
           {%- if settings.social_instagram != blank -%}
@@ -100,7 +101,7 @@
       "type": "text",
       "id": "tagline",
       "label": "Frase sotto il nome",
-      "default": "Streetwear dal Sud. Made in Italy."
+      "info": "Se vuota usa la descrizione del negozio (Impostazioni → Preferenze)."
     },
     {
       "type": "checkbox",
