@@ -74,7 +74,7 @@
               {%- liquid
                 if hero_mode == 'photo'
                   assign img_sizes = '100vw'
-                  assign focal = hero_img.presentation.focal_point | default: '50% 32%'
+                  assign focal = hero_img.presentation.focal_point | default: '50% 25%'
                 else
                   assign img_sizes = '(min-width: 750px) 55vw, 90vw'
                   assign focal = '50% 50%'
@@ -111,7 +111,8 @@
           <p class="ch__eyebrow ch__fade" style="--d: 0s;">{{ section.settings.eyebrow | escape }}</p>
         {%- endif -%}
 
-        {%- assign title_words = collection.title | split: ' ' -%}
+        {%- comment -%} il trattino resta attaccato alla parola prima (spazio non separabile) {%- endcomment -%}
+        {%- assign title_words = collection.title | replace: ' - ', ' - ' | replace: ' – ', ' – ' | replace: ' — ', ' — ' | split: ' ' -%}
         {%- assign li = 0 -%}
         <h1 class="ch__title{{ title_size }}" data-ch-title>
           <span class="visually-hidden">{{ collection.title | escape }}</span>
@@ -180,7 +181,7 @@
               </summary>
               <div class="cf__layer" data-native-scroll>
                 <div class="cf__scrim" data-cf-close aria-hidden="true"></div>
-                <div class="cf__panel" role="dialog" aria-labelledby="CollFiltersTitle-{{ section.id }}">
+                <div class="cf__panel" role="dialog" aria-modal="true" aria-labelledby="CollFiltersTitle-{{ section.id }}">
                   <div class="cf__head">
                     <p class="cf__title" id="CollFiltersTitle-{{ section.id }}">{{ 'products.facets.filter' | t }}</p>
                     <button type="button" class="cf__close" data-cf-close aria-label="{{ section.settings.close_label | escape }}">{% render 'icon', name: 'close' %}</button>

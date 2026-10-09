@@ -70,10 +70,17 @@
 
 /* set chiaro: il primo capo della collezione quando manca la foto */
 .ch--stage {
+  margin-top: 0;
+  padding-top: 24px;
   background: var(--color-stage);
   color: var(--color-stage-text);
 }
-.ch--stage .ch__kb { inset: calc(var(--header-h, 64px) + 4%) 6% 40% 6%; }
+/* il bianco della foto si fonde col set: lo sfondo deve stare nello stesso livello dell'immagine */
+.ch--stage .ch__frame,
+.ch--stage .ch__open,
+.ch--stage .ch__kb { background: var(--color-stage); }
+.ch--stage .ch__kb { inset: 4% 6% 42% 6%; }
+.ch--stage .ch__scroll { display: none !important; }
 .ch--stage .ch__img { object-fit: contain; mix-blend-mode: multiply; }
 .ch--stage .ch__shade {
   background: radial-gradient(ellipse 60% 55% at 50% 38%, color-mix(in srgb, #fff 55%, transparent), transparent 70%);
@@ -83,7 +90,10 @@
 .ch--stage .ch__desc { color: color-mix(in srgb, var(--color-stage-text) 78%, transparent); }
 .ch--stage .ch__unit { color: color-mix(in srgb, var(--color-stage-text) 62%, transparent); }
 @media (min-width: 750px) {
-  .ch--stage .ch__kb { inset: calc(var(--header-h, 64px) + 6%) 5% 8% 46%; }
+  .ch--stage .ch__kb { inset: 7% 4% 7% 50%; }
+  .ch--stage .ch__title { font-size: calc(clamp(3rem, 8vw, 9.5rem) * var(--ch-fit)); }
+  .ch--stage .ch__title--l { font-size: calc(clamp(2.6rem, 6vw, 7rem) * var(--ch-fit)); }
+  .ch--stage .ch__title--xl { font-size: calc(clamp(2.2rem, 4.6vw, 5.4rem) * var(--ch-fit)); }
 }
 
 /* testo */
@@ -168,18 +178,19 @@
 }
 .ch__scroll {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: clamp(18px, 3vh, 32px);
   display: none;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin: 0;
+  width: max-content;
+  margin: 0 auto;
   font-size: .66rem;
   font-weight: 700;
   letter-spacing: .3em;
   text-transform: uppercase;
-  transform: translateX(-50%);
 }
 .ch__scroll i {
   position: relative;
@@ -205,7 +216,6 @@
 @media (min-width: 990px) {
   .ch__scroll { display: flex; }
   .ch--stage .ch__content { padding-right: 52%; }
-  .ch--stage .ch__title { text-wrap: wrap; }
 }
 @media (min-width: 750px) and (max-width: 989px) {
   .ch--stage .ch__content { padding-right: 40%; }
@@ -417,7 +427,8 @@
 @media (max-width: 749px) {
   .ctb__inner { gap: 8px; min-height: 60px; padding-block: 8px; }
   .ctb__form { gap: 8px; }
-  .ctb__btn { padding: 0 14px 0 12px; }
+  .ctb__btn { gap: 8px; padding: 0 12px 0 10px; letter-spacing: .1em; }
+  .ctb__badge { min-width: 18px; height: 18px; }
   .ctb__sort label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .ctb__sort select { max-width: 100%; padding: 0 2.2em 0 .9em; font-size: .78rem; background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; }
 }
@@ -449,7 +460,7 @@
   left: 0;
   display: flex;
   flex-direction: column;
-  width: min(460px, 100%);
+  width: min(460px, calc(100% - 44px));
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
   box-shadow: 30px 0 80px -30px color-mix(in srgb, var(--color-bg) 80%, transparent);
@@ -608,7 +619,7 @@ html.cf-lock { overflow: hidden; }
 @media (min-width: 750px) {
   .cg { grid-template-columns: repeat(var(--cols-d, 3), minmax(0, 1fr)); }
 }
-.cg__item { min-width: 0; container-type: inline-size; }
+.cg__item { min-width: 0; }
 .cg__item > .card {
   position: relative;
   transform-origin: 0 0;
@@ -635,13 +646,14 @@ html.cf-lock { overflow: hidden; }
   justify-content: space-between;
   gap: 2px 14px;
   padding-top: 14px;
+  container-type: inline-size;
 }
 .cg .card__title { flex: 1 1 12ch; margin: 0; font-size: .95rem; }
 .cg .price { flex: none; color: var(--color-text); font-size: .9rem; font-variant-numeric: tabular-nums; }
+/* schede strette: il prezzo va sotto il nome (il contenitore è .card__info, i contatori restano liberi) */
 @container (max-width: 300px) {
-  .cg .card__info { flex-direction: column; gap: 4px; }
-  .cg .card__title { flex: none; font-size: .9rem; }
-  .cg .price { color: var(--color-muted); }
+  .cg .card__title { flex: 1 1 100%; font-size: .9rem; }
+  .cg .price { margin-top: 2px; color: var(--color-muted); }
 }
 .cg .card__media img { transition: transform 1.2s var(--ease-out), opacity .4s ease; }
 @media (hover: hover) {

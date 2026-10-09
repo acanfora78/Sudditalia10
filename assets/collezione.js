@@ -94,14 +94,31 @@
   };
 
   // il titolo gigante non deve mai uscire dallo schermo: si rimpicciolisce se la parola più lunga non ci sta
+  // e tutta l'apertura deve stare nell'altezza: se il testo è troppo alto il titolo si riduce ancora
   Collection.prototype.fitTitle = function () {
     var t = this.title;
     if (!t) return;
+    var words = t.querySelectorAll('.ch__w');
     t.style.setProperty('--ch-fit', '1');
+    var fit = 1;
     var box = t.clientWidth;
     var widest = 0;
-    each(t.querySelectorAll('.ch__w'), function (w) { widest = Math.max(widest, w.offsetWidth); });
-    if (box && widest > box) t.style.setProperty('--ch-fit', (box / widest * 0.98).toFixed(3));
+    each(words, function (w) { widest = Math.max(widest, w.offsetWidth); });
+    if (box && widest > box) fit = box / widest * 0.98;
+    var hero = this.hero;
+    var content = this.content;
+    if (hero && content) {
+      for (var k = 0; k < 3; k++) {
+        t.style.setProperty('--ch-fit', fit.toFixed(3));
+        var cs = getComputedStyle(hero);
+        var room = hero.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+        var over = content.offsetHeight - room;
+        if (over <= 1) break;
+        var th = t.offsetHeight;
+        fit *= Math.max(0.5, (th - over) / th);
+      }
+    }
+    t.style.setProperty('--ch-fit', fit.toFixed(3));
   };
 
   Collection.prototype.countUp = function (el, to) {
@@ -279,20 +296,26 @@
 
     var vh = window.innerHeight;
     var barBottom = this.bar ? this.bar.getBoundingClientRect().bottom : 0;
+    // la scheda che si sta guardando: la prima che comincia sotto la barra, altrimenti quella tagliata dalla barra
     var anchor = null;
     var anchorTop = 0;
+    var cut = null;
     for (var i = 0; i < this.items.length; i++) {
       var r = this.items[i].getBoundingClientRect();
-      if (r.bottom > barBottom + 20 && r.top < vh) { anchor = this.items[i]; anchorTop = r.top; break; }
+      if (r.bottom <= barBottom + 40 || r.top >= vh) continue;
+      if (r.top >= barBottom - 4) { anchor = this.items[i]; anchorTop = r.top; break; }
+      if (!cut) cut = this.items[i];
     }
+    var gridTop = this.grid.getBoundingClientRect().top;
+    if (!anchor && cut && gridTop < barBottom) { anchor = cut; anchorTop = barBottom + 24; }
     var first = cards.map(function (c) { return c.getBoundingClientRect(); });
 
     mutate();
 
-    // la scheda che si stava guardando resta allo stesso punto dello schermo
-    if (anchor && anchorTop > barBottom - 1) {
+    // dopo il cambio, quella scheda resta allo stesso punto dello schermo (la pagina sopra non si muove)
+    if (anchor && gridTop < barBottom + 40) {
       var dy = anchor.getBoundingClientRect().top - anchorTop;
-      if (Math.abs(dy) > 1) window.scrollTo({ top: window.scrollY + dy, behavior: 'instant' });
+      if (Math.abs(dy) > 1) window.scrollTo({ top: Math.max(0, window.scrollY + dy), behavior: 'instant' });
     }
     var moved = [];
     cards.forEach(function (c, i) {
@@ -388,7 +411,23 @@
       if (cf.open && closeBtn) closeBtn.focus({ preventScroll: true });
       else if (!cf.open && cf.contains(document.activeElement)) summary.focus({ preventScroll: true });
     });
-    this.on(document, 'keydown', function (e) { if (e.key === 'Escape' && cf.open) close(); });
+    this.on(document, 'keydown', function (e) {
+      if (!cf.open) return;
+      if (e.key === 'Escape') { close(); return; }
+      // il Tab resta dentro il pannello finché è aperto
+      if (e.key !== 'Tab') return;
+      var panel = cf.querySelector('.cf__panel');
+      var list = Array.prototype.filter.call(
+        panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled])'),
+        function (el) { return el.offsetWidth || el.offsetHeight; }
+      );
+      if (!list.length) return;
+      var firstEl = list[0];
+      var lastEl = list[list.length - 1];
+      if (!panel.contains(document.activeElement)) { e.preventDefault(); firstEl.focus(); }
+      else if (e.shiftKey && document.activeElement === firstEl) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); firstEl.focus(); }
+    });
     this.off.push(function () { document.documentElement.classList.remove('cf-lock'); });
 
     // se ci sono due collezioni nella pagina, theme.js gestisce solo il primo form: l'altro lo invia questo script
