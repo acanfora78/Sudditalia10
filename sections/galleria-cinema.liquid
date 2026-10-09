@@ -1,0 +1,430 @@
+{%- comment -%}
+  Galleria cinema: lookbook orizzontale bloccato.
+  La sezione resta ferma sotto l'header mentre, scorrendo in verticale, la pista di pannelli scorre
+  in orizzontale (assets/galleria-cinema.js). Ogni pannello: foto o video a tutta altezza con
+  parallasse interna, numero grande a contorno, didascalia che entra quando arriva al centro.
+  Barra di avanzamento e contatore in basso. Il titolo grande esce di scena all'inizio.
+  Con "riduci movimento" (o schermi molto bassi) i pannelli sono una griglia/striscia normale.
+
+  Ogni pannello può puntare a un prodotto o a una collezione: il titolo di default è il suo nome
+  vero e, se manca la foto, si usa quella del prodotto (sul set chiaro) o della collezione.
+{%- endcomment -%}
+{{ 'galleria-cinema.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'galleria-cinema.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign title = section.settings.title
+  assign panel_count = section.blocks.size
+  assign label_product = section.settings.label_product
+  assign label_collection = section.settings.label_collection
+  assign cta_label = section.settings.cta_label
+  if cta_label == blank
+    assign cta_label = 'general.cursor.explore' | t
+  endif
+  assign view_label = 'general.cursor.view' | t
+  assign drag_label = 'general.cursor.drag' | t
+  assign end_label = section.settings.end_label
+  if end_label == blank
+    assign end_label = 'sections.header.view_all' | t
+  endif
+-%}
+
+<galleria-cinema
+  class="gc{% if title == blank %} gc--no-title{% endif %}{% if section.settings.show_numbers == false %} gc--no-num{% endif %}"
+  style="--gc-n: {{ panel_count }};"
+  data-speed="{{ section.settings.speed | default: 110 }}"
+  data-cursor-drag="{{ drag_label | escape }}"
+  {% if title != blank %}aria-label="{{ title | escape }}"{% endif %}
+>
+  <div class="gc__pin">
+    {%- if title != blank or section.settings.eyebrow != blank -%}
+      <div class="gc__intro" data-gc-intro>
+        <div class="gc__intro-inner">
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="gc__eyebrow" data-gc-fade>
+              {%- render 'icon', name: 'star' -%}
+              <span>{{ section.settings.eyebrow | escape }}</span>
+            </p>
+          {%- endif -%}
+          {%- if title != blank -%}
+            {%- assign words = title | split: ' ' -%}
+            <h2 class="gc__title">
+              {%- for word in words -%}
+                <span class="gc__w"><span class="gc__wi" style="--i: {{ forloop.index0 }};"><span class="gc__wo" data-gc-word>{{ word | escape }}</span></span></span>
+                {%- unless forloop.last %} {% endunless -%}
+              {%- endfor -%}
+            </h2>
+          {%- endif -%}
+          {%- if section.settings.text != blank -%}
+            <p class="gc__hint" data-gc-fade>
+              <span>{{ section.settings.text | escape }}</span>
+              <span class="gc__hint-line" aria-hidden="true"></span>
+            </p>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- comment -%}
+      media del pannello: video > foto del blocco > foto del prodotto (sul set chiaro) > foto della collezione;
+      formato: verticale (v), quadrato (q), orizzontale (o), panoramico (w)
+    {%- endcomment -%}
+    <ul class="gc__track" role="list" data-gc-track>
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign p = block.settings.product
+          assign c = block.settings.collection
+          assign img = block.settings.image
+          assign vid = block.settings.video
+          assign on_set = false
+
+          assign link = ''
+          assign kicker = ''
+          assign name = block.settings.title
+          if p != blank
+            assign link = p.url
+            assign kicker = label_product
+            if name == blank
+              assign name = p.title
+            endif
+          elsif c != blank
+            assign link = c.url
+            assign kicker = label_collection
+            if name == blank
+              assign name = c.title
+            endif
+          endif
+
+          if vid == blank and img == blank
+            if p != blank and p.featured_media != blank
+              assign img = p.featured_media.preview_image
+              assign on_set = true
+            elsif c != blank and c.featured_image != blank
+              assign img = c.featured_image
+            endif
+          endif
+
+          assign shape = block.settings.shape
+          if shape == 'auto' or shape == blank
+            assign ratio = 0.8
+            if vid != blank and vid.aspect_ratio
+              assign ratio = vid.aspect_ratio
+            elsif img != blank and img.aspect_ratio
+              assign ratio = img.aspect_ratio
+            endif
+            if on_set
+              assign shape = 'q'
+            elsif ratio < 0.9
+              assign shape = 'v'
+            elsif ratio < 1.2
+              assign shape = 'q'
+            elsif ratio < 1.9
+              assign shape = 'o'
+            else
+              assign shape = 'w'
+            endif
+          endif
+
+          assign align = block.settings.align
+          if align == 'auto' or align == blank
+            assign mod = forloop.index | modulo: 2
+            if mod == 0
+              assign align = 'end'
+            else
+              assign align = 'start'
+            endif
+          endif
+
+          case shape
+            when 'v'
+              assign sizes = '(max-width: 749px) 110vw, 52vh'
+            when 'q'
+              assign sizes = '(max-width: 749px) 110vw, 66vh'
+            when 'o'
+              assign sizes = '(max-width: 749px) 110vw, 96vh'
+            else
+              assign sizes = '(max-width: 749px) 120vw, 110vh'
+          endcase
+
+          assign num = forloop.index | prepend: '0' | slice: -2, 2
+          if forloop.index > 99
+            assign num = forloop.index
+          endif
+        -%}
+        <li
+          class="gc__panel gc__panel--{{ shape }} gc__panel--{{ align }}{% if on_set %} gc__panel--set{% endif %}{% if vid != blank %} gc__panel--video{% endif %}"
+          data-gc-panel
+          {{ block.shopify_attributes }}
+        >
+          <div class="gc__box">
+            <span class="gc__num" data-gc-num data-n="{{ num }}" aria-hidden="true">{{ num }}</span>
+            {%- if link != blank -%}
+              <a class="gc__frame" href="{{ link }}" data-gc-frame data-cursor="{{ view_label | escape }}">
+            {%- else -%}
+              <div class="gc__frame" data-gc-frame>
+            {%- endif -%}
+                <div class="gc__media" data-gc-media{% if img != blank and img.presentation.focal_point != blank %} style="--focus: {{ img.presentation.focal_point }};"{% endif %}>
+                  {%- if vid != blank -%}
+                    {{ vid | video_tag: autoplay: false, loop: true, muted: true, playsinline: true, controls: false, preload: 'none', image_size: '1200x' }}
+                  {%- elsif img != blank -%}
+                    {%- liquid
+                      assign alt = img.alt | default: name
+                      if on_set
+                        assign alt = p.featured_media.alt | default: p.title
+                      endif
+                    -%}
+                    {% render 'responsive-image', image: img, sizes: sizes, widths: '480, 720, 960, 1280, 1600, 2000', alt: alt %}
+                  {%- else -%}
+                    {%- assign ph = forloop.index | modulo: 2 | plus: 1 -%}
+                    {{ 'lifestyle-' | append: ph | placeholder_svg_tag: 'placeholder-svg' }}
+                  {%- endif -%}
+                </div>
+                {%- if name != blank or block.settings.subtitle != blank or kicker != blank -%}
+                  <div class="gc__cap">
+                    {%- if kicker != blank -%}
+                      <p class="gc__kicker"><span>{{ kicker | escape }}</span></p>
+                    {%- endif -%}
+                    {%- if name != blank -%}
+                      <h3 class="gc__name"><span>{{ name | escape }}</span></h3>
+                    {%- endif -%}
+                    {%- if block.settings.subtitle != blank -%}
+                      <p class="gc__sub"><span>{{ block.settings.subtitle | escape }}</span></p>
+                    {%- endif -%}
+                    {%- if link != blank -%}
+                      <p class="gc__meta">
+                        <span>
+                          {%- if p != blank -%}{% render 'price', product: p %}{%- endif -%}
+                          <span class="gc__cta">{{ cta_label | escape }}{% render 'icon', name: 'arrow' %}</span>
+                        </span>
+                      </p>
+                    {%- endif -%}
+                  </div>
+                {%- endif -%}
+            {%- if link != blank -%}
+              </a>
+            {%- else -%}
+              </div>
+            {%- endif -%}
+          </div>
+        </li>
+      {%- endfor -%}
+
+      {%- if section.settings.end_text != blank or section.settings.end_link != blank -%}
+        <li class="gc__end" data-gc-end>
+          {%- if section.settings.end_text != blank -%}
+            <p class="gc__end-text" aria-hidden="true">{{ section.settings.end_text | escape }}</p>
+          {%- endif -%}
+          {%- if section.settings.end_link != blank -%}
+            <a class="btn btn--outline gc__end-btn" href="{{ section.settings.end_link }}">
+              {{- end_label | escape -}}
+            </a>
+          {%- endif -%}
+        </li>
+      {%- endif -%}
+    </ul>
+
+    {%- if panel_count > 0 -%}
+      <div class="gc__hud" aria-hidden="true">
+        <p class="gc__hud-label">
+          {%- if section.settings.eyebrow != blank -%}
+            {{ section.settings.eyebrow | escape }}
+          {%- else -%}
+            {{ title | escape }}
+          {%- endif -%}
+        </p>
+        <div class="gc__bar">
+          <span class="gc__bar-fill" data-gc-fill></span>
+          {%- for block in section.blocks -%}
+            <span class="gc__tick" data-gc-tick></span>
+          {%- endfor -%}
+        </div>
+        <p class="gc__count">
+          <span class="gc__count-mask"><span class="gc__count-list" data-gc-count>
+            {%- for block in section.blocks -%}
+              {%- assign n = forloop.index | prepend: '0' | slice: -2, 2 -%}
+              <span>{{ n }}</span>
+            {%- endfor -%}
+          </span></span>
+          <span class="gc__count-sep">/</span>
+          <span class="gc__count-total">{{ panel_count | prepend: '0' | slice: -2, 2 }}</span>
+        </p>
+        <p class="gc__tc" data-gc-tc>00:00:00:00</p>
+      </div>
+    {%- endif -%}
+  </div>
+</galleria-cinema>
+
+{% schema %}
+{
+  "name": "Galleria cinema",
+  "tag": "section",
+  "class": "section-galleria-cinema",
+  "max_blocks": 12,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Lookbook orizzontale: la sezione resta ferma e, scorrendo, i pannelli passano come in un film. Con \"riduci movimento\" attivo i pannelli diventano una griglia normale."
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Riga sopra il titolo",
+      "default": "Galleria"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titolo grande",
+      "info": "Esce di scena quando si inizia a scorrere. Se vuoto i pannelli partono subito.",
+      "default": "Lookbook"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Invito sotto il titolo",
+      "default": "Scorri per guardare"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_numbers",
+      "label": "Numeri grandi sui pannelli",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "Durata dello scorrimento",
+      "info": "Più alta = serve scorrere di più per arrivare in fondo (movimento più lento).",
+      "min": 80,
+      "max": 160,
+      "step": 10,
+      "unit": "%",
+      "default": 110
+    },
+    {
+      "type": "header",
+      "content": "Etichette"
+    },
+    {
+      "type": "text",
+      "id": "label_product",
+      "label": "Sopra il nome di un prodotto",
+      "default": "Prodotto"
+    },
+    {
+      "type": "text",
+      "id": "label_collection",
+      "label": "Sopra il nome di una collezione",
+      "default": "Collezione"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Testo del link",
+      "default": "Scopri"
+    },
+    {
+      "type": "header",
+      "content": "Finale"
+    },
+    {
+      "type": "text",
+      "id": "end_text",
+      "label": "Scritta finale",
+      "info": "Grande, a contorno, dopo l'ultimo pannello. Lascia vuoto per non mostrarla.",
+      "default": "Fine"
+    },
+    {
+      "type": "url",
+      "id": "end_link",
+      "label": "Link del bottone finale"
+    },
+    {
+      "type": "text",
+      "id": "end_label",
+      "label": "Testo del bottone finale",
+      "default": "Vedi tutto"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "panel",
+      "name": "Pannello",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Foto",
+          "info": "Se manca, si usa la foto del prodotto o della collezione scelti sotto."
+        },
+        {
+          "type": "video",
+          "id": "video",
+          "label": "Video (facoltativo)",
+          "info": "Muto e in loop. Se c'è, si vede al posto della foto."
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Prodotto (facoltativo)"
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collezione (facoltativa)",
+          "info": "Usata se non è scelto un prodotto."
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Titolo",
+          "info": "Se vuoto: il nome del prodotto o della collezione."
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Sottotitolo"
+        },
+        {
+          "type": "select",
+          "id": "shape",
+          "label": "Formato",
+          "options": [
+            { "value": "auto", "label": "Automatico (dalla foto)" },
+            { "value": "v", "label": "Verticale" },
+            { "value": "q", "label": "Quadrato" },
+            { "value": "o", "label": "Orizzontale" },
+            { "value": "w", "label": "Panoramico" }
+          ],
+          "default": "auto"
+        },
+        {
+          "type": "select",
+          "id": "align",
+          "label": "Posizione in altezza",
+          "info": "Per i formati più bassi della pista.",
+          "options": [
+            { "value": "auto", "label": "Alternata" },
+            { "value": "start", "label": "In alto" },
+            { "value": "center", "label": "Al centro" },
+            { "value": "end", "label": "In basso" }
+          ],
+          "default": "auto"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Galleria cinema",
+      "blocks": [
+        { "type": "panel", "settings": { "shape": "v" } },
+        { "type": "panel", "settings": { "shape": "o" } },
+        { "type": "panel", "settings": { "shape": "v" } },
+        { "type": "panel", "settings": { "shape": "q" } },
+        { "type": "panel", "settings": { "shape": "w" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
