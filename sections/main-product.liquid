@@ -1,10 +1,13 @@
 {%- comment -%}
   Pagina prodotto a 3 colonne.
     sinistra: tipo di prodotto, frase grande (metafield custom.frase, altrimenti il nome), descrizione
-    centro:   foto del capo; se il prodotto ha il file della hero (custom.capo_fronte), dopo un attimo
-              la foto stesa lascia il posto al modello che lo indossa (metà destra del file doppio)
-    destra:   nome, prezzo, taglie, quantità, aggiungi al carrello
-  Su telefono: foto, acquisto, testo.
+    centro:   il "set": foto del capo; se il prodotto ha il file della hero (custom.capo_fronte), dopo un attimo
+              la foto stesa lascia il posto al modello che lo indossa (metà destra del file doppio).
+              Parallasse 3D al puntatore, lente di ingrandimento al clic, passaggio tra le foto a tendina.
+    destra:   nome, prezzo, taglie (indicatore che scivola), quantità, aggiungi al carrello
+  Su telefono: foto, titolo, acquisto, testo; quando il bottone esce dallo schermo compare una barra fissa in basso.
+  Gli effetti sono in assets/prodotto.js (estende <product-stage> di effetti.js senza modificarlo);
+  varianti e carrello restano a theme.js ([data-product], [data-variants], [data-add-to-cart], [data-price], [data-option]).
 {%- endcomment -%}
 {%- liquid
   assign current = product.selected_or_first_available_variant
@@ -14,167 +17,232 @@
   if worn != blank
     assign slide_count = slide_count | plus: 1
   endif
+  assign form_id = 'ProductForm-' | append: section.id
+  assign zoom_label = section.settings.zoom_label | default: 'Zoom'
+  assign added_label = section.settings.added_label | default: 'Aggiunto'
 -%}
-<div class="pe" data-product>
-  <div class="pe__story">
-    {%- if product.type != blank -%}
-      <p class="pe__eyebrow">{{ product.type }}</p>
-    {%- endif -%}
-    <h1 class="pe__headline">{{ headline }}</h1>
-    {%- if product.description != blank -%}
-      <div class="pe__description rte">{{ product.description }}</div>
-    {%- endif -%}
-      {%- if section.blocks.size > 0 -%}
-      <div class="product__accordions">
-        {%- for block in section.blocks -%}
-          {%- liquid
-            assign body = block.settings.text
-            if block.settings.page != blank
-              assign body = block.settings.page.content
-            endif
-          -%}
-          {%- if block.settings.title != blank and body != blank -%}
-            <details class="accordion" {{ block.shopify_attributes }}>
-              <summary>{{ block.settings.title }} {% render 'icon', name: 'chevron' %}</summary>
-              <div class="accordion__body rte">{{ body }}</div>
-            </details>
-          {%- endif -%}
-        {%- endfor -%}
-      </div>
-    {%- endif -%}
-  </div>
+{{ 'prodotto.css' | asset_url | stylesheet_tag }}
 
-  <product-stage class="pe__stage" data-pixel-reveal {% if worn != blank %}data-autoplay-worn{% endif %}>
-    <div class="pe__slides">
-      {%- for media in product.media -%}
-        <div class="pe__slide{% if forloop.first %} is-active{% endif %}" data-slide data-media-id="{{ media.id }}">
-          {%- case media.media_type -%}
-            {%- when 'image' -%}
+<div class="pd" data-pd data-added-label="{{ added_label | escape }}">
+  <div class="pe" data-product>
+    <div class="pe__story">
+      <div class="pd-intro">
+        {%- if product.type != blank -%}
+          <p class="pe__eyebrow pd-eyebrow" data-pd-in>{{ product.type }}</p>
+        {%- endif -%}
+        <h1 class="pd__headline" data-pd-lines>{{ headline }}</h1>
+      </div>
+
+      <div class="pd-more">
+        {%- if product.description != blank -%}
+          <div class="pe__description rte" data-pd-in style="--d: .25s">{{ product.description }}</div>
+        {%- endif -%}
+        {%- if section.blocks.size > 0 -%}
+          <div class="product__accordions pd-acc" data-pd-in style="--d: .4s">
+            {%- for block in section.blocks -%}
               {%- liquid
-                assign loading = 'lazy'
-                if forloop.first
-                  assign loading = 'eager'
+                assign body = block.settings.text
+                if block.settings.page != blank
+                  assign body = block.settings.page.content
                 endif
               -%}
-              {% render 'responsive-image', image: media.preview_image, sizes: '(max-width: 989px) 92vw, 40vw', widths: '480, 720, 960, 1280, 1600', loading: loading, alt: media.alt %}
-            {%- when 'video' -%}
-              {{ media | video_tag: controls: true, muted: true, playsinline: true, image_size: '1200x' }}
-            {%- when 'external_video' -%}
-              {{ media | external_video_tag: loading: 'lazy' }}
-            {%- when 'model' -%}
-              {{ media | model_viewer_tag: reveal: 'interaction', toggleable: true }}
-          {%- endcase -%}
-        </div>
-        {%- if forloop.first and worn != blank -%}
-          <div class="pe__slide pe__slide--worn" data-slide data-worn>
-            <div class="pe__worn{% if worn.aspect_ratio > 1 %} pe__worn--double{% endif %}">
-              {% render 'responsive-image', image: worn, sizes: '(max-width: 989px) 184vw, 80vw', widths: '720, 1080, 1440, 1800', alt: product.title %}
-            </div>
+              {%- if block.settings.title != blank and body != blank -%}
+                <details class="accordion" {{ block.shopify_attributes }}>
+                  <summary>{{ block.settings.title }} {% render 'icon', name: 'chevron' %}</summary>
+                  <div class="accordion__body rte">{{ body }}</div>
+                </details>
+              {%- endif -%}
+            {%- endfor -%}
           </div>
         {%- endif -%}
-      {%- else -%}
-        <div class="pe__slide is-active" data-slide>{{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}</div>
-      {%- endfor -%}
+      </div>
     </div>
 
-    {%- if slide_count > 1 -%}
-      <div class="pe__thumbs" role="group" aria-label="{{ 'products.product.media_gallery' | t }}">
-        {%- for i in (1..slide_count) -%}
-          <button type="button" class="pe__thumb{% if forloop.first %} is-active{% endif %}" data-thumb="{{ forloop.index0 }}" aria-label="{{ 'products.product.show_media' | t: number: i }}"{% if forloop.first %} aria-current="true"{% endif %}></button>
-        {%- endfor -%}
-      </div>
-    {%- endif -%}
-  </product-stage>
-
-  <div class="pe__buy">
-    <h2 class="pe__title">{{ product.title }}</h2>
-    <div class="product__price" data-price>{% render 'price', product: product, variant: current %}</div>
-    {%- if cart.taxes_included or shop.shipping_policy.body != blank -%}
-      <p class="product__tax">
-        {%- if cart.taxes_included -%}{{ 'products.product.taxes_included' | t }}{%- endif -%}
-        {%- if shop.shipping_policy.body != blank %} {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}{% endif -%}
-      </p>
-    {%- endif -%}
-
-      {%- assign form_id = 'ProductForm-' | append: section.id -%}
-    {%- form 'product', product, id: form_id, class: 'product__form', data-product-form: 'true' -%}
-      <input type="hidden" name="id" value="{{ current.id }}">
-
-      {%- unless product.has_only_default_variant -%}
-        {%- for option in product.options_with_values -%}
-          <fieldset class="option" data-option>
-            <legend><strong>{{ option.name }}</strong> <span class="text-muted" data-option-value>{{ option.selected_value }}</span></legend>
-            <div class="option__values">
-              {%- for value in option.values -%}
-                {%- assign input_id = form_id | append: '-' | append: option.position | append: '-' | append: forloop.index -%}
-                <div class="option__value">
-                  <input type="radio" id="{{ input_id }}" name="{{ option.name | escape }}" value="{{ value | escape }}" form="OptionsOnly-{{ section.id }}" {% if option.selected_value == value %}checked{% endif %}>
-                  <label for="{{ input_id }}">{{ value }}</label>
-                </div>
-              {%- endfor -%}
+    <product-stage class="pe__stage pd-stage" data-pixel-reveal {% if worn != blank %}data-autoplay-worn{% endif %}>
+      <div class="pd-set" data-pd-set>
+        <div class="pe__slides" data-pd-slides{% if section.settings.enable_zoom %} data-pd-zoom data-cursor="{{ zoom_label | escape }}"{% endif %}>
+          {%- for media in product.media -%}
+            <div class="pe__slide{% if forloop.first %} is-active{% endif %}" data-slide data-media-id="{{ media.id }}">
+              {%- case media.media_type -%}
+                {%- when 'image' -%}
+                  {%- liquid
+                    assign loading = 'lazy'
+                    assign priority = nil
+                    if forloop.first
+                      assign loading = 'eager'
+                      assign priority = 'high'
+                    endif
+                  -%}
+                  {% render 'responsive-image', image: media.preview_image, sizes: '(max-width: 989px) 92vw, 40vw', widths: '480, 720, 960, 1280, 1600, 2048', loading: loading, fetchpriority: priority, alt: media.alt %}
+                {%- when 'video' -%}
+                  {{ media | video_tag: controls: true, muted: true, playsinline: true, image_size: '1200x' }}
+                {%- when 'external_video' -%}
+                  {{ media | external_video_tag: loading: 'lazy' }}
+                {%- when 'model' -%}
+                  {{ media | model_viewer_tag: reveal: 'interaction', toggleable: true }}
+              {%- endcase -%}
             </div>
-          </fieldset>
-        {%- endfor -%}
+            {%- if forloop.first and worn != blank -%}
+              <div class="pe__slide pe__slide--worn" data-slide data-worn>
+                <div class="pe__worn{% if worn.aspect_ratio > 1 %} pe__worn--double{% endif %}">
+                  {% render 'responsive-image', image: worn, sizes: '(max-width: 989px) 184vw, 80vw', widths: '720, 1080, 1440, 1800, 2400', alt: product.title %}
+                </div>
+              </div>
+            {%- endif -%}
+          {%- else -%}
+            <div class="pe__slide is-active" data-slide>{{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}</div>
+          {%- endfor -%}
+          <span class="pd-wipe" aria-hidden="true"></span>
+        </div>
+        <span class="pd-light" aria-hidden="true"></span>
+        <span class="pd-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="pd-lens" aria-hidden="true"><span class="pd-lens__in"></span></span>
+      </div>
 
-        <noscript>
-          <label for="VariantSelect-{{ section.id }}">{{ 'products.product.variant' | t }}</label>
-          <select id="VariantSelect-{{ section.id }}" name="id">
-            {%- for variant in product.variants -%}
-              <option value="{{ variant.id }}" {% if variant == current %}selected{% endif %} {% unless variant.available %}disabled{% endunless %}>
-                {{ variant.title }}{% unless variant.available %} – {{ 'products.product.sold_out' | t }}{% endunless %}
-              </option>
-            {%- endfor -%}
-          </select>
-        </noscript>
-      {%- endunless -%}
-
-      {%- if section.settings.show_quantity -%}
-        <div>
-          <label for="Quantity-{{ section.id }}">{{ 'products.product.quantity' | t }}</label>
-          <div class="quantity">
-            <button type="button" data-qty-step="-1" aria-label="{{ 'products.product.decrease' | t }}">&minus;</button>
-            <input type="number" id="Quantity-{{ section.id }}" name="quantity" value="1" min="1" inputmode="numeric">
-            <button type="button" data-qty-step="1" aria-label="{{ 'products.product.increase' | t }}">+</button>
-          </div>
+      {%- if slide_count > 1 -%}
+        <div class="pd-count" aria-hidden="true">
+          <span class="pd-count__cur"><span>01</span></span>
+          <span class="pd-count__bar"></span>
+          <span class="pd-count__tot">{% if slide_count < 10 %}0{% endif %}{{ slide_count }}</span>
+        </div>
+        <div class="pe__thumbs pd-thumbs" role="group" aria-label="{{ 'products.product.media_gallery' | t }}">
+          {%- for i in (1..slide_count) -%}
+            <button type="button" class="pe__thumb{% if forloop.first %} is-active{% endif %}" data-thumb="{{ forloop.index0 }}" aria-label="{{ 'products.product.show_media' | t: number: i }}"{% if forloop.first %} aria-current="true"{% endif %}></button>
+          {%- endfor -%}
         </div>
       {%- endif -%}
+    </product-stage>
 
-      <div class="product__buttons">
-        <button type="submit" name="add" class="btn btn--full" data-add-to-cart {% unless current.available %}disabled{% endunless %}>
-          <span data-add-to-cart-text>
-            {%- if current.available -%}
-              {{ 'products.product.add_to_cart' | t }}
-            {%- else -%}
-              {{ 'products.product.sold_out' | t }}
-            {%- endif -%}
-          </span>
-        </button>
-        {%- if section.settings.show_dynamic_checkout -%}
-          <div data-payment-button {% unless current.available %}hidden{% endunless %}>{{ form | payment_button }}</div>
+    <div class="pe__buy">
+      <h2 class="pe__title{% if headline == product.title %} pe__title--dup{% endif %}">{{ product.title }}</h2>
+      <div class="product__price pd-price" data-price data-pd-in style="--d: .16s">{% render 'price', product: product, variant: current %}</div>
+      {%- if cart.taxes_included or shop.shipping_policy.body != blank -%}
+        <p class="product__tax" data-pd-in style="--d: .2s">
+          {%- if cart.taxes_included -%}{{ 'products.product.taxes_included' | t }}{%- endif -%}
+          {%- if shop.shipping_policy.body != blank %} {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}{% endif -%}
+        </p>
+      {%- endif -%}
+
+      {%- form 'product', product, id: form_id, class: 'product__form', data-product-form: 'true' -%}
+        <input type="hidden" name="id" value="{{ current.id }}">
+
+        {%- unless product.has_only_default_variant -%}
+          {%- for option in product.options_with_values -%}
+            <fieldset class="option pd-opt" data-option data-pd-in style="--d: {{ forloop.index | times: 0.06 | plus: 0.24 }}s">
+              <legend><strong>{{ option.name }}</strong> <span class="text-muted" data-option-value>{{ option.selected_value }}</span></legend>
+              <div class="option__values" data-pd-values>
+                <span class="pd-ind" aria-hidden="true"></span>
+                {%- for value in option.values -%}
+                  {%- assign input_id = form_id | append: '-' | append: option.position | append: '-' | append: forloop.index -%}
+                  <div class="option__value">
+                    <input type="radio" id="{{ input_id }}" name="{{ option.name | escape }}" value="{{ value | escape }}" form="OptionsOnly-{{ section.id }}" {% if option.selected_value == value %}checked{% endif %}>
+                    <label for="{{ input_id }}">{{ value }}</label>
+                  </div>
+                {%- endfor -%}
+              </div>
+            </fieldset>
+          {%- endfor -%}
+
+          <noscript>
+            <label for="VariantSelect-{{ section.id }}">{{ 'products.product.variant' | t }}</label>
+            <select id="VariantSelect-{{ section.id }}" name="id">
+              {%- for variant in product.variants -%}
+                <option value="{{ variant.id }}" {% if variant == current %}selected{% endif %} {% unless variant.available %}disabled{% endunless %}>
+                  {{ variant.title }}{% unless variant.available %} – {{ 'products.product.sold_out' | t }}{% endunless %}
+                </option>
+              {%- endfor -%}
+            </select>
+          </noscript>
+        {%- endunless -%}
+
+        {%- if section.settings.show_quantity -%}
+          <div class="pd-qty-wrap" data-pd-in style="--d: .4s">
+            <label for="Quantity-{{ section.id }}">{{ 'products.product.quantity' | t }}</label>
+            <div class="quantity pd-qty" data-pd-qty>
+              <button type="button" data-qty-step="-1" aria-label="{{ 'products.product.decrease' | t }}">&minus;</button>
+              <input type="number" id="Quantity-{{ section.id }}" name="quantity" value="1" min="1" inputmode="numeric">
+              <button type="button" data-qty-step="1" aria-label="{{ 'products.product.increase' | t }}">+</button>
+            </div>
+          </div>
+        {%- endif -%}
+
+        <div class="product__buttons" data-pd-in style="--d: .46s">
+          <button type="submit" name="add" class="btn btn--full pd-atc" data-add-to-cart data-pd-atc {% unless current.available %}disabled{% endunless %}>
+            <span class="pd-atc__fill" aria-hidden="true"></span>
+            <span class="pd-atc__label">
+              <span data-add-to-cart-text>
+                {%- if current.available -%}
+                  {{ 'products.product.add_to_cart' | t }}
+                {%- else -%}
+                  {{ 'products.product.sold_out' | t }}
+                {%- endif -%}
+              </span>
+              <svg class="pd-atc__arrow" viewBox="0 0 20 10" aria-hidden="true" focusable="false"><path d="M0 5h18M14 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+            </span>
+            <span class="pd-atc__load" aria-hidden="true"><i></i></span>
+            <span class="pd-atc__ok" aria-hidden="true">
+              <svg viewBox="0 0 16 12" focusable="false"><path d="M1.5 6.5l4 4 9-9" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+              <span>{{ added_label }}</span>
+            </span>
+          </button>
+          {%- if section.settings.show_dynamic_checkout -%}
+            <div data-payment-button {% unless current.available %}hidden{% endunless %}>{{ form | payment_button }}</div>
+          {%- endif -%}
+        </div>
+      {%- endform -%}
+
+      {%- comment -%} I radio delle opzioni appartengono a questo form vuoto, così non vengono inviati al carrello. {%- endcomment -%}
+      <form id="OptionsOnly-{{ section.id }}" hidden></form>
+
+      <script type="application/json" data-variants>
+        [
+          {%- for variant in product.variants -%}
+            {%- capture price_html -%}{% render 'price', product: product, variant: variant %}{%- endcapture -%}
+            {
+              "id": {{ variant.id }},
+              "available": {{ variant.available | json }},
+              "options": {{ variant.options | json }},
+              "media_id": {{ variant.featured_media.id | default: 'null' }},
+              "price_html": {{ price_html | json }}
+            }{% unless forloop.last %},{% endunless %}
+          {%- endfor -%}
+        ]
+      </script>
+    </div>
+  </div>
+
+  {%- if section.settings.show_sticky_bar -%}
+    {%- comment -%} Barra di acquisto su telefono: il bottone invia lo stesso form (attributo form), theme.js fa il resto. {%- endcomment -%}
+    <div class="pd-bar" data-pd-bar>
+      <div class="pd-bar__media" aria-hidden="true">
+        {%- if product.featured_media -%}
+          {% render 'responsive-image', image: product.featured_media.preview_image, sizes: '56px', widths: '120, 180', alt: '' %}
         {%- endif -%}
       </div>
-    {%- endform -%}
-
-    {%- comment -%} I radio delle opzioni appartengono a questo form vuoto, così non vengono inviati al carrello. {%- endcomment -%}
-    <form id="OptionsOnly-{{ section.id }}" hidden></form>
-
-    <script type="application/json" data-variants>
-      [
-        {%- for variant in product.variants -%}
-          {%- capture price_html -%}{% render 'price', product: product, variant: variant %}{%- endcapture -%}
-          {
-            "id": {{ variant.id }},
-            "available": {{ variant.available | json }},
-            "options": {{ variant.options | json }},
-            "media_id": {{ variant.featured_media.id | default: 'null' }},
-            "price_html": {{ price_html | json }}
-          }{% unless forloop.last %},{% endunless %}
-        {%- endfor -%}
-      ]
-    </script>
-
-  </div>
+      <div class="pd-bar__info">
+        <p class="pd-bar__name">{{ product.title }}</p>
+        <div class="pd-bar__price" data-pd-bar-price>{% render 'price', product: product, variant: current %}</div>
+      </div>
+      <button type="submit" form="{{ form_id }}" class="btn pd-atc pd-atc--bar" data-pd-bar-btn {% unless current.available %}disabled{% endunless %}>
+        <span class="pd-atc__fill" aria-hidden="true"></span>
+        <span class="pd-atc__label"><span data-pd-bar-text>
+          {%- if current.available -%}
+            {{ 'products.product.add_to_cart' | t }}
+          {%- else -%}
+            {{ 'products.product.sold_out' | t }}
+          {%- endif -%}
+        </span></span>
+        <span class="pd-atc__load" aria-hidden="true"><i></i></span>
+        <span class="pd-atc__ok" aria-hidden="true">
+          <svg viewBox="0 0 16 12" focusable="false"><path d="M1.5 6.5l4 4 9-9" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span>{{ added_label }}</span>
+        </span>
+      </button>
+    </div>
+  {%- endif -%}
 </div>
+
+<script src="{{ 'prodotto.js' | asset_url }}" defer></script>
 
 <script type="application/ld+json">
   {{ product | structured_data }}
@@ -200,6 +268,40 @@
       "id": "show_dynamic_checkout",
       "label": "Mostra il bottone di acquisto rapido",
       "info": "Shop Pay, PayPal e gli altri metodi attivi sul negozio.",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Foto"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_zoom",
+      "label": "Lente di ingrandimento sulla foto",
+      "info": "Al clic la lente segue il puntatore; su telefono si tocca per ingrandire, si trascina e si tocca di nuovo per uscire.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "zoom_label",
+      "label": "Parola sul cursore della foto",
+      "default": "Zoom"
+    },
+    {
+      "type": "header",
+      "content": "Acquisto"
+    },
+    {
+      "type": "text",
+      "id": "added_label",
+      "label": "Conferma sul bottone dopo l'aggiunta",
+      "default": "Aggiunto"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sticky_bar",
+      "label": "Barra di acquisto fissa su telefono",
+      "info": "Compare in basso quando il bottone principale esce dallo schermo.",
       "default": true
     }
   ],
