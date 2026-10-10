@@ -74,13 +74,14 @@ html.mv-hdr-hide .ctb:has(.cf[open]),
 .mv-split--lines { --mv-step: .11s; }
 .mv-split--lines .mv-c { display: block; transform: translate3d(0, 105%, 0) rotate(1.5deg); transform-origin: 0 0; transition-duration: 1.15s; }
 .mv-split.is-in .mv-c { transform: none; }
-/* markup complesso: entra tutto insieme, scoprendosi dal basso */
+/* markup complesso: entra tutto insieme, salendo e schiarendosi
+   (niente clip-path sull'elemento osservato: il browser lo considererebbe invisibile) */
 .mv-split--block {
-  clip-path: inset(0 0 100% 0);
-  transform: translate3d(0, 24px, 0);
-  transition: clip-path 1.1s cubic-bezier(.77, 0, .18, 1) var(--mv-delay), transform 1.1s cubic-bezier(.2, .8, .2, 1) var(--mv-delay);
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition: opacity 1s ease var(--mv-delay), transform 1.1s cubic-bezier(.2, .8, .2, 1) var(--mv-delay);
 }
-.mv-split--block.is-in { clip-path: inset(0 0 -10% 0); transform: none; }
+.mv-split--block.is-in { opacity: 1; transform: none; }
 
 /* --- Nome gigante del footer --------------------------------------------- */
 .mv-wm-box { overflow-x: clip; }
@@ -191,6 +192,8 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 0; }
 .skip-link:focus-visible { outline-offset: -4px; }
+/* sul cielo blu della 404 l'accento si perderebbe: anello chiaro */
+.nf :focus-visible { outline-color: var(--color-text); }
 
 /* ==========================================================================
    Pagina 404: cielo con le nuvole del tema, "404" gigante con disturbo
@@ -440,7 +443,7 @@ textarea:focus-visible { outline: 2px solid var(--color-accent); outline-offset:
 @media (prefers-reduced-motion: reduce) {
   .section-header, .ctb, [data-header-follow], .mv-progress { transition: none; }
   html.mv-hdr-hide .section-header, html.mv-hdr-hide .ctb { transform: none; }
-  .mv-c, .mv-split--block { transform: none !important; clip-path: none !important; transition: none !important; }
+  .mv-c, .mv-split--block { transform: none !important; opacity: 1 !important; transition: none !important; }
   .mv-wi { transform: none !important; animation: none !important; }
   .link-underline::after, .header__nav > ul > li > a::after, .header__nav summary::after, .header__dropdown > ul a::after,
   .footer__col a::after, .footer__policies a::after, .menu-drawer__account::after { transition: none; animation: none !important; }

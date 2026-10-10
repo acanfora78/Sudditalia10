@@ -123,6 +123,11 @@
   function headerHide() {
     var sec = document.querySelector('.section-header');
     if (!sec || reduce) return;
+    // nell'editor del tema l'header può essere ricaricato: si riprende quello nuovo
+    function header() {
+      if (!sec.isConnected) sec = document.querySelector('.section-header') || sec;
+      return sec;
+    }
     var hidden = false;
     var lastY = window.scrollY;
     var acc = 0;
@@ -132,7 +137,7 @@
     // sezioni bloccate proprio sotto l'header (top = --header-h) e alte quasi quanto lo schermo:
     // finché sono a schermo l'header resta, altrimenti sopra di loro resterebbe un buco
     function measure() {
-      headerH = sec.offsetHeight;
+      headerH = header().offsetHeight;
       zones = [];
       document.querySelectorAll('main [class*="sticky"], main [class*="pin"], [data-header-pin]').forEach(function (el) {
         var cs = getComputedStyle(el);
@@ -151,8 +156,8 @@
     }
     function canHide() {
       if (root.classList.contains('cine-on')) return false;
-      if (sec.querySelector('details[open]') || document.querySelector('[data-menu-drawer][open], .cf[open]')) return false;
-      if (keyboardFocusIn(sec)) return false;
+      if (header().querySelector('details[open]') || document.querySelector('[data-menu-drawer][open], .cf[open]')) return false;
+      if (keyboardFocusIn(header())) return false;
       return true;
     }
     // fuoco da tastiera dentro l'header (il clic col mouse non conta)
@@ -177,7 +182,9 @@
     });
     // menu, ricerca o filtri aperti, tastiera dentro l'header: si vede sempre
     document.addEventListener('toggle', function () { if (hidden && !canHide()) set(false); }, true);
-    sec.addEventListener('focusin', function () { if (keyboardFocusIn(sec)) set(false); });
+    document.addEventListener('focusin', function (e) {
+      if (hidden && e.target.closest && e.target.closest('.section-header') && keyboardFocusIn(header())) set(false);
+    });
     measure();
     // la galleria e la finestra si preparano dopo: si rimisura appena sono pronte
     setTimeout(scheduleMeasure, 600);
@@ -495,7 +502,7 @@
     }
     var H = 0, left = 0, top = 0, avg = 1;
     function measureLetters() {
-      if (!letters.length) return;
+      if (!letters.length || !el.isConnected) return;
       var r = el.getBoundingClientRect();
       left = r.left;
       top = r.top + window.scrollY;
@@ -505,7 +512,9 @@
     }
     fit();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-    window.addEventListener('resize', function () { requestAnimationFrame(measureLetters); }, { passive: true });
+    // al resize effetti.js rifà il calcolo; qui lo si ripete (identico) per un nome ricaricato dall'editor,
+    // che effetti.js non conosce, e si rimisurano le lettere
+    window.addEventListener('resize', function () { if (el.isConnected) requestAnimationFrame(fit); }, { passive: true });
     onMeasureFns.push(measureLetters);
     if (reduce || !letters.length) return;
 
@@ -539,8 +548,8 @@
           var fy = clamp(1 - Math.abs(dy) / (H * 2.4), 0, 1);
           f = Math.exp(-dx * dx) * fy;
         }
-        l.t = -f * H * 0.2;
-        l.st = 1 + f * 0.1;
+        l.t = -f * H * 0.17;
+        l.st = 1 + f * 0.08;
         spring(l, 'y', 'v', l.t, 0.15, 0.72, dt);
         spring(l, 's', 'sv', l.st, 0.15, 0.72, dt);
         if (Math.abs(l.v) > 0.02 || Math.abs(l.t - l.y) > 0.05 || Math.abs(l.sv) > 0.0005 || Math.abs(l.st - l.s) > 0.0005) moving = true;
