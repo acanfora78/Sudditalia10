@@ -4,9 +4,11 @@
     - i pannelli stanno fermi sotto l'header con position: sticky (CSS); qui, a ogni frame di scroll,
       il pannello che viene coperto si rimpicciolisce, si scurisce e arrotonda gli angoli, quello che sale
       ha la foto in parallasse e gli angoli che si raddrizzano mentre si appoggia
+    - la schermata finale ("Tutti i prodotti") copre l'ultima collezione come un'ultima carta
     - la collezione a schermo (quella che attraversa il centro dello schermo) accende il suo titolo
-      e si evidenzia nell'indice laterale; un clic sull'indice porta alla collezione
-  Solo transform / opacity / clip-path; misure prese una volta (e al resize), non a ogni frame.
+      e si evidenzia nell'indice laterale; il binario dell'indice segue lo scroll; un clic porta alla collezione
+  Solo transform / opacity / clip-path; misure prese una volta (e al resize), non a ogni frame;
+  si lavora solo quando la pila è a schermo.
   Con "riduci movimento": niente pila né animazioni, l'indice funziona lo stesso.
 */
 (function () {
@@ -21,6 +23,7 @@
   var PHONE = { scale: 0.06, lift: 1.5, radius: 18, par: 5, drift: 2, zoomBase: 1.05, zoomIn: 0.07, shadeIn: 0.3, shadeOut: 0.72 };
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function round(v, k) { return Math.round(v * k) / k; }
   function headerHeight() {
     return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
   }
@@ -28,10 +31,17 @@
   class ElencoCollezioni extends HTMLElement {
     connectedCallback() {
       var self = this;
+      if (this.started) return;
+      this.started = true;
       this.panels = Array.prototype.slice.call(this.querySelectorAll('[data-ec-panel]'));
       this.links = Array.prototype.slice.call(this.querySelectorAll('[data-ec-link]'));
       this.stack = this.querySelector('[data-ec-stack]');
-      this.indexList = this.querySelector('.ec__index-list');
+      this.index = this.querySelector('[data-ec-index]');
+      this.indexBox = this.querySelector('[data-ec-index-box]');
+      this.fill = this.querySelector('[data-ec-fill]');
+      this.outro = this.querySelector('[data-ec-outro]');
+      this.outroInner = this.querySelector('[data-ec-outro-inner]');
+      this.glow = this.querySelector('[data-ec-glow]');
       this.current = -1;
       this.cleanup = [];
 
@@ -48,7 +58,8 @@
           card: panel.querySelector('[data-ec-card]'),
           media: panel.querySelector('[data-ec-media]'),
           shade: panel.querySelector('[data-ec-shade]'),
-          p: -1, e: -1, near: false
+          light: panel.hasAttribute('data-ec-light'),
+          p: -1, e: -1, near: null
         };
       });
 
@@ -61,7 +72,10 @@
       (this.cleanup || []).forEach(function (fn) { fn(); });
       this.cleanup = [];
       if (this.raf) cancelAnimationFrame(this.raf);
-      this.raf = 0;
+      if (this.rafResize) cancelAnimationFrame(this.rafResize);
+      this.raf = this.rafResize = 0;
+      this.started = false;
+      this.live = false;
     }
 
     on(target, type, fn, opts) {
@@ -75,6 +89,7 @@
       var self = this;
       if (!('IntersectionObserver' in window)) {
         this.items.forEach(function (it) { it.panel.classList.add('is-in'); });
+        if (this.outro) this.outro.classList.add('is-in');
         this.setCurrent(0);
         return;
       }
@@ -92,6 +107,14 @@
       }, { rootMargin: '-48% 0px -48% 0px' });
       this.panels.forEach(function (p) { io.observe(p); });
       this.cleanup.push(function () { io.disconnect(); });
+
+      if (this.outro) {
+        var io2 = new IntersectionObserver(function (entries) {
+          if (entries[entries.length - 1].isIntersecting) { self.outro.classList.add('is-in'); io2.disconnect(); }
+        }, { threshold: 0.35 });
+        io2.observe(this.outro);
+        this.cleanup.push(function () { io2.disconnect(); });
+      }
     }
 
     setCurrent(i) {
@@ -103,6 +126,10 @@
         if (on) a.setAttribute('aria-current', 'true');
         else a.removeAttribute('aria-current');
       });
+      // sui pannelli col set chiaro l'indice diventa scuro
+      if (this.index && this.items[i]) this.index.classList.toggle('is-light', this.items[i].light);
+      // senza pila il binario segue la collezione a schermo
+      if (!this.live && this.fill) this.fill.style.transform = 'scaleY(' + round((i + 1) / this.items.length, 1000) + ')';
     }
 
     /* posizione di scroll in cui il pannello i è appoggiato sotto l'header */
@@ -183,13 +210,13 @@
         io.observe(this.stack);
         this.cleanup.push(function () { io.disconnect(); });
       }
-      // l'altezza della pagina sopra la pila può cambiare (font, titolo adattato, immagini)
+      // l'altezza della pagina sopra la pila può cambiare (font, titolo adattato, immagini, header)
       if ('ResizeObserver' in window) {
         var ro = new ResizeObserver(this.onResize);
         ro.observe(document.body);
         this.cleanup.push(function () { ro.disconnect(); });
       }
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(this.onResize);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (self.live) self.onResize(); });
     }
 
     measure() {
@@ -198,21 +225,24 @@
       this.headerH = parseFloat(getComputedStyle(first).top) || 0;
       this.stackTop = this.stack.getBoundingClientRect().top + window.scrollY;
       this.cfg = mqPhone.matches ? PHONE : DESKTOP;
-      // forza il ridisegno di tutti i pannelli con le nuove misure
+      // forza il ridisegno di tutto con le nuove misure
       this.items.forEach(function (it) { it.p = -1; it.e = -1; });
-      this.indexO = -1;
+      this.indexO = this.fillS = this.outroQ = -1;
     }
 
     update() {
       var cfg = this.cfg;
+      var n = this.items.length;
       // f = quanti pannelli sono già appoggiati (0 = il primo è appena arrivato sotto l'header)
       var f = (window.scrollY + this.headerH - this.stackTop) / this.H;
       this.f = f;
       var base = Math.floor(f);
-      for (var i = 0; i < this.items.length; i++) {
+      for (var i = 0; i < n; i++) {
         var it = this.items[i];
-        var p = Math.round(clamp(f - i, 0, 1) * 1000) / 1000;     // quanto è coperto dal successivo
-        var e = Math.round(clamp(f - i + 1, 0, 1) * 1000) / 1000; // quanto è salito al suo posto
+        // quanto è coperto dal successivo (l'ultimo lo copre la schermata finale, se c'è)
+        var p = i === n - 1 && !this.outro ? 0 : round(clamp(f - i, 0, 1), 1000);
+        // quanto è salito al suo posto
+        var e = round(clamp(f - i + 1, 0, 1), 1000);
         var near = i >= base - 1 && i <= base + 1;
         if (near !== it.near) { it.near = near; it.panel.classList.toggle('is-near', near); }
         if (p === it.p && e === it.e) continue;
@@ -234,14 +264,35 @@
         }
         if (it.shade) it.shade.style.opacity = Math.max(cfg.shadeIn * (1 - e), cfg.shadeOut * p).toFixed(3);
       }
-      // l'indice compare con il primo pannello e se ne va con l'ultimo
-      if (this.indexList) {
-        var o = Math.min(clamp((f + 0.75) / 0.5, 0, 1), 1 - clamp((f - this.items.length + 1) / 0.35, 0, 1));
-        o = Math.round(o * 100) / 100;
+
+      // schermata finale: sale come un'altra carta; la scritta arriva un po' più lenta e la luce cresce
+      if (this.outro) {
+        var q = round(clamp(f - n + 1, 0, 1), 1000);
+        if (q !== this.outroQ) {
+          this.outroQ = q;
+          if (this.outroInner) this.outroInner.style.transform = q < 1 ? 'translate3d(0,' + (-(1 - q) * 18).toFixed(2) + 'vh,0)' : '';
+          if (this.glow) {
+            this.glow.style.transform = 'translate3d(0,' + ((1 - q) * 22).toFixed(2) + '%,0) scale(' + (0.7 + 0.3 * q).toFixed(4) + ')';
+            this.glow.style.opacity = (0.25 + 0.75 * q).toFixed(3);
+          }
+        }
+      }
+
+      if (this.indexBox) {
+        // l'indice compare con il primo pannello e se ne va quando sale la schermata finale (o l'ultimo pannello)
+        var o = Math.min(clamp((f + 0.75) / 0.5, 0, 1), 1 - clamp((f - n + 1) / 0.35, 0, 1));
+        o = round(o, 100);
         if (o !== this.indexO) {
           this.indexO = o;
-          this.indexList.style.opacity = o;
-          this.indexList.style.transform = o < 1 ? 'translate3d(' + ((1 - o) * 24).toFixed(1) + 'px,0,0)' : '';
+          this.indexBox.style.opacity = o;
+          this.indexBox.style.transform = o < 1 ? 'translate3d(' + ((1 - o) * 24).toFixed(1) + 'px,0,0)' : '';
+          // quasi invisibile: i link non si prendono i clic (con la tastiera l'indice ricompare, vedi CSS)
+          this.indexBox.classList.toggle('is-off', o < 0.1);
+        }
+        // binario: avanza con lo scroll lungo tutto l'elenco
+        if (this.fill) {
+          var fs = round(clamp((f + 1) / n, 0, 1), 1000);
+          if (fs !== this.fillS) { this.fillS = fs; this.fill.style.transform = 'scaleY(' + fs + ')'; }
         }
       }
     }

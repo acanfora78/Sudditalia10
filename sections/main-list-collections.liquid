@@ -1,10 +1,12 @@
 {%- comment -%}
   Tutte le collezioni: schermate impilate.
   Ogni collezione è un pannello a tutto schermo che resta fermo sotto l'header; scorrendo, il pannello
-  successivo sale e si appoggia sopra, quello sotto si rimpicciolisce e si scurisce, come carte di un mazzo.
+  successivo sale e si appoggia sopra, quello sotto si rimpicciolisce, si scurisce e arrotonda gli angoli,
+  come carte di un mazzo. Alla fine un'ultima schermata ("Tutti i prodotti") copre l'ultima collezione.
   Su computer un indice laterale porta a ogni collezione e segna quella a schermo.
   Con "riduci movimento" i pannelli sono statici, uno sotto l'altro.
   Collezioni: quelle scelte con i blocchi (nell'ordine dei blocchi) oppure tutte, con l'ordine scelto.
+  Stili e movimento: assets/elenco-collezioni.css / .js (classi .ec__*).
 {%- endcomment -%}
 {{ 'elenco-collezioni.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'elenco-collezioni.js' | asset_url }}" defer></script>
@@ -79,9 +81,13 @@
     if section.settings.show_index and shown > 1 and shown <= 14
       assign show_index = true
     endif
+    assign show_outro = false
+    if section.settings.show_outro and section.settings.outro_title != blank and shown > 0
+      assign show_outro = true
+    endif
   -%}
 
-  <elenco-collezioni class="ec" data-ec>
+  <elenco-collezioni class="ec{% if show_index %} ec--index{% endif %}" data-ec>
     <header class="ec__intro page-width">
       <p class="ec__eyebrow">
         <span class="ec__eyebrow-shop">{{ shop.name | escape }}</span>
@@ -96,7 +102,7 @@
             {%- if l == ' ' -%}
               <span class="ec__space" aria-hidden="true"> </span>
             {%- else -%}
-              <span class="ec__l" aria-hidden="true"><span style="--i: {{ forloop.index0 }};">{{ l }}</span></span>
+              <span class="ec__l" aria-hidden="true"><span style="--i: {{ forloop.index0 }};">{{ l | escape }}</span></span>
             {%- endif -%}
           {%- endfor -%}
         </h1>
@@ -112,41 +118,44 @@
     </header>
 
     {%- if shown > 0 -%}
-      <div class="ec__wrap" data-ec-wrap style="--ec-n: {{ shown }};">
+      <div class="ec__wrap" style="--ec-n: {{ shown }};">
         {%- if show_index -%}
-          <nav class="ec__index" aria-label="{{ section.settings.index_label | escape }}">
+          <nav class="ec__index" aria-label="{{ section.settings.index_label | escape }}" data-ec-index>
             <div class="ec__index-frame">
-              <ol class="ec__index-list">
-                {%- assign n = 0 -%}
-                {%- for item in items -%}
-                  {%- liquid
-                    if use_blocks
-                      assign c = item.settings.collection
-                    else
-                      assign c = item
-                    endif
-                    if c == blank
-                      continue
-                    endif
-                    if section.settings.hide_empty and c.all_products_count == 0
-                      continue
-                    endif
-                    assign n = n | plus: 1
-                    assign num = offset | plus: n
-                  -%}
-                  <li>
-                    <a class="ec__index-link" href="#ec-{{ section.id }}-{{ n }}" data-ec-link="{{ n | minus: 1 }}" data-no-curtain>
-                      <span class="ec__index-num">{% if num < 10 %}0{% endif %}{{ num }}</span>
-                      <span class="ec__index-name">{{ c.title | escape }}</span>
-                    </a>
-                  </li>
-                {%- endfor -%}
-              </ol>
+              <div class="ec__index-box" data-ec-index-box>
+                <ol class="ec__index-list">
+                  {%- assign n = 0 -%}
+                  {%- for item in items -%}
+                    {%- liquid
+                      if use_blocks
+                        assign c = item.settings.collection
+                      else
+                        assign c = item
+                      endif
+                      if c == blank
+                        continue
+                      endif
+                      if section.settings.hide_empty and c.all_products_count == 0
+                        continue
+                      endif
+                      assign n = n | plus: 1
+                      assign num = offset | plus: n
+                    -%}
+                    <li>
+                      <a class="ec__index-link" href="#ec-{{ section.id }}-{{ n }}" data-ec-link="{{ n | minus: 1 }}" data-no-curtain>
+                        <span class="ec__index-name">{{ c.title | escape }}</span>
+                        <span class="ec__index-num">{% if num < 10 %}0{% endif %}{{ num }}</span>
+                      </a>
+                    </li>
+                  {%- endfor -%}
+                </ol>
+                <span class="ec__index-rail" aria-hidden="true"><span class="ec__index-fill" data-ec-fill></span></span>
+              </div>
             </div>
           </nav>
         {%- endif -%}
 
-        <ol class="ec__stack" data-ec-stack>
+        <div class="ec__stack" data-ec-stack>
           {%- assign n = 0 -%}
           {%- for item in items -%}
             {%- liquid
@@ -172,6 +181,10 @@
               if section.settings.panel_style == 'set' or image == blank
                 assign set_style = true
               endif
+              assign focal = '50% 32%'
+              if image.presentation.focal_point != blank
+                assign focal = image.presentation.focal_point.x | append: '% ' | append: image.presentation.focal_point.y | append: '%'
+              endif
               if c.all_products_count == 1
                 assign count_label = section.settings.product_label
               else
@@ -182,7 +195,15 @@
                 assign loading = 'eager'
               endif
             -%}
-            <li class="ec__panel{% if set_style %} ec__panel--set{% endif %}" id="ec-{{ section.id }}-{{ n }}" style="--ec-p: {{ num | times: 1.0 | divided_by: total }};" data-ec-panel {% if use_blocks %}{{ item.shopify_attributes }}{% endif %}>
+            <article
+              class="ec__panel{% if set_style %} ec__panel--set{% endif %}"
+              id="ec-{{ section.id }}-{{ n }}"
+              style="--ec-p: {{ num | times: 1.0 | divided_by: total }};"
+              aria-labelledby="ec-{{ section.id }}-{{ n }}-t"
+              data-ec-panel
+              {% if set_style %}data-ec-light{% endif %}
+              {% if use_blocks %}{{ item.shopify_attributes }}{% endif %}
+            >
               <div class="ec__card" data-ec-card>
                 <div class="ec__media" data-ec-media>
                   {%- if set_style -%}
@@ -201,7 +222,13 @@
                       {%- endif -%}
                     </div>
                   {%- else -%}
-                    {% render 'responsive-image', image: image, sizes: '100vw', widths: '750, 1100, 1500, 1800, 2200, 2800', alt: '', loading: loading, class: 'ec__img' %}
+                    <div class="ec__photo" style="--ec-focal: {{ focal }};">
+                      {%- if n == 1 -%}
+                        {% render 'responsive-image', image: image, sizes: '100vw', widths: '750, 1100, 1500, 1800, 2200, 2800', alt: '', loading: loading, fetchpriority: 'high', class: 'ec__img' %}
+                      {%- else -%}
+                        {% render 'responsive-image', image: image, sizes: '100vw', widths: '750, 1100, 1500, 1800, 2200, 2800', alt: '', loading: loading, class: 'ec__img' %}
+                      {%- endif -%}
+                    </div>
                   {%- endif -%}
                 </div>
                 <div class="ec__veil" aria-hidden="true"></div>
@@ -214,9 +241,10 @@
                     <span class="ec__num-cur">{% if num < 10 %}0{% endif %}{{ num }}</span>
                     <span class="ec__num-sep" aria-hidden="true">/</span>
                     <span class="ec__num-tot">{{ total_pad }}</span>
+                    <span class="ec__num-bar" aria-hidden="true"></span>
                   </p>
 
-                  <h2 class="ec__name">
+                  <h2 class="ec__name" id="ec-{{ section.id }}-{{ n }}-t">
                     {%- assign words = c.title | split: ' ' -%}
                     {%- for w in words -%}
                       <span class="ec__w"><span class="ec__wi" style="--i: {{ forloop.index0 }};">{{ w | escape }}</span></span>{% unless forloop.last %} {% endunless %}
@@ -248,9 +276,35 @@
                   </div>
                 </div>
               </div>
-            </li>
+            </article>
           {%- endfor -%}
-        </ol>
+
+          {%- if show_outro -%}
+            <div class="ec__outro" data-ec-outro>
+              <div class="ec__outro-glow" data-ec-glow aria-hidden="true"></div>
+              <div class="ec__outro-inner page-width" data-ec-outro-inner>
+                {%- if section.settings.outro_eyebrow != blank -%}
+                  <p class="ec__outro-eyebrow">
+                    <span class="ec__outro-line" aria-hidden="true"></span>
+                    {{ section.settings.outro_eyebrow | escape }}
+                    <span class="ec__outro-line" aria-hidden="true"></span>
+                  </p>
+                {%- endif -%}
+                <h2 class="ec__outro-title">
+                  {%- assign words = section.settings.outro_title | split: ' ' -%}
+                  {%- for w in words -%}
+                    <span class="ec__w"><span class="ec__wi" style="--i: {{ forloop.index0 }};">{{ w | escape }}</span></span>{% unless forloop.last %} {% endunless %}
+                  {%- endfor -%}
+                </h2>
+                {%- assign outro_button = section.settings.outro_button | default: cta_label -%}
+                <a class="ec__cta ec__cta--outro" href="{{ routes.all_products_collection_url }}" data-cursor="{{ outro_button | escape }}">
+                  <span class="ec__cta-text">{{ outro_button | escape }}</span>
+                  <span class="ec__cta-icon" aria-hidden="true">{% render 'icon', name: 'arrow' %}</span>
+                </a>
+              </div>
+            </div>
+          {%- endif -%}
+        </div>
       </div>
     {%- else -%}
       <div class="page-width ec__empty">
@@ -340,7 +394,7 @@
         { "value": "set", "label": "Primi prodotti sul set chiaro" }
       ],
       "default": "image",
-      "info": "Le collezioni senza foto mostrano sempre i primi prodotti sul set."
+      "info": "Le collezioni senza foto mostrano sempre i primi prodotti sul set. Per scegliere la parte della foto da tenere a schermo usa il punto focale dell'immagine (Contenuti > File)."
     },
     {
       "type": "checkbox",
@@ -384,6 +438,35 @@
       "id": "empty_label",
       "label": "Messaggio senza collezioni",
       "default": "Nessuna collezione da mostrare."
+    },
+    {
+      "type": "header",
+      "content": "Schermata finale"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_outro",
+      "label": "Mostra la schermata \"Tutti i prodotti\" alla fine",
+      "default": true,
+      "info": "Copre l'ultima collezione come un'ultima carta e porta a tutti i prodotti del negozio."
+    },
+    {
+      "type": "text",
+      "id": "outro_eyebrow",
+      "label": "Testo piccolo",
+      "default": "Tutto il catalogo"
+    },
+    {
+      "type": "text",
+      "id": "outro_title",
+      "label": "Titolo",
+      "default": "Tutti i prodotti"
+    },
+    {
+      "type": "text",
+      "id": "outro_button",
+      "label": "Testo del bottone",
+      "default": "Vedi tutto"
     }
   ],
   "blocks": [
