@@ -50,6 +50,7 @@
         // l'apertura entra dopo il primo disegno (e dopo il sipario tra le pagine)
         requestAnimationFrame(function () { requestAnimationFrame(function () { self.classList.add('is-ready'); }); });
       }
+      this.fitText();
       if (!this.panels.length || !this.stack) return;
 
       this.items = this.panels.map(function (panel) {
@@ -76,6 +77,52 @@
       this.raf = this.rafResize = 0;
       this.started = false;
       this.live = false;
+    }
+
+    /* il titolo dell'apertura riempie la riga (senza superare ~40% dell'altezza dello schermo);
+       i nomi delle collezioni si rimpiccioliscono solo se una parola è più larga del pannello.
+       Si rimisura quando cambia la larghezza e quando arrivano i font (vale anche con "riduci movimento"). */
+    fitText() {
+      var self = this;
+      var title = this.querySelector('[data-ec-fit]');
+      var names = Array.prototype.slice.call(this.querySelectorAll('.ec__name, .ec__outro-title'));
+      var lastW = -1;
+      var fit = function (force) {
+        var w = self.clientWidth;
+        if (!w || (w === lastW && force !== true)) return;
+        lastW = w;
+        // niente transizioni mentre si misura (con "riduci movimento" theme.css dà a tutto una transizione brevissima,
+        // e la misura letta subito dopo il cambio sarebbe quella vecchia)
+        self.classList.add('ec--measure');
+        if (title && title.parentElement) {
+          title.style.fontSize = '100px';
+          var tw = title.scrollWidth;
+          var box = title.parentElement.clientWidth;
+          if (tw && box) title.style.fontSize = Math.min(100 * box / tw, window.innerHeight * 0.4).toFixed(2) + 'px';
+        }
+        names.forEach(function (el) { el.style.fontSize = ''; });
+        names.forEach(function (el) {
+          var over = el.scrollWidth - el.clientWidth;
+          if (over > 1 && el.clientWidth) {
+            var fs = parseFloat(getComputedStyle(el).fontSize);
+            el.style.fontSize = Math.floor(fs * el.clientWidth / el.scrollWidth) + 'px';
+          }
+        });
+        self.classList.remove('ec--measure');
+      };
+      var refit = function () { fit(true); };
+      fit(true);
+      if ('ResizeObserver' in window) {
+        var ro = new ResizeObserver(function () { fit(false); });
+        ro.observe(this);
+        this.cleanup.push(function () { ro.disconnect(); });
+      } else {
+        this.on(window, 'resize', function () { fit(false); }, { passive: true });
+      }
+      if (document.fonts) {
+        if (document.fonts.addEventListener) this.on(document.fonts, 'loadingdone', refit);
+        if (document.fonts.ready) document.fonts.ready.then(function () { if (self.started) refit(); });
+      }
     }
 
     on(target, type, fn, opts) {

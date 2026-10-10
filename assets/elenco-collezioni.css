@@ -48,15 +48,20 @@
   background: currentColor;
   transform-origin: left center;
 }
-.ec__title-wrap { width: 100%; }
+.ec__title-wrap { width: 100%; overflow-x: clip; }
+/* la misura giusta per riempire la riga la calcola elenco-collezioni.js; questa vale finché non c'è */
 .ec__title {
   display: inline-block;
   margin: 0;
-  font-size: clamp(3.4rem, 15.5vw, 16rem);
+  font-size: min(15vw, 16rem);
   line-height: .8;
   letter-spacing: -.045em;
   white-space: nowrap;
 }
+/* mentre elenco-collezioni.js misura i titoli */
+.ec--measure .ec__title, .ec--measure .ec__title *,
+.ec--measure .ec__name, .ec--measure .ec__name *,
+.ec--measure .ec__outro-title, .ec--measure .ec__outro-title * { transition: none !important; }
 .ec__l { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .06em; margin-bottom: -.06em; }
 .ec__l > span { display: inline-block; }
 .ec__space { display: inline-block; width: .28em; }
@@ -189,6 +194,8 @@
 
 /* collezione mostrata con i primi prodotti sul set chiaro */
 .ec__panel--set .ec__card { --ec-fg: var(--color-stage-text); --ec-ground: var(--color-stage); background: var(--color-stage); }
+/* il set ha il suo fondo: la foto (su bianco) si fonde con multiply dentro il livello che si muove */
+.ec__panel--set .ec__media { background: var(--color-stage); }
 .ec__set {
   position: absolute;
   inset: 13% 6% 26%;
@@ -202,7 +209,9 @@
   max-width: 34%;
   height: 100%;
 }
-.ec__set-item:nth-child(2) { transform: translateY(6%); }
+/* sfalsato con top, non con transform: un transform isolerebbe la foto e il multiply non la fonderebbe col set */
+.ec__set-item:nth-child(2) { position: relative; top: 5%; }
+.ec__set-item:only-child { max-width: 52%; }
 .ec__set-item img,
 .ec__placeholder {
   width: 100%;
@@ -210,6 +219,7 @@
   object-fit: contain;
   mix-blend-mode: multiply;
 }
+.ec__set-item img { clip-path: inset(1%); } /* via i bordi non bianchi di certe foto */
 .ec__placeholder { color: var(--color-stage-text); opacity: .35; }
 .ec__panel--set .ec__veil {
   background:
@@ -563,6 +573,8 @@
   .ec__index-box.is-off .ec__index-link { pointer-events: none; }
   .ec__index-box:focus-within { opacity: 1 !important; transform: none !important; }
 
+  /* sul set i prodotti lasciano spazio all'indice */
+  .ec--index .ec__set { left: 4%; right: clamp(220px, 19vw, 300px); }
   /* velo sul lato dell'indice, perché si legga su ogni foto */
   .ec--index .ec__veil::after {
     content: '';
@@ -593,7 +605,10 @@
   .ec__foot { align-items: stretch; padding-bottom: 0; }
   .ec__peek { display: none; }
   .ec__meta { justify-content: space-between; }
-  .ec__set { inset: 12% 4% 34%; }
+  .ec__set { inset: 11% 5% 34%; }
+  .ec__set-item { max-width: 50%; }
+  .ec__set-item:nth-child(3) { display: none; }
+  .ec__set-item:only-child { max-width: 82%; }
   .ec__hint-line { height: 34px; }
   .ec__intro { min-height: calc(58vh - var(--header-h, 0px)); }
   .ec__eyebrow-shop, .ec__eyebrow-shop + .ec__eyebrow-line { display: none; }
@@ -610,4 +625,6 @@
   .ec__hint-line::after { animation: none; transform: none; }
   .ec__cta, .ec__cta::before, .ec__cta-icon, .ec__peek-link,
   .ec__index-link, .ec__index-name, .ec__index-name::before, .ec__index-num { transition: none; }
+  /* senza pila l'indice resta in cima al primo pannello, non scorre sopra gli altri */
+  .ec__index-frame { position: absolute; inset: 0 0 auto; }
 }

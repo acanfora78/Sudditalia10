@@ -95,7 +95,7 @@
         <span>{{ total_pad }} {{ section.settings.collections_label | escape }}</span>
       </p>
       <div class="ec__title-wrap">
-        <h1 class="ec__title" data-fit-text>
+        <h1 class="ec__title" data-ec-fit>
           <span class="visually-hidden">{{ title | escape }}</span>
           {%- assign letters = title | split: '' -%}
           {%- for l in letters -%}
