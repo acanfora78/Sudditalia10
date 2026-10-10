@@ -40,6 +40,22 @@
     if (t) for (var k in t) s += t[k][1];
     return s;
   }
+  // molle uguali a 60 e a 120 Hz: tempo dall'ultimo fotogramma, in fotogrammi da 1/60 s
+  function stepper() {
+    var last = 0;
+    var fn = function (now) {
+      var dt = last ? (now - last) / 16.67 : 1;
+      last = now;
+      return clamp(dt, 0.25, 4);
+    };
+    fn.reset = function () { last = 0; };
+    return fn;
+  }
+  // un passo di molla (semi-implicito) lungo dt fotogrammi
+  function spring(o, x, v, target, k, damp, dt) {
+    o[v] = (o[v] + (target - o[x]) * k * dt) * Math.pow(damp, dt);
+    o[x] += o[v] * dt;
+  }
 
   /* ------------------------------------------------------------------
      Un solo ascolto dello scroll: un fotogramma, una lettura di scrollY.
@@ -136,8 +152,12 @@
     function canHide() {
       if (root.classList.contains('cine-on')) return false;
       if (sec.querySelector('details[open]') || document.querySelector('[data-menu-drawer][open], .cf[open]')) return false;
-      if (sec.contains(document.activeElement)) return false;
+      if (keyboardFocusIn(sec)) return false;
       return true;
+    }
+    // fuoco da tastiera dentro l'header (il clic col mouse non conta)
+    function keyboardFocusIn(el) {
+      try { return !!el.querySelector(':focus-visible'); } catch (err) { return el.contains(document.activeElement); }
     }
     function set(h) {
       if (h === hidden) return;
@@ -157,7 +177,7 @@
     });
     // menu, ricerca o filtri aperti, tastiera dentro l'header: si vede sempre
     document.addEventListener('toggle', function () { if (hidden && !canHide()) set(false); }, true);
-    sec.addEventListener('focusin', function () { set(false); });
+    sec.addEventListener('focusin', function () { if (keyboardFocusIn(sec)) set(false); });
     measure();
     // la galleria e la finestra si preparano dopo: si rimisura appena sono pronte
     setTimeout(scheduleMeasure, 600);
@@ -175,8 +195,9 @@
 
     function allowed(el) {
       if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
-      if (el.classList.contains('btn--full') || el.closest('[data-no-magnetic]')) return false;
-      return el.offsetWidth <= 480;
+      // bottoni larghi (aggiungi al carrello, pieni) restano fermi: si misura una volta sola
+      if (el._mvMagOk === undefined) el._mvMagOk = !el.classList.contains('btn--full') && !el.closest('[data-no-magnetic]') && el.offsetWidth <= 480;
+      return el._mvMagOk;
     }
     function state(el) {
       if (!el._mvMag) {
@@ -185,20 +206,25 @@
       }
       return el._mvMag;
     }
-    function tick() {
+    var steps = stepper();
+    function tick(now) {
+      var dt = steps(now);
       for (var i = running.length - 1; i >= 0; i--) {
         var s = running[i];
         // molla: insegue il bersaglio e, lasciata, rimbalza appena prima di fermarsi
-        s.vx = (s.vx + (s.tx - s.x) * 0.16) * 0.74;
-        s.vy = (s.vy + (s.ty - s.y) * 0.16) * 0.74;
-        s.x += s.vx;
-        s.y += s.vy;
-        var rest = !s.on && Math.abs(s.x) < 0.05 && Math.abs(s.y) < 0.05 && Math.abs(s.vx) < 0.05 && Math.abs(s.vy) < 0.05;
-        if (rest) { s.x = s.y = s.vx = s.vy = 0; running.splice(i, 1); }
+        spring(s, 'x', 'vx', s.tx, 0.18, 0.68, dt);
+        spring(s, 'y', 'vy', s.ty, 0.18, 0.68, dt);
+        // ferma (sul bersaglio o di nuovo a casa): niente più fotogrammi finché il mouse non si muove
+        var rest = Math.abs(s.tx - s.x) < 0.05 && Math.abs(s.ty - s.y) < 0.05 && Math.abs(s.vx) < 0.05 && Math.abs(s.vy) < 0.05;
+        if (rest) {
+          s.x = s.tx; s.y = s.ty; s.vx = s.vy = 0;
+          running.splice(i, 1);
+        }
         setT(s.el, 'mag', s.x, s.y);
         if (s.inner) setT(s.inner, 'mag', s.x * 0.45, s.y * 0.45);
       }
       if (running.length) requestAnimationFrame(tick);
+      else steps.reset();
     }
     function wake(s) {
       if (running.indexOf(s) !== -1) return;
@@ -500,8 +526,10 @@
     // le lettere vicine al puntatore saltano su; lasciate, ricadono con un rimbalzo
     var footer = el.closest('footer') || box;
     var px = -1e5, py = 0, inside = false, running = false;
-    function tick() {
+    var steps = stepper();
+    function tick(now) {
       var moving = false;
+      var dt = steps(now);
       var sigma = avg * 1.15;
       letters.forEach(function (l) {
         var f = 0;
@@ -513,15 +541,15 @@
         }
         l.t = -f * H * 0.2;
         l.st = 1 + f * 0.1;
-        l.v = (l.v + (l.t - l.y) * 0.14) * 0.76;
-        l.y += l.v;
-        l.sv = (l.sv + (l.st - l.s) * 0.14) * 0.76;
-        l.s += l.sv;
+        spring(l, 'y', 'v', l.t, 0.15, 0.72, dt);
+        spring(l, 's', 'sv', l.st, 0.15, 0.72, dt);
         if (Math.abs(l.v) > 0.02 || Math.abs(l.t - l.y) > 0.05 || Math.abs(l.sv) > 0.0005 || Math.abs(l.st - l.s) > 0.0005) moving = true;
-        l.el.style.transform = (Math.abs(l.y) < 0.05 && Math.abs(l.s - 1) < 0.0005) ? '' : 'translate3d(0,' + l.y.toFixed(2) + 'px,0) scaleY(' + l.s.toFixed(4) + ')';
+        var tr = (Math.abs(l.y) < 0.05 && Math.abs(l.s - 1) < 0.0005) ? '' : 'translate3d(0,' + l.y.toFixed(2) + 'px,0) scaleY(' + l.s.toFixed(4) + ')';
+        if (tr !== l.tr) { l.tr = tr; l.el.style.transform = tr; }
       });
-      if (moving || inside) requestAnimationFrame(tick);
-      else running = false;
+      // si ferma appena le lettere sono ferme; il prossimo movimento del mouse la riavvia
+      if (moving) requestAnimationFrame(tick);
+      else { running = false; steps.reset(); }
     }
     function run() { if (!running) { running = true; requestAnimationFrame(tick); } }
     if (fine) {
@@ -553,6 +581,7 @@
   var depthIO = null;
   var depthPointer = { x: 0, y: 0 };
   var depthRunning = false;
+  var depthSteps = stepper();
   function depth(scope) {
     if (reduce || !fine) return;
     var found = toArray(scope.querySelectorAll('[data-depth]')).filter(function (el) { return !el._mvDepth; });
@@ -582,18 +611,20 @@
   function runDepth() {
     if (depthRunning) return;
     depthRunning = true;
-    requestAnimationFrame(function step() {
+    var steps = depthSteps;
+    requestAnimationFrame(function step(now) {
       var moving = false;
+      var k = 1 - Math.pow(1 - 0.07, steps(now));  // inseguimento morbido, uguale a ogni frequenza
       depthItems.forEach(function (it) {
         if (!it.visible || !it.el.isConnected) return;
         var tx = depthPointer.x * it.amt, ty = depthPointer.y * it.amt;
-        it.x += (tx - it.x) * 0.07;
-        it.y += (ty - it.y) * 0.07;
+        it.x += (tx - it.x) * k;
+        it.y += (ty - it.y) * k;
         if (Math.abs(tx - it.x) > 0.05 || Math.abs(ty - it.y) > 0.05) moving = true;
         setT(it.el, 'depth', it.x, it.y);
       });
       if (moving) requestAnimationFrame(step);
-      else depthRunning = false;
+      else { depthRunning = false; steps.reset(); }
     });
   }
 
