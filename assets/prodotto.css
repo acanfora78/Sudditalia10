@@ -156,8 +156,8 @@
   height: 200%;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(circle at center, rgba(255, 255, 255, .5), rgba(255, 255, 255, .12) 18%, transparent 34%);
-  mix-blend-mode: soft-light;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, .2), rgba(255, 255, 255, .07) 16%, transparent 32%);
+  mix-blend-mode: screen;
   transition: opacity .8s ease;
 }
 .pd-stage.is-hover .pd-light { opacity: 1; }
@@ -301,7 +301,7 @@
   position: relative;
   z-index: 1;
   overflow: hidden;
-  transition: border-color .3s ease, color .45s cubic-bezier(.2, .8, .2, 1), background-color .3s ease;
+  transition: border-color .3s ease .1s, color .4s cubic-bezier(.2, .8, .2, 1) .12s, background-color .3s ease;
 }
 .pd-ind {
   position: absolute;
@@ -319,7 +319,7 @@
 .pd-opt.is-ready .pd-ind { opacity: 1; }
 .pd-opt.is-ready .pd-ind.is-anim { transition: transform .65s cubic-bezier(.77, 0, .18, 1), background-color .3s ease, box-shadow .3s ease; }
 .pd-ind.is-off { background: transparent; box-shadow: inset 0 0 0 1px var(--color-text); }
-.pd-opt.is-ready .option__value input:checked + label { background: transparent; border-color: transparent; color: var(--color-bg); }
+.pd-opt.is-ready .option__value input:checked + label { background: transparent; border-color: transparent; color: var(--color-bg); transition: border-color .25s ease .3s, color .35s ease .3s, background-color .3s ease; }
 .pd-opt.is-ready .option__value input.is-unavailable:checked + label { color: var(--color-text); }
 .pd-opt .option__value input.is-unavailable + label { color: color-mix(in srgb, var(--color-muted) 80%, transparent); background-image: none; }
 .pd-opt .option__value label::after {
@@ -365,15 +365,23 @@
   transform-origin: right center;
   transition: transform .7s cubic-bezier(.77, 0, .18, 1);
 }
+/* la freccia non occupa spazio: la scritta resta centrata e al passaggio si sposta per farle posto */
 .pd-atc__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  transform: translate3d(15px, 0, 0);
+  position: relative;
+  display: inline-block;
   transition: transform .55s cubic-bezier(.77, 0, .18, 1), opacity .3s ease;
 }
-.pd-atc--bar .pd-atc__label { transform: none; }
-.pd-atc__arrow { flex: none; width: 18px; height: 10px; opacity: 0; transform: translate3d(-10px, 0, 0); transition: transform .55s cubic-bezier(.2, .8, .2, 1), opacity .3s ease; }
+.pd-atc__arrow {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  width: 18px;
+  height: 10px;
+  margin: -5px 0 0 12px;
+  opacity: 0;
+  transform: translate3d(-10px, 0, 0);
+  transition: transform .55s cubic-bezier(.2, .8, .2, 1), opacity .3s ease;
+}
 .pd-atc:focus-visible .pd-atc__fill,
 .pd-atc.is-loading .pd-atc__fill,
 .pd-atc.is-done .pd-atc__fill { transform: scaleX(1); transform-origin: left center; }
@@ -383,7 +391,7 @@
 @media (hover: hover) {
   .pd-atc:not([disabled]):hover { color: var(--color-accent-text); border-color: var(--color-accent); }
   .pd-atc:not([disabled]):hover .pd-atc__fill { transform: scaleX(1); transform-origin: left center; }
-  .pd-atc:not([disabled]):hover .pd-atc__label { transform: none; }
+  .pd-atc:not([disabled]):not(.pd-atc--bar):hover .pd-atc__label { transform: translate3d(-15px, 0, 0); }
   .pd-atc:not([disabled]):hover .pd-atc__arrow { opacity: 1; transform: none; }
 }
 .pd-atc.is-loading { opacity: 1; }
@@ -458,9 +466,11 @@
   .pd .pe__buy { order: 1; }
   .pd .pd-more { order: 2; }
   .pd .pe__title--dup { display: none; }
-  .pd .pd__headline { margin-bottom: 0; }
+  .pd .pd__headline { margin-bottom: 0; font-size: clamp(2.2rem, 10.5vw, 3.4rem); }
   .pd-frame { inset: 10px; }
   .pd-count { top: 22px; left: 26px; }
+  /* su tablet il set lascia vedere anche il titolo sotto */
+  .pd-set { width: min(100%, max(calc((100svh - 300px) * .8), calc((100svh - 150px) * .7))); }
   .pd-thumbs { padding-bottom: 6px; }
 
   .pd-bar {
@@ -512,6 +522,9 @@
     min-height: 560px;
   }
   .pd-set { width: min(100% - 56px, calc((100svh - 190px) * .8)); will-change: transform; }
+}
+@media (min-width: 990px) and (max-width: 1199px) {
+  .pd-atc:not(.pd-atc--bar) { padding-inline: 1em; letter-spacing: .07em; }
 }
 
 /* ==========================================================================

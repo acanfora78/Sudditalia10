@@ -19,6 +19,7 @@
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var hasIO = 'IntersectionObserver' in window;
+  var barOwner = null;
 
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
   function $(root, sel) { return root ? root.querySelector(sel) : null; }
@@ -239,7 +240,10 @@
       old.className = 'is-out';
       s.className = 'is-new';
       countCur.appendChild(s);
-      setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); s.className = ''; }, 720);
+      setTimeout(function () {
+        if (old.parentNode) old.parentNode.removeChild(old);
+        if (s.className === 'is-new') s.className = '';
+      }, 720);
     }
 
     /* misure (una volta, poi solo dopo scroll/resize) */
@@ -607,6 +611,10 @@
     var btn = $(ctx.root, '[data-pd-atc]');
     var pe = $(ctx.root, '.pe');
     if (!bar || !btn || !pe) return;
+    // se la sezione compare due volte, la barra è una sola (la prima)
+    if (barOwner && barOwner !== ctx.root && document.documentElement.contains(barOwner)) return;
+    barOwner = ctx.root;
+    ctx.later(function () { if (barOwner === ctx.root) barOwner = null; });
     var mq = window.matchMedia('(max-width: 989px)');
     var footer = document.querySelector('footer');
     // posizioni misurate una volta (e quando la pagina cambia altezza): lo scroll fa solo due confronti
