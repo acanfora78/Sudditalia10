@@ -1,0 +1,383 @@
+{%- comment -%}
+  Finestra cinema.
+  Schermo pieno bloccato mentre si scorre (sticky, lunghezza da impostazione).
+    Inizio:    la scritta del brand enorme a tutta larghezza e, al centro, una piccola finestra con gli
+               angoli arrotondati che mostra il video (o la foto). Dove la scritta passa sopra la finestra
+               le lettere diventano solo contorno.
+    Scorrendo: la finestra si allarga (clip-path) fino a riempire lo schermo, il video dentro passa da
+               zoom 1.3 a 1, le lettere si allontanano dal centro verso i lati e sfumano.
+    Aperta:    entrano etichetta, titolo, sottotitolo, bottone e qualche prodotto della collezione.
+  Telefono: finestra verticale, una parola per riga sopra e sotto la finestra.
+  "Riduci movimento" (o senza JavaScript): video/foto a tutto schermo con i testi, niente blocco.
+  Effetti in assets/finestra-cinema.js (<finestra-cinema>), stili in assets/finestra-cinema.css.
+{%- endcomment -%}
+{{ 'finestra-cinema.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'finestra-cinema.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign collection = section.settings.collection
+  assign image = section.settings.image
+  assign video = section.settings.video
+  assign video_mobile = section.settings.video_mobile
+  if video == blank and video_mobile != blank
+    assign video = video_mobile
+    assign video_mobile = blank
+  endif
+  assign logo = section.settings.logo
+
+  assign word_text = section.settings.text | default: shop.name | strip
+  if section.settings.word_layout == 'single'
+    assign lines = word_text | split: '|||'
+  else
+    assign lines = word_text | split: ' '
+  endif
+  assign mid = lines.size | plus: 1 | divided_by: 2
+
+  assign title = section.settings.title | default: collection.title
+  assign subtitle = section.settings.subtitle
+  if subtitle == blank and collection != blank
+    assign subtitle = collection.description | strip_html | strip | truncatewords: 28
+  endif
+  assign button_link = section.settings.button_link | default: collection.url
+  assign count = 0
+  if collection != blank and section.settings.show_count
+    assign count = collection.all_products_count
+  endif
+  assign products_to_show = section.settings.products_to_show
+  if collection == blank
+    assign products_to_show = 0
+  endif
+  assign has_button = false
+  if section.settings.button_label != blank and button_link != blank
+    assign has_button = true
+  endif
+  assign has_text = false
+  if title != blank or subtitle != blank or has_button
+    assign has_text = true
+  endif
+-%}
+
+{%- capture word_html -%}
+  {%- if logo != blank -%}
+    <div class="fc__grp fc__grp--top"></div>
+    <div class="fc__gap">
+      <div class="fc__logo" style="--fc-logo-ratio: {{ logo.width }} / {{ logo.height }};" data-fc-line>
+        {%- for k in (0..9) -%}
+          <span class="fc__slice" style="--k: {{ k }};" data-fc-ch>
+            <img src="{{ logo | image_url: width: 1600 }}" alt="" width="{{ logo.width }}" height="{{ logo.height }}" loading="lazy" decoding="async">
+          </span>
+        {%- endfor -%}
+      </div>
+    </div>
+    <div class="fc__grp fc__grp--bot"></div>
+  {%- else -%}
+    {%- if lines.size == 1 -%}
+      <div class="fc__grp fc__grp--top"></div>
+      <div class="fc__gap">
+        <span class="fc__line" data-fc-line>
+          {%- assign chars = lines.first | split: '' -%}
+          {%- for ch in chars -%}
+            {%- if ch == ' ' -%}
+              <span class="fc__ch fc__ch--sp" data-fc-ch>&nbsp;</span>
+            {%- else -%}
+              <span class="fc__ch" data-fc-ch><span class="fc__chi">{{ ch | escape }}</span></span>
+            {%- endif -%}
+          {%- endfor -%}
+        </span>
+      </div>
+      <div class="fc__grp fc__grp--bot"></div>
+    {%- else -%}
+      <div class="fc__grp fc__grp--top">
+        {%- for line in lines -%}
+          {%- if forloop.index > mid -%}{%- break -%}{%- endif -%}
+          <span class="fc__line" data-fc-line data-fc-dir="-1">
+            {%- assign chars = line | split: '' -%}
+            {%- for ch in chars -%}
+              <span class="fc__ch" data-fc-ch><span class="fc__chi">{{ ch | escape }}</span></span>
+            {%- endfor -%}
+          </span>
+        {%- endfor -%}
+      </div>
+      <div class="fc__gap"></div>
+      <div class="fc__grp fc__grp--bot">
+        {%- for line in lines -%}
+          {%- if forloop.index <= mid -%}{%- continue -%}{%- endif -%}
+          <span class="fc__line" data-fc-line data-fc-dir="1">
+            {%- assign chars = line | split: '' -%}
+            {%- for ch in chars -%}
+              <span class="fc__ch" data-fc-ch><span class="fc__chi">{{ ch | escape }}</span></span>
+            {%- endfor -%}
+          </span>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+{%- endcapture -%}
+
+<finestra-cinema
+  class="fc{% if image != blank %} fc--has-image{% endif %}{% if logo != blank or lines.size == 1 %} fc--single{% endif %}{% if logo != blank %} fc--logo{% endif %}"
+  style="--fc-scroll: {{ section.settings.scroll_height }}vh; --fc-pos: {{ section.settings.focus }};"
+>
+  <div class="fc__sticky">
+    <div class="fc__word fc__word--fill" aria-hidden="true">{{ word_html }}</div>
+
+    <div class="fc__window" data-fc-window>
+      <div class="fc__media" data-fc-media>
+        <div class="fc__par" data-fc-par>
+        {%- if image != blank -%}
+          {% render 'responsive-image', image: image, sizes: '100vw', widths: '750, 1000, 1400, 1800, 2400', class: 'fc__img', alt: image.alt %}
+        {%- endif -%}
+        {%- if video != blank -%}
+          <div class="fc__video{% if video_mobile != blank %} fc__video--desktop{% endif %}" data-fc-video="desktop">
+            {{ video | video_tag: muted: true, loop: true, playsinline: true, controls: false, preload: 'none', image_size: '1800x' }}
+          </div>
+        {%- endif -%}
+        {%- if video_mobile != blank -%}
+          <div class="fc__video fc__video--mobile" data-fc-video="mobile">
+            {{ video_mobile | video_tag: muted: true, loop: true, playsinline: true, controls: false, preload: 'none', image_size: '900x' }}
+          </div>
+        {%- endif -%}
+        {%- if image == blank and video == blank -%}
+          {{ 'lifestyle-2' | placeholder_svg_tag: 'fc__ph' }}
+        {%- endif -%}
+        </div>
+      </div>
+      <div class="fc__shade" aria-hidden="true"></div>
+      <div class="fc__dim" aria-hidden="true" data-fc-dim></div>
+    </div>
+
+    <div class="fc__word fc__word--ghost" aria-hidden="true">{{ word_html }}</div>
+
+    {%- comment -%} misura della finestra iniziale (la legge lo script) {%- endcomment -%}
+    <div class="fc__layout" aria-hidden="true"><span class="fc__probe" data-fc-probe></span></div>
+
+    {%- if section.settings.show_frame -%}
+      <div class="fc__frame" aria-hidden="true" data-fc-frame>
+        <span class="fc__corner fc__corner--tl"></span>
+        <span class="fc__corner fc__corner--tr"></span>
+        <span class="fc__corner fc__corner--bl"></span>
+        <span class="fc__corner fc__corner--br"></span>
+      </div>
+    {%- endif -%}
+
+    <div class="fc__safe">
+      <div class="fc__hud page-width" aria-hidden="true" data-fc-hud>
+        <span class="fc__hud-tl">
+          {%- if title != blank -%}<span class="fc__dot"></span>{{ title | escape }}{%- endif -%}
+        </span>
+        <span class="fc__hud-tr"><span data-fc-count>000</span><span class="fc__hud-unit">%</span></span>
+        <span class="fc__hud-bl">
+          {%- if section.settings.scroll_label != blank -%}
+            <span class="fc__cue-line"><i></i></span>{{ section.settings.scroll_label | escape }}
+          {%- endif -%}
+        </span>
+        <span class="fc__hud-br"><span class="fc__bar"><i data-fc-bar></i></span></span>
+      </div>
+
+      {%- if has_text or products_to_show > 0 -%}
+        <div class="fc__content page-width">
+          {%- if has_text -%}
+            <div class="fc__text">
+              {%- if section.settings.kicker != blank -%}
+                <p class="fc__kicker"><span class="fc__rule"></span><span class="fc__kicker-m"><span class="fc__kicker-t">{{ section.settings.kicker | escape }}</span></span></p>
+              {%- endif -%}
+              {%- if title != blank -%}
+                {%- assign title_words = title | split: ' ' -%}
+                <h2 class="fc__title">
+                  {%- for w in title_words -%}
+                    <span class="fc__w"><span class="fc__wi" style="--i: {{ forloop.index0 }};">{{ w | escape }}</span></span>{% unless forloop.last %} {% endunless %}
+                  {%- endfor -%}
+                  {%- if count > 0 -%}
+                    <span class="fc__w fc__w--count"><span class="fc__wi fc__count" style="--i: {{ title_words.size }};">{{ count }}</span></span>
+                  {%- endif -%}
+                </h2>
+              {%- endif -%}
+              {%- if subtitle != blank -%}
+                <p class="fc__sub">{{ subtitle | escape }}</p>
+              {%- endif -%}
+              {%- if has_button -%}
+                <a class="btn fc__btn" href="{{ button_link }}">
+                  <span>{{ section.settings.button_label | escape }}</span>
+                  {% render 'icon', name: 'arrow' %}
+                </a>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+
+          {%- if products_to_show > 0 -%}
+            <ul class="fc__prods" role="list">
+              {%- for product in collection.products limit: products_to_show -%}
+                <li class="fc__prod" style="--i: {{ forloop.index0 }};">
+                  <a class="fc__plink" href="{{ product.url }}" data-cursor="{{ 'general.cursor.view' | t }}">
+                    <span class="fc__pimg">
+                      {%- assign pimg = product.featured_media.preview_image -%}
+                      {%- if pimg != blank -%}
+                        {% render 'responsive-image', image: pimg, sizes: '(max-width: 749px) 30vw, 150px', widths: '180, 240, 360, 480', alt: product.title %}
+                      {%- else -%}
+                        {{ 'product-1' | placeholder_svg_tag: 'fc__ph' }}
+                      {%- endif -%}
+                    </span>
+                    <span class="fc__pname">{{ product.title | escape }}</span>
+                    {% render 'price', product: product %}
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</finestra-cinema>
+
+{% schema %}
+{
+  "name": "Finestra cinema",
+  "tag": "section",
+  "class": "section-finestra-cinema",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Scritta"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Scritta",
+      "info": "Enorme, a tutta larghezza. Se vuota usa il nome del negozio."
+    },
+    {
+      "type": "select",
+      "id": "word_layout",
+      "label": "Disposizione della scritta",
+      "options": [
+        { "value": "lines", "label": "Una parola per riga, sopra e sotto la finestra" },
+        { "value": "single", "label": "Tutta su una riga, sopra la finestra" }
+      ],
+      "default": "lines"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo al posto della scritta (facoltativo)",
+      "info": "PNG chiaro con sfondo trasparente. Scorrendo si divide in strisce che si allontanano."
+    },
+    {
+      "type": "header",
+      "content": "Finestra"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Video",
+      "info": "Senza audio, in loop. Meglio orizzontale e breve (10–20 s)."
+    },
+    {
+      "type": "video",
+      "id": "video_mobile",
+      "label": "Video per telefono (facoltativo)",
+      "info": "Verticale. Se vuoto, anche sul telefono si usa il video principale."
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Immagine",
+      "info": "Copertina finché il video non parte, oppure al posto del video. Almeno 2000 px di lato."
+    },
+    {
+      "type": "select",
+      "id": "focus",
+      "label": "Parte del video o della foto da tenere al centro",
+      "options": [
+        { "value": "50% 50%", "label": "Centro" },
+        { "value": "50% 25%", "label": "Alto" },
+        { "value": "50% 75%", "label": "Basso" }
+      ],
+      "default": "50% 50%"
+    },
+    {
+      "type": "range",
+      "id": "scroll_height",
+      "label": "Lunghezza dello scorrimento",
+      "info": "Quanto bisogna scorrere mentre la finestra resta bloccata e si apre.",
+      "min": 180,
+      "max": 400,
+      "step": 10,
+      "unit": "vh",
+      "default": 260
+    },
+    {
+      "type": "checkbox",
+      "id": "show_frame",
+      "label": "Mirino e contatore intorno alla finestra",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "scroll_label",
+      "label": "Invito a scorrere",
+      "default": "Scorri per aprire"
+    },
+    {
+      "type": "header",
+      "content": "A finestra aperta"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collezione",
+      "info": "Titolo e descrizione si prendono dalla collezione quando i campi sotto sono vuoti."
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Etichetta sopra il titolo",
+      "default": "Collezione"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titolo",
+      "info": "Se vuoto usa il nome della collezione."
+    },
+    {
+      "type": "textarea",
+      "id": "subtitle",
+      "label": "Sottotitolo",
+      "info": "Se vuoto usa la descrizione della collezione."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_count",
+      "label": "Numero di prodotti accanto al titolo",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Testo del bottone",
+      "default": "Scopri la collezione"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Link del bottone",
+      "info": "Se vuoto porta alla collezione."
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Prodotti della collezione da mostrare",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "default": 3
+    }
+  ],
+  "presets": [
+    {
+      "name": "Finestra cinema"
+    }
+  ]
+}
+{% endschema %}
