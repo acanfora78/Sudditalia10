@@ -31,7 +31,11 @@
     },
     "404": {
       "text": "Questa pagina non esiste o è stata spostata.",
-      "button": "Vai allo shop"
+      "button": "Vai allo shop",
+      "kicker": "Errore 404",
+      "heading": "Persi tra le nuvole",
+      "home": "Torna alla home",
+      "collections": "Vedi le collezioni"
     },
     "password": {
       "message": "Stiamo per aprire. Lascia la tua email per sapere quando.",

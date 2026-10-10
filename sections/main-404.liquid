@@ -1,8 +1,108 @@
-<div class="page-width not-found">
-  <div>
-    <h1>404</h1>
-    <p>{{ 'general.404.text' | t }}</p>
-    <a class="btn" href="{{ routes.all_products_collection_url }}">{{ 'general.404.button' | t }}</a>
+{%- comment -%}
+  Pagina non trovata, da film: cielo blu con le nuvole del tema che si aprono come un sipario e poi
+  scorrono lente; "404" gigante con un disturbo a scatti (al passaggio del mouse è più forte);
+  frase, bottoni verso home e collezioni e, se attiva, la ricerca.
+  Stili e movimento in movimento.css / movimento.js, già caricati dal layout per tutto il sito:
+  data-parallax (le nuvole scorrono a velocità diverse), data-depth (seguono il mouse),
+  data-split (il titolo entra parola per parola), data-glitch (il disturbo).
+{%- endcomment -%}
+{%- liquid
+  assign kicker = section.settings.kicker
+  if kicker == blank
+    assign kicker = 'general.404.kicker' | t
+  endif
+  assign heading = section.settings.heading
+  if heading == blank
+    assign heading = 'general.404.heading' | t
+  endif
+  assign text = section.settings.text
+  if text == blank
+    assign text = 'general.404.text' | t
+  endif
+  assign home_label = section.settings.home_label
+  if home_label == blank
+    assign home_label = 'general.404.home' | t
+  endif
+  assign collections_label = section.settings.collections_label
+  if collections_label == blank
+    assign collections_label = 'general.404.collections' | t
+  endif
+-%}
+<div class="nf{% if section.settings.clouds %} nf--clouds{% endif %}" data-nf>
+  <script>
+    // arrivando col sipario tra le pagine, l'apertura delle nuvole aspetta che il telo si alzi
+    if (document.documentElement.classList.contains('curtain-in')) document.currentScript.parentNode.classList.add('nf--late');
+  </script>
+
+  <div class="nf__sky" aria-hidden="true">
+    <div class="nf__layer" data-parallax="0.45" data-depth="10">
+      <div class="nf__enter nf__enter--far">
+        <div class="nf__drift nf__drift--far">
+          <img class="nf__cloud nf__cloud--far" src="{{ 'nuvola-sfondo.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" decoding="async">
+        </div>
+      </div>
+    </div>
+    <div class="nf__layer" data-parallax="0.3" data-depth="22">
+      <div class="nf__enter nf__enter--left">
+        <div class="nf__drift nf__drift--left">
+          <img class="nf__cloud nf__cloud--left" src="{{ 'nuvola-sinistra.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" decoding="async">
+        </div>
+      </div>
+    </div>
+    <div class="nf__layer" data-parallax="0.24" data-depth="30">
+      <div class="nf__enter nf__enter--right">
+        <div class="nf__drift nf__drift--right">
+          <img class="nf__cloud nf__cloud--right" src="{{ 'nuvola-destra.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" decoding="async">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nf__content page-width">
+    {%- if kicker != blank -%}
+      <p class="nf__kicker">{{ kicker | escape }}</p>
+    {%- endif -%}
+    <h1 class="nf__title">
+      <span class="nf__code" data-text="404" aria-hidden="true" data-depth="-14"{% if section.settings.glitch %} data-glitch{% endif %}>
+        <span class="nf__digits">
+          {%- for i in (0..2) -%}
+            <span class="nf__d" style="--i: {{ i }};">{% if i == 1 %}0{% else %}4{% endif %}</span>
+          {%- endfor -%}
+        </span>
+      </span>
+      <span class="nf__heading" data-split="words" data-split-delay="0.75">{{ heading | escape }}</span>
+    </h1>
+    {%- if text != blank -%}
+      <p class="nf__text">{{ text | escape }}</p>
+    {%- endif -%}
+    <div class="nf__actions">
+      <a class="btn" href="{{ routes.root_url }}">{{ home_label | escape }}</a>
+      <a class="btn btn--outline" href="{{ routes.collections_url }}">{{ collections_label | escape }}</a>
+    </div>
+    {%- if section.settings.show_search -%}
+      <form class="nf__search" action="{{ routes.search_url }}" method="get" role="search">
+        <label class="visually-hidden" for="NotFoundSearch-{{ section.id }}">{{ 'general.search.placeholder' | t }}</label>
+        <input id="NotFoundSearch-{{ section.id }}" type="search" name="q" placeholder="{{ 'general.search.placeholder' | t }}" autocomplete="off">
+        <button type="submit" aria-label="{{ 'general.search.submit' | t }}">{% render 'icon', name: 'arrow' %}</button>
+      </form>
+    {%- endif -%}
+  </div>
+
+  <div class="nf__front" aria-hidden="true">
+    <div class="nf__layer nf__layer--near" data-parallax="-0.12" data-depth="44">
+      <div class="nf__enter nf__enter--near-left">
+        <div class="nf__drift nf__drift--near-left">
+          <img class="nf__cloud nf__cloud--near-left" src="{{ 'nuvola-vicina-sinistra.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" decoding="async">
+        </div>
+      </div>
+    </div>
+    <div class="nf__layer nf__layer--near" data-parallax="-0.16" data-depth="52">
+      <div class="nf__enter nf__enter--near-right">
+        <div class="nf__drift nf__drift--near-right">
+          <img class="nf__cloud nf__cloud--near-right" src="{{ 'nuvola-vicina-destra.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" decoding="async">
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -10,6 +110,65 @@
 {
   "name": "Pagina non trovata",
   "tag": "section",
-  "settings": []
+  "class": "section-404",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Etichetta sopra il numero",
+      "default": "Errore 404"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Titolo",
+      "default": "Persi tra le nuvole"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Testo",
+      "info": "Se vuoto usa il testo predefinito: \"Questa pagina non esiste o è stata spostata.\""
+    },
+    {
+      "type": "header",
+      "content": "Bottoni"
+    },
+    {
+      "type": "text",
+      "id": "home_label",
+      "label": "Bottone verso la home",
+      "default": "Torna alla home"
+    },
+    {
+      "type": "text",
+      "id": "collections_label",
+      "label": "Bottone verso le collezioni",
+      "default": "Vedi le collezioni"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "Mostra la ricerca",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Movimento"
+    },
+    {
+      "type": "checkbox",
+      "id": "clouds",
+      "label": "Nuvole che scorrono",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "glitch",
+      "label": "Disturbo sul 404",
+      "info": "A scatti e al passaggio del mouse. Spento se nel sistema è attivo \"riduci movimento\".",
+      "default": true
+    }
+  ]
 }
 {% endschema %}
