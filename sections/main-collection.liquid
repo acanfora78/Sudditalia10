@@ -1,3 +1,5 @@
+{{ 'griglie.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'griglie.js' | asset_url }}" defer></script>
 {%- comment -%}
   Pagina collezione, come l'apertura di un film:
     - intestazione a tutto schermo con la foto della collezione (o, se manca, il primo capo su un set chiaro),

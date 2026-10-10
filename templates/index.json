@@ -20,9 +20,142 @@
         "text_color": "#06132F"
       }
     },
+    "finestra": {
+      "type": "finestra-cinema",
+      "settings": {
+        "video": "shopify://files/videos/apertura-computer.mp4",
+        "video_mobile": "shopify://files/videos/apertura-telefono.mp4",
+        "image": "shopify://shop_images/apertura.jpg",
+        "collection": "hoodies"
+      }
+    },
     "marquee": {
       "type": "fascia-scorrevole",
       "settings": {}
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+        "collection": "hoodies",
+        "title": "",
+        "products_to_show": 4,
+        "columns": 4
+      }
+    },
+    "galleria": {
+      "type": "galleria-cinema",
+      "blocks": {
+        "palco": {
+          "type": "panel",
+          "settings": {
+            "image": "shopify://shop_images/instagram-2.jpg",
+            "title": "Sul palco",
+            "shape": "v"
+          }
+        },
+        "live": {
+          "type": "panel",
+          "settings": {
+            "image": "shopify://shop_images/apertura.jpg",
+            "collection": "t-shirts",
+            "shape": "w"
+          }
+        },
+        "backstage": {
+          "type": "panel",
+          "settings": {
+            "video": "shopify://files/videos/apertura-telefono.mp4",
+            "title": "Backstage",
+            "shape": "v"
+          }
+        },
+        "diamond": {
+          "type": "panel",
+          "settings": {
+            "product": "diamond-hoodie",
+            "shape": "q"
+          }
+        },
+        "felpe": {
+          "type": "panel",
+          "settings": {
+            "image": "shopify://shop_images/instagram-3.jpg",
+            "collection": "hoodies",
+            "shape": "v"
+          }
+        },
+        "bandana": {
+          "type": "panel",
+          "settings": {
+            "image": "shopify://shop_images/instagram-4.jpg",
+            "collection": "accessori",
+            "shape": "o"
+          }
+        },
+        "busta": {
+          "type": "panel",
+          "settings": {
+            "image": "shopify://shop_images/instagram-1.jpg",
+            "title": "Firmato Sudditalia",
+            "shape": "v"
+          }
+        }
+      },
+      "block_order": [
+        "palco",
+        "live",
+        "backstage",
+        "diamond",
+        "felpe",
+        "bandana",
+        "busta"
+      ],
+      "settings": {
+        "eyebrow": "Lookbook",
+        "title": "Dal palco alla strada",
+        "text": "Scorri per guardare",
+        "end_text": "Fine",
+        "end_link": "/collections/all",
+        "end_label": "Vedi tutti i prodotti"
+      }
+    },
+    "collections": {
+      "type": "collection-list",
+      "blocks": {
+        "c1": {
+          "type": "collection",
+          "settings": {
+            "collection": "t-shirts"
+          }
+        },
+        "c2": {
+          "type": "collection",
+          "settings": {
+            "collection": "long-shorts"
+          }
+        },
+        "c3": {
+          "type": "collection",
+          "settings": {
+            "collection": "giacche"
+          }
+        },
+        "c4": {
+          "type": "collection",
+          "settings": {
+            "collection": "accessori"
+          }
+        }
+      },
+      "block_order": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "settings": {
+        "title": "Collezioni"
+      }
     },
     "social": {
       "type": "striscia-social",
@@ -67,61 +200,16 @@
         "post4"
       ],
       "settings": {}
-    },
-    "featured": {
-      "type": "featured-collection",
-      "settings": {
-        "collection": "hoodies",
-        "title": "",
-        "products_to_show": 4,
-        "columns": 4
-      }
-    },
-    "collections": {
-      "type": "collection-list",
-      "blocks": {
-        "c1": {
-          "type": "collection",
-          "settings": {
-            "collection": "t-shirts"
-          }
-        },
-        "c2": {
-          "type": "collection",
-          "settings": {
-            "collection": "long-shorts"
-          }
-        },
-        "c3": {
-          "type": "collection",
-          "settings": {
-            "collection": "giacche"
-          }
-        },
-        "c4": {
-          "type": "collection",
-          "settings": {
-            "collection": "accessori"
-          }
-        }
-      },
-      "block_order": [
-        "c1",
-        "c2",
-        "c3",
-        "c4"
-      ],
-      "settings": {
-        "title": "Collezioni"
-      }
     }
   },
   "order": [
     "intro",
     "hero",
+    "finestra",
     "marquee",
-    "social",
     "featured",
-    "collections"
+    "galleria",
+    "collections",
+    "social"
   ]
 }
