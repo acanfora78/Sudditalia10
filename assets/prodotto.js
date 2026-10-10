@@ -188,11 +188,17 @@
       slides.forEach(function (s) { s.classList.remove('pd-enter', 'pd-leave', 'pd-back', 'pd-up'); });
       if (wipe) wipe.className = 'pd-wipe';
     }
+    // con le lineette o con la variante la direzione segue l'ordine; col dito segue il gesto (che fa il giro)
+    var byIndex = false;
+    var markIndex = function () { byIndex = true; setTimeout(function () { byIndex = false; }, 0); };
+    ctx.on(st, 'click', function (e) { if (e.target.closest && e.target.closest('[data-thumb]')) markIndex(); }, true);
+    ctx.on(st, 'stage:show', markIndex, true);
     function changed(prev, idx) {
       var dir;
       if (slides[idx].hasAttribute('data-worn')) dir = 'up';
-      else if (n === 2) dir = idx > prev ? 'fwd' : 'back';
+      else if (n === 2 || byIndex) dir = idx > prev ? 'fwd' : 'back';
       else dir = ((idx - prev + n) % n) <= n / 2 ? 'fwd' : 'back';
+      byIndex = false;
 
       if (zoomed) exitZoom(true);
       count(idx, dir);
@@ -600,25 +606,33 @@
     var bar = $(ctx.root, '[data-pd-bar]');
     var btn = $(ctx.root, '[data-pd-atc]');
     var pe = $(ctx.root, '.pe');
-    if (!bar || !btn || !pe || !hasIO) return;
+    if (!bar || !btn || !pe) return;
     var mq = window.matchMedia('(max-width: 989px)');
-    var passed = false, inside = false;
+    var footer = document.querySelector('footer');
+    // posizioni misurate una volta (e quando la pagina cambia altezza): lo scroll fa solo due confronti
+    var btnBottom = Infinity, endTop = Infinity, headerH = 64, ticking = false, mt = 0;
     function update() {
-      var show = mq.matches && passed && inside;
+      ticking = false;
+      var y = window.scrollY, vh = window.innerHeight;
+      // il bottone è "uscito" quando è passato sotto l'header fisso; la barra si toglie quando arriva il footer
+      var show = mq.matches && y + headerH > btnBottom && y + vh < endTop;
       if (bar.classList.contains('is-on') === show) return;
       bar.classList.toggle('is-on', show);
       document.documentElement.classList.toggle('pd-bar-on', show);
     }
-    ctx.keep(new IntersectionObserver(function (en) {
-      var e = en[en.length - 1];
-      passed = !e.isIntersecting && e.boundingClientRect.top < 0;
+    function measure() {
+      var y = window.scrollY;
+      headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
+      btnBottom = btn.getBoundingClientRect().bottom + y;
+      endTop = footer ? footer.getBoundingClientRect().top + y : pe.getBoundingClientRect().bottom + y + window.innerHeight * 0.15;
       update();
-    })).observe(btn);
-    // la barra resta finché la sezione prodotto arriva in fondo allo schermo
-    ctx.keep(new IntersectionObserver(function (en) {
-      inside = en[en.length - 1].isIntersecting;
-      update();
-    }, { rootMargin: '-85% 0px 0px 0px' })).observe(pe);
+    }
+    function later() { clearTimeout(mt); mt = setTimeout(measure, 120); }
+    ctx.on(window, 'scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    ctx.on(window, 'resize', later);
+    ctx.on(window, 'load', measure);
+    if ('ResizeObserver' in window) ctx.keep(new ResizeObserver(later)).observe(document.body);
+    measure();
     if (mq.addEventListener) {
       mq.addEventListener('change', update);
       ctx.later(function () { mq.removeEventListener('change', update); });

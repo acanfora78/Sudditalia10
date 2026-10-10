@@ -95,7 +95,7 @@
 }
 
 /* le foto: una sola visibile; durante il passaggio quella che esce resta sotto */
-.pd-set > .pe__slides > .pe__slide { opacity: 1; visibility: hidden; z-index: 0; transition: none; }
+.pd-set > .pe__slides > .pe__slide { opacity: 1; visibility: hidden; z-index: 0; overflow: hidden; transition: none; }
 .pd-set > .pe__slides > .pe__slide.is-active { visibility: visible; z-index: 2; }
 .pd-set > .pe__slides > .pe__slide.pd-leave { visibility: visible; z-index: 1; }
 /* ciò che si muove dentro la foto: l'immagine (mai il riquadro .pe__worn, che ha già la sua trasformazione) */
@@ -199,7 +199,21 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-stage-text, #0b1a3a) 28%, transparent), inset 0 0 36px rgba(11, 26, 58, .12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7), inset 0 0 0 2px color-mix(in srgb, var(--color-stage-text, #0b1a3a) 30%, transparent), inset 0 0 40px rgba(11, 26, 58, .14);
+}
+.pd-lens::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  background:
+    linear-gradient(var(--color-accent), var(--color-accent)) center / 100% 1px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) center / 1px 100% no-repeat;
+  opacity: .9;
 }
 .pd-lens__in { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .pd-lens__in > .pe__slide { position: absolute; inset: 0; opacity: 1; visibility: visible; transition: none; animation: none; }
@@ -214,9 +228,9 @@
 /* contatore 01 — 03 */
 .pd-count {
   position: absolute;
-  top: clamp(14px, 2.2vw, 30px);
-  left: clamp(16px, 2.2vw, 30px);
-  z-index: 8;
+  top: 16px;
+  left: 18px;
+  z-index: 6;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -225,7 +239,13 @@
   letter-spacing: .14em;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
+  transform: translateZ(60px);
+  transition: opacity .4s ease;
 }
+.pd-set.is-zoomed .pd-count,
+.pd-set.is-zoomed .pd-frame,
+.pd-stage.is-lens .pd-count { opacity: 0; }
+.pd-frame { transition: opacity .4s ease; }
 .pd-count__cur { position: relative; display: block; height: 1em; overflow: hidden; }
 .pd-count__cur span { display: block; }
 .pd-count__cur span + span { position: absolute; left: 0; top: 0; }
@@ -425,6 +445,9 @@
 /* barra di acquisto su telefono */
 .pd-bar { display: none; }
 
+/* l'avviso "Aggiunto al carrello" su una riga (centrato con left: 50% andrebbe a capo a metà schermo) */
+.template-product .toast { width: max-content; }
+
 /* ==========================================================================
    Telefono e tablet
    ========================================================================== */
@@ -469,7 +492,7 @@
   .pd-bar__name { margin: 0 0 2px; overflow: hidden; font-size: .84rem; font-weight: 700; line-height: 1.2; white-space: nowrap; text-overflow: ellipsis; }
   .pd-bar__price { font-size: .84rem; line-height: 1.2; }
   .pd-bar__price .price { color: var(--color-text); }
-  .pd-atc--bar { flex: none; min-height: 48px; padding: .6em 1.15em; font-size: .7rem; }
+  .pd-atc--bar { flex: none; min-height: 48px; padding: .6em 1em; font-size: .68rem; letter-spacing: .06em; }
   .pd-atc--bar .pd-atc__ok { gap: 8px; }
   html.pd-bar-on .toast { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
 }

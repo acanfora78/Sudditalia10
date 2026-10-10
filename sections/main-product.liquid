@@ -96,15 +96,17 @@
         </div>
         <span class="pd-light" aria-hidden="true"></span>
         <span class="pd-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        {%- if slide_count > 1 -%}
+          <span class="pd-count" aria-hidden="true">
+            <span class="pd-count__cur"><span>01</span></span>
+            <span class="pd-count__bar"></span>
+            <span class="pd-count__tot">{% if slide_count < 10 %}0{% endif %}{{ slide_count }}</span>
+          </span>
+        {%- endif -%}
         <span class="pd-lens" aria-hidden="true"><span class="pd-lens__in"></span></span>
       </div>
 
       {%- if slide_count > 1 -%}
-        <div class="pd-count" aria-hidden="true">
-          <span class="pd-count__cur"><span>01</span></span>
-          <span class="pd-count__bar"></span>
-          <span class="pd-count__tot">{% if slide_count < 10 %}0{% endif %}{{ slide_count }}</span>
-        </div>
         <div class="pe__thumbs pd-thumbs" role="group" aria-label="{{ 'products.product.media_gallery' | t }}">
           {%- for i in (1..slide_count) -%}
             <button type="button" class="pe__thumb{% if forloop.first %} is-active{% endif %}" data-thumb="{{ forloop.index0 }}" aria-label="{{ 'products.product.show_media' | t: number: i }}"{% if forloop.first %} aria-current="true"{% endif %}></button>
