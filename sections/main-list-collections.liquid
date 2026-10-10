@@ -84,7 +84,7 @@
   <elenco-collezioni class="ec" data-ec>
     <header class="ec__intro page-width">
       <p class="ec__eyebrow">
-        <span>{{ shop.name | escape }}</span>
+        <span class="ec__eyebrow-shop">{{ shop.name | escape }}</span>
         <span class="ec__eyebrow-line" aria-hidden="true"></span>
         <span>{{ total_pad }} {{ section.settings.collections_label | escape }}</span>
       </p>
@@ -182,7 +182,7 @@
                 assign loading = 'eager'
               endif
             -%}
-            <li class="ec__panel{% if set_style %} ec__panel--set{% endif %}" id="ec-{{ section.id }}-{{ n }}" data-ec-panel {% if use_blocks %}{{ item.shopify_attributes }}{% endif %}>
+            <li class="ec__panel{% if set_style %} ec__panel--set{% endif %}" id="ec-{{ section.id }}-{{ n }}" style="--ec-p: {{ num | times: 1.0 | divided_by: total }};" data-ec-panel {% if use_blocks %}{{ item.shopify_attributes }}{% endif %}>
               <div class="ec__card" data-ec-card>
                 <div class="ec__media" data-ec-media>
                   {%- if set_style -%}

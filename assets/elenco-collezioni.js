@@ -31,6 +31,7 @@
       this.panels = Array.prototype.slice.call(this.querySelectorAll('[data-ec-panel]'));
       this.links = Array.prototype.slice.call(this.querySelectorAll('[data-ec-link]'));
       this.stack = this.querySelector('[data-ec-stack]');
+      this.indexList = this.querySelector('.ec__index-list');
       this.current = -1;
       this.cleanup = [];
 
@@ -199,6 +200,7 @@
       this.cfg = mqPhone.matches ? PHONE : DESKTOP;
       // forza il ridisegno di tutti i pannelli con le nuove misure
       this.items.forEach(function (it) { it.p = -1; it.e = -1; });
+      this.indexO = -1;
     }
 
     update() {
@@ -231,6 +233,16 @@
           it.media.style.transform = 'translate3d(0,' + y.toFixed(2) + '%,0) scale(' + s.toFixed(4) + ')';
         }
         if (it.shade) it.shade.style.opacity = Math.max(cfg.shadeIn * (1 - e), cfg.shadeOut * p).toFixed(3);
+      }
+      // l'indice compare con il primo pannello e se ne va con l'ultimo
+      if (this.indexList) {
+        var o = Math.min(clamp((f + 0.75) / 0.5, 0, 1), 1 - clamp((f - this.items.length + 1) / 0.35, 0, 1));
+        o = Math.round(o * 100) / 100;
+        if (o !== this.indexO) {
+          this.indexO = o;
+          this.indexList.style.opacity = o;
+          this.indexList.style.transform = o < 1 ? 'translate3d(' + ((1 - o) * 24).toFixed(1) + 'px,0,0)' : '';
+        }
       }
     }
   }

@@ -138,8 +138,18 @@
   background: var(--color-surface);
   color: var(--ec-fg);
   transform-origin: 50% 40%;
-  box-shadow: 0 -1px 0 color-mix(in srgb, var(--color-text) 14%, transparent);
 }
+/* filo di luce sul bordo alto, come il bordo di uno schermo */
+.ec__card::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 5;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-text) 38%, transparent) 50%, transparent);
+}
+.ec__panel--set .ec__card::after { display: none; }
 .ec__panel.is-near .ec__card,
 .ec__panel.is-near .ec__media { will-change: transform; }
 
@@ -242,10 +252,10 @@
 .ec__num::after {
   content: '';
   align-self: center;
-  width: clamp(36px, 5vw, 80px);
+  width: clamp(48px, 6vw, 96px);
   height: 1px;
   margin-left: .6em;
-  background: color-mix(in srgb, var(--ec-fg) 50%, transparent);
+  background: linear-gradient(to right, var(--ec-fg) calc(var(--ec-p, 0) * 100%), color-mix(in srgb, var(--ec-fg) 28%, transparent) 0);
   transform-origin: left center;
 }
 
@@ -403,6 +413,7 @@
     -webkit-backdrop-filter: blur(14px) saturate(1.2);
     backdrop-filter: blur(14px) saturate(1.2);
   }
+  .ec__index-list:focus-within { opacity: 1 !important; transform: none !important; }
   .ec__index-link {
     position: relative;
     display: grid;
@@ -467,6 +478,8 @@
   .ec__meta { justify-content: space-between; }
   .ec__set { inset: 12% 4% 34%; }
   .ec__hint-line { height: 34px; }
+  .ec__intro { min-height: calc(58vh - var(--header-h, 0px)); }
+  .ec__eyebrow-shop, .ec__eyebrow-shop + .ec__eyebrow-line { display: none; }
 }
 
 /* --- Riduci movimento: pannelli statici uno sotto l'altro ----------------- */
