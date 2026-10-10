@@ -720,6 +720,7 @@ label { display: block; margin-bottom: 6px; font-size: .87rem; }
   display: flex;
   align-items: center;
   gap: 20px;
+  width: max-content;
   max-width: calc(100vw - 32px);
   padding: 14px 20px;
   border-radius: var(--corner-radius);

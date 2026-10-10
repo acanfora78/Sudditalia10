@@ -37,7 +37,7 @@
   {% if title != blank %}role="region" aria-label="{{ title | escape }}"{% endif %}
 >
   <div class="gc__pin">
-    {%- if title != blank or section.settings.eyebrow != blank -%}
+    {%- if title != blank -%}
       <div class="gc__intro" data-gc-intro>
         <div class="gc__intro-inner">
           {%- if section.settings.eyebrow != blank -%}
@@ -137,13 +137,13 @@
 
           case shape
             when 'v'
-              assign sizes = '(max-width: 749px) 110vw, 52vh'
+              assign sizes = '(max-width: 749px) 110vw, 75vh'
             when 'q'
-              assign sizes = '(max-width: 749px) 110vw, 66vh'
+              assign sizes = '(max-width: 749px) 110vw, 90vh'
             when 'o'
-              assign sizes = '(max-width: 749px) 110vw, 96vh'
+              assign sizes = '(max-width: 749px) 110vw, 125vh'
             else
-              assign sizes = '(max-width: 749px) 120vw, 110vh'
+              assign sizes = '(max-width: 749px) 120vw, 145vh'
           endcase
 
           assign num = forloop.index | prepend: '0' | slice: -2, 2

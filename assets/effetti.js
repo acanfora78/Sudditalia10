@@ -430,6 +430,8 @@
     if (!els.length) return;
     function fit() {
       els.forEach(function (el) {
+        // senza transizioni: con "riduci movimento" theme.css le accorcia ma non le toglie, e la misura arriverebbe vecchia
+        el.style.transition = 'none';
         el.style.fontSize = '100px';
         var w = el.scrollWidth;
         var box = el.parentElement.clientWidth;

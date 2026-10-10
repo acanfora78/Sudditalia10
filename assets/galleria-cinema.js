@@ -339,10 +339,12 @@
           // otturatore: la parte destra resta chiusa finché il pannello non entra davvero
           var r = pn.open ? 0 : clamp((left - vw * 0.42) / (vw * 0.44), 0, 1);
           r = Math.round(r * r * (3 - 2 * r) * 1000) / 10;
+          // mai un capello di immagine a riposo: o chiuso del tutto o aperto almeno del 12%
+          if (r > 88) r = 100;
           if (r !== pn.clip) { pn.clip = r; pn.frame.style.clipPath = r > 0 ? 'inset(0 ' + r + '% 0 0)' : ''; }
         }
         if (pn.num) pn.num.style.transform = 'translate3d(' + (norm * vw * 0.075).toFixed(1) + 'px,0,0)';
-        var on = pn.active ? Math.abs(norm) < 0.58 : Math.abs(norm) < 0.32;
+        var on = pn.active ? Math.abs(norm) < 0.45 && left > -pn.w * 0.15 : Math.abs(norm) < 0.32;
         if (on !== pn.active) { pn.active = on; pn.el.classList.toggle('is-active', on); }
       }
 
