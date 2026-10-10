@@ -62,6 +62,7 @@
 
     {{ 'theme.css' | asset_url | stylesheet_tag: preload: true }}
     {{ 'sezioni.css' | asset_url | stylesheet_tag }}
+    {{ 'movimento.css' | asset_url | stylesheet_tag }}
 
     <script>
       document.documentElement.classList.remove('no-js');
@@ -95,6 +96,7 @@
     </script>
     <script src="{{ 'theme.js' | asset_url }}" defer></script>
     <script src="{{ 'effetti.js' | asset_url }}" defer></script>
+    <script src="{{ 'movimento.js' | asset_url }}" defer></script>
 
     {{ content_for_header }}
   </head>
