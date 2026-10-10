@@ -12,6 +12,7 @@
   --ec-h: calc(100vh - var(--header-h, 0px));
   --ec-pad-x: clamp(16px, 3.4vw, 56px);
   --ec-pad-y: clamp(20px, 3vw, 44px);
+  --ec-gap: 32vh; /* pausa: per questo tratto di scroll il pannello appoggiato resta tutto a schermo */
   position: relative;
   display: block;
 }
@@ -134,6 +135,8 @@
   top: var(--header-h, 0px);
   height: var(--ec-h);
 }
+.ec__panel + .ec__panel,
+.ec__outro { margin-top: var(--ec-gap); }
 .ec__card {
   --ec-fg: var(--color-text);
   --ec-ground: var(--color-bg);
@@ -612,6 +615,7 @@
   .ec__hint-line { height: 34px; }
   .ec__intro { min-height: calc(58vh - var(--header-h, 0px)); }
   .ec__eyebrow-shop, .ec__eyebrow-shop + .ec__eyebrow-line { display: none; }
+  .ec { --ec-gap: 22vh; }
   .ec__outro-title { font-size: clamp(2.8rem, 15vw, 5rem); }
   .ec__outro-glow { bottom: -30%; }
 }

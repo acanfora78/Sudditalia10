@@ -181,7 +181,7 @@
 
     /* posizione di scroll in cui il pannello i è appoggiato sotto l'header */
     landing(i) {
-      if (this.live) return Math.ceil(this.stackTop + i * this.H - this.headerH);
+      if (this.live) return Math.ceil(this.stackTop + i * this.P - this.headerH);
       return Math.ceil(this.panels[i].getBoundingClientRect().top + window.scrollY - headerHeight());
     }
 
@@ -213,7 +213,9 @@
         try { focusVisible = t.matches(':focus-visible'); } catch (err) {}
         if (!focusVisible) return;
         var i = self.panels.indexOf(panel);
-        if (i >= 0 && Math.abs(self.f - i) > 0.02) self.goTo(i, false);
+        // già tutto a schermo (appoggiato o nella pausa): non si muove niente
+        var si = i * self.P;
+        if (i >= 0 && (self.s < si - 2 || self.s > si + self.gap + 2)) self.goTo(i, false);
       });
       // editor del tema: selezionando un blocco si va alla sua collezione
       this.on(document, 'shopify:block:select', function (e) {
@@ -270,32 +272,43 @@
       var first = this.panels[0];
       this.H = first.offsetHeight || window.innerHeight;
       this.headerH = parseFloat(getComputedStyle(first).top) || 0;
+      // pausa tra un pannello e l'altro (margine in CSS): il pannello appoggiato resta tutto a schermo per un tratto
+      var next = this.panels[1] || this.outro;
+      this.gap = next ? parseFloat(getComputedStyle(next).marginTop) || 0 : 0;
+      this.P = this.H + this.gap;
       this.stackTop = this.stack.getBoundingClientRect().top + window.scrollY;
       this.cfg = mqPhone.matches ? PHONE : DESKTOP;
       // forza il ridisegno di tutto con le nuove misure
-      this.items.forEach(function (it) { it.p = -1; it.e = -1; });
+      this.items.forEach(function (it) { it.p = it.e = it.l = -1; });
       this.indexO = this.fillS = this.outroQ = -1;
     }
 
     update() {
       var cfg = this.cfg;
       var n = this.items.length;
-      // f = quanti pannelli sono già appoggiati (0 = il primo è appena arrivato sotto l'header)
-      var f = (window.scrollY + this.headerH - this.stackTop) / this.H;
-      this.f = f;
-      var base = Math.floor(f);
+      var H = this.H, gap = this.gap, P = this.P;
+      // s = quanto si è scesi nella pila (0 = il primo pannello è appena arrivato sotto l'header);
+      // il pannello i si appoggia a s = i * P, resta fermo per "gap", poi il successivo lo copre in H
+      var s = window.scrollY + this.headerH - this.stackTop;
+      this.s = s;
+      this.f = s / P;
       for (var i = 0; i < n; i++) {
         var it = this.items[i];
-        // quanto è coperto dal successivo (l'ultimo lo copre la schermata finale, se c'è)
-        var p = i === n - 1 && !this.outro ? 0 : round(clamp(f - i, 0, 1), 1000);
+        var si = i * P;
         // quanto è salito al suo posto
-        var e = round(clamp(f - i + 1, 0, 1), 1000);
-        var near = i >= base - 1 && i <= base + 1;
+        var e = round(clamp((s - si + H) / H, 0, 1), 1000);
+        // quanto è coperto dal successivo (l'ultimo lo copre la schermata finale, se c'è)
+        var p = i === n - 1 && !this.outro ? 0 : round(clamp((s - si - gap) / H, 0, 1), 1000);
+        // vita intera del pannello, da quando inizia a salire a quando è coperto: la foto scorre e si allarga
+        // senza fermarsi mai, anche nella pausa
+        var l = round(clamp((s - si + H) / (2 * H + gap), 0, 1), 1000);
+        var near = s > si - H - 40 && s < si + gap + H + 40;
         if (near !== it.near) { it.near = near; it.panel.classList.toggle('is-near', near); }
-        if (p === it.p && e === it.e) continue;
-        it.p = p; it.e = e;
+        if (p === it.p && e === it.e && l === it.l) continue;
+        var cardChanged = p !== it.p || e !== it.e;
+        it.p = p; it.e = e; it.l = l;
 
-        if (it.card) {
+        if (it.card && cardChanged) {
           it.card.style.transform = p > 0
             ? 'translate3d(0,' + (-cfg.lift * p).toFixed(2) + '%,0) scale(' + (1 - cfg.scale * p).toFixed(4) + ')'
             : '';
@@ -303,31 +316,30 @@
           it.card.style.clipPath = r > 0.4 ? 'inset(0 round ' + r.toFixed(1) + 'px)' : '';
           // del tutto coperto: non si disegna più (resta raggiungibile con la tastiera)
           it.card.style.opacity = p >= 1 ? '0' : '';
+          if (it.shade) it.shade.style.opacity = Math.max(cfg.shadeIn * (1 - e), cfg.shadeOut * p).toFixed(3);
         }
         if (it.media) {
-          var y = -cfg.par * (1 - e) + cfg.drift * p;
-          var s = cfg.zoomBase + cfg.zoomIn * (1 - e);
-          it.media.style.transform = 'translate3d(0,' + y.toFixed(2) + '%,0) scale(' + s.toFixed(4) + ')';
+          var y = -cfg.par + (cfg.par + cfg.drift) * l;
+          var z = cfg.zoomBase + cfg.zoomIn * (1 - l);
+          it.media.style.transform = 'translate3d(0,' + y.toFixed(2) + '%,0) scale(' + z.toFixed(4) + ')';
         }
-        if (it.shade) it.shade.style.opacity = Math.max(cfg.shadeIn * (1 - e), cfg.shadeOut * p).toFixed(3);
       }
 
+      var sLast = (n - 1) * P;
       // schermata finale: sale come un'altra carta; la scritta arriva un po' più lenta e la luce cresce
-      if (this.outro) {
-        var q = round(clamp(f - n + 1, 0, 1), 1000);
-        if (q !== this.outroQ) {
-          this.outroQ = q;
-          if (this.outroInner) this.outroInner.style.transform = q < 1 ? 'translate3d(0,' + (-(1 - q) * 18).toFixed(2) + 'vh,0)' : '';
-          if (this.glow) {
-            this.glow.style.transform = 'translate3d(0,' + ((1 - q) * 22).toFixed(2) + '%,0) scale(' + (0.7 + 0.3 * q).toFixed(4) + ')';
-            this.glow.style.opacity = (0.25 + 0.75 * q).toFixed(3);
-          }
+      var q = round(clamp((s - sLast - (this.outro ? gap : 0)) / H, 0, 1), 1000);
+      if (this.outro && q !== this.outroQ) {
+        this.outroQ = q;
+        if (this.outroInner) this.outroInner.style.transform = q < 1 ? 'translate3d(0,' + (-(1 - q) * 18).toFixed(2) + 'vh,0)' : '';
+        if (this.glow) {
+          this.glow.style.transform = 'translate3d(0,' + ((1 - q) * 22).toFixed(2) + '%,0) scale(' + (0.7 + 0.3 * q).toFixed(4) + ')';
+          this.glow.style.opacity = (0.25 + 0.75 * q).toFixed(3);
         }
       }
 
       if (this.indexBox) {
-        // l'indice compare con il primo pannello e se ne va quando sale la schermata finale (o l'ultimo pannello)
-        var o = Math.min(clamp((f + 0.75) / 0.5, 0, 1), 1 - clamp((f - n + 1) / 0.35, 0, 1));
+        // l'indice compare con il primo pannello e se ne va quando sale la schermata finale (o se ne va l'ultimo pannello)
+        var o = Math.min(clamp((s + 0.75 * H) / (0.5 * H), 0, 1), 1 - clamp(q / 0.35, 0, 1));
         o = round(o, 100);
         if (o !== this.indexO) {
           this.indexO = o;
@@ -336,9 +348,9 @@
           // quasi invisibile: i link non si prendono i clic (con la tastiera l'indice ricompare, vedi CSS)
           this.indexBox.classList.toggle('is-off', o < 0.1);
         }
-        // binario: avanza con lo scroll lungo tutto l'elenco
+        // binario: avanza con lo scroll lungo tutto l'elenco, pieno quando l'ultima collezione è appoggiata
         if (this.fill) {
-          var fs = round(clamp((f + 1) / n, 0, 1), 1000);
+          var fs = round(clamp((s + H) / (sLast + H), 0, 1), 1000);
           if (fs !== this.fillS) { this.fillS = fs; this.fill.style.transform = 'scaleY(' + fs + ')'; }
         }
       }
