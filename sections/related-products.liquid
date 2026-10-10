@@ -1,34 +1,45 @@
-<div class="section-spacing">
+{%- comment -%}
+  Prodotti correlati: carosello da trascinare (mouse, con inerzia) o da scorrere col dito,
+  con frecce e barra di avanzamento.
+  Shopify calcola i consigliati dopo la pagina: griglie.js li chiede all'indirizzo in data-url
+  e sostituisce il contenuto di <product-recommendations> con questa stessa sezione già piena.
+{%- endcomment -%}
+{{ 'griglie.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'griglie.js' | asset_url }}" defer></script>
+
+<div class="rp section-spacing">
   <div class="page-width">
-    <product-recommendations data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.products_to_show }}&intent=related">
+    <product-recommendations class="rp__recs" data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.products_to_show }}&intent=related">
       {%- if recommendations.performed and recommendations.products_count > 0 -%}
-        <div class="section-head">
-          <h2>{{ section.settings.title }}</h2>
-        </div>
-        <div class="grid" style="--cols: 4;">
-          {%- for product in recommendations.products -%}
-            {% render 'product-card', product: product %}
-          {%- endfor -%}
+        {%- assign count = recommendations.products_count -%}
+        <div class="g-rail rp__rail" data-g-rail data-g-drag>
+          <header class="g-head g-head--compact" data-g-in>
+            <div class="g-head__top">
+              {%- if section.settings.title != blank -%}
+                <h2 class="g-head__title">{{ section.settings.title | escape }}</h2>
+              {%- endif -%}
+              <span class="g-head__count" aria-hidden="true">({% if count < 10 %}0{% endif %}{{ count }})</span>
+            </div>
+            <div class="g-head__nav">
+              <button type="button" class="g-arrow g-arrow--prev" data-g-prev aria-label="{{ 'general.accessibility.previous' | t }}">
+                {%- render 'icon', name: 'arrow' -%}
+              </button>
+              <button type="button" class="g-arrow" data-g-next aria-label="{{ 'general.accessibility.next' | t }}">
+                {%- render 'icon', name: 'arrow' -%}
+              </button>
+            </div>
+          </header>
+          <ul class="g-rail__track rp__track" data-g-track role="list">
+            {%- for product in recommendations.products -%}
+              <li class="g-rail__item">{% render 'product-card', product: product, sizes: '(max-width: 749px) 72vw, 26vw' %}</li>
+            {%- endfor -%}
+          </ul>
+          <div class="g-rail__bar" aria-hidden="true"><span class="g-rail__thumb" data-g-thumb></span></div>
         </div>
       {%- endif -%}
     </product-recommendations>
   </div>
 </div>
-
-<script>
-  (function () {
-    var el = document.currentScript.previousElementSibling.querySelector('product-recommendations');
-    if (!el || el.children.length || !window.fetch) return;
-    fetch(el.dataset.url)
-      .then(function (r) { return r.text(); })
-      .then(function (html) {
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        var fresh = doc.querySelector('product-recommendations');
-        if (fresh && fresh.innerHTML.trim()) el.innerHTML = fresh.innerHTML;
-      })
-      .catch(function () { /* senza consigliati la pagina resta completa */ });
-  })();
-</script>
 
 {% schema %}
 {
@@ -46,9 +57,17 @@
       "id": "products_to_show",
       "label": "Prodotti da mostrare",
       "min": 2,
-      "max": 8,
+      "max": 10,
       "step": 1,
-      "default": 4
+      "default": 8
+    }
+  ],
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "presets": [
+    {
+      "name": "Prodotti correlati"
     }
   ]
 }

@@ -1,6 +1,16 @@
 {%- comment -%}
-  Scheda prodotto per le griglie.
+  Scheda prodotto per le griglie (home, collezione, ricerca, correlati).
   Parametri: product (obbligatorio), sizes (opzionale), eager (opzionale: carica subito l'immagine)
+
+  Il movimento sta in griglie.css + griglie.js (caricati dalla sezione che usa la scheda):
+  inclinazione 3D col riflesso di luce, seconda foto a tendina diagonale, titolo e prezzo che
+  scorrono, entrata a cascata. Senza quei file la scheda resta pulita con lo stile base di theme.css
+  (le copie del testo che scorre hanno l'attributo hidden: le mostra solo griglie.css).
+  "Seconda foto" è attiva se l'impostazione del tema non è spenta (!= false: attiva anche se manca).
+  Le foto si scoprono dal basso con l'effetto del tema (effetti.js, .card__media): qui non si
+  anima di nuovo l'immagine, si muovono la scheda e il suo involucro (.g-card__zoom).
+  Lo sconto in percentuale compare solo se tutte le varianti hanno lo stesso prezzo: così il numero
+  è quello vero del capo (arrotondato per difetto, mai più alto del reale).
 {%- endcomment -%}
 {%- liquid
   assign sizes = sizes | default: '(max-width: 749px) 50vw, 25vw'
@@ -10,28 +20,63 @@
   if eager
     assign loading = 'eager'
   endif
+  assign swap = false
+  if second != blank and settings.card_second_image != false
+    assign swap = true
+  endif
+  assign on_sale = false
+  if product.compare_at_price_min > product.price_min
+    assign on_sale = true
+  endif
+  assign sale_pct = 0
+  if on_sale and product.price_varies == false
+    assign v = product.selected_or_first_available_variant
+    if v.compare_at_price > v.price
+      assign sale_pct = v.compare_at_price | minus: v.price | times: 100 | divided_by: v.compare_at_price | floor
+    endif
+  endif
 -%}
-<article class="card">
-  <a class="card__link" href="{{ product.url }}">
-    <div class="card__media{% if second != blank and settings.card_second_image %} card__media--swap{% endif %}">
-      {%- if first != blank -%}
-        {% render 'responsive-image', image: first, sizes: sizes, widths: '240, 360, 480, 640, 800, 1000', loading: loading, alt: product.title %}
-        {%- if second != blank and settings.card_second_image -%}
-          {% render 'responsive-image', image: second, sizes: sizes, widths: '240, 360, 480, 640, 800, 1000', class: 'card__second', alt: '' %}
+<article class="card g-card{% if product.available == false %} g-card--soldout{% endif %}">
+  <a class="card__link g-card__link" href="{{ product.url }}">
+    <div class="card__media g-card__media{% if swap %} card__media--swap{% endif %}">
+      <div class="g-card__zoom">
+        {%- if first != blank -%}
+          {% render 'responsive-image', image: first, sizes: sizes, widths: '240, 360, 480, 640, 800, 1000', loading: loading, alt: product.title, class: 'g-card__img' %}
+          {%- if swap -%}
+            {% render 'responsive-image', image: second, sizes: sizes, widths: '240, 360, 480, 640, 800, 1000', class: 'card__second', alt: '' %}
+          {%- endif -%}
+        {%- else -%}
+          {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
         {%- endif -%}
-      {%- else -%}
-        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
-      {%- endif -%}
+      </div>
+      <span class="g-card__glare" aria-hidden="true"></span>
 
       {%- if product.available == false -%}
-        <span class="badge">{{ 'products.product.sold_out' | t }}</span>
-      {%- elsif product.compare_at_price_min > product.price_min -%}
-        <span class="badge badge--sale">{{ 'products.product.on_sale' | t }}</span>
+        <span class="badge g-badge g-badge--soldout">{{ 'products.product.sold_out' | t }}</span>
+      {%- elsif on_sale -%}
+        <span class="badge badge--sale g-badge g-badge--sale">
+          {%- if sale_pct > 0 -%}
+            <span class="g-badge__pct">&minus;{{ sale_pct }}%</span>{{ ' ' }}
+          {%- endif -%}
+          <span class="g-badge__label">{{ 'products.product.on_sale' | t }}</span>
+        </span>
       {%- endif -%}
     </div>
-    <div class="card__info">
-      <h3 class="card__title">{{ product.title }}</h3>
-      {% render 'price', product: product %}
+
+    <div class="card__info g-card__info">
+      <h3 class="card__title g-card__title">
+        <span class="g-roll">
+          <span class="g-roll__in">{{ product.title }}</span>
+          <span class="g-roll__copy" aria-hidden="true" hidden>{{ product.title }}</span>
+        </span>
+      </h3>
+      <div class="g-card__price">
+        <span class="g-roll">
+          <span class="g-roll__in">{% render 'price', product: product %}</span>
+          <span class="g-roll__copy" aria-hidden="true" hidden>{% render 'price', product: product %}</span>
+        </span>
+      </div>
+      <span class="g-card__line" aria-hidden="true"></span>
     </div>
   </a>
 </article>
