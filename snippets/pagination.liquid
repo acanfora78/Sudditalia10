@@ -1,24 +1,66 @@
-{%- comment -%} Paginazione. Parametro: paginate (obbligatorio) {%- endcomment -%}
+{%- comment -%}
+  Paginazione.
+  Parametri:
+    paginate (obbligatorio)
+    variant  (opzionale) 'cine': versione grande della pagina collezione (frecce tonde, numeri grandi,
+             "02 / 05" sul telefono). Gli stili sono in collezione.css.
+{%- endcomment -%}
 {%- if paginate.pages > 1 -%}
-  <nav class="pagination" aria-label="{{ 'general.pagination.label' | t }}">
-    {%- if paginate.previous -%}
-      <a class="pagination__arrow pagination__arrow--prev" href="{{ paginate.previous.url }}" aria-label="{{ 'general.pagination.previous' | t }}">{% render 'icon', name: 'arrow' %}</a>
-    {%- endif -%}
-    <ul class="pagination__list">
-      {%- for part in paginate.parts -%}
-        <li>
-          {%- if part.is_link -%}
-            <a href="{{ part.url }}" aria-label="{{ 'general.meta.page' | t: page: part.title }}">{{ part.title }}</a>
-          {%- elsif part.title == paginate.current_page -%}
-            <span aria-current="page">{{ part.title }}</span>
-          {%- else -%}
-            <span aria-hidden="true">{{ part.title }}</span>
-          {%- endif -%}
-        </li>
-      {%- endfor -%}
-    </ul>
-    {%- if paginate.next -%}
-      <a class="pagination__arrow" href="{{ paginate.next.url }}" aria-label="{{ 'general.pagination.next' | t }}">{% render 'icon', name: 'arrow' %}</a>
-    {%- endif -%}
-  </nav>
+  {%- if variant == 'cine' -%}
+    <nav class="pagination pagination--cine" aria-label="{{ 'general.pagination.label' | t }}">
+      {%- if paginate.previous -%}
+        <a class="pagination__arrow pagination__arrow--prev" href="{{ paginate.previous.url }}" rel="prev" aria-label="{{ 'general.pagination.previous' | t }}">{% render 'icon', name: 'arrow' %}</a>
+      {%- else -%}
+        <span class="pagination__arrow pagination__arrow--prev is-off" aria-hidden="true">{% render 'icon', name: 'arrow' %}</span>
+      {%- endif -%}
+
+      <p class="pagination__status" aria-hidden="true">
+        <span class="pagination__now">{% if paginate.current_page < 10 %}0{% endif %}{{ paginate.current_page }}</span>
+        <span class="pagination__sep"></span>
+        <span class="pagination__all">{% if paginate.pages < 10 %}0{% endif %}{{ paginate.pages }}</span>
+      </p>
+
+      <ul class="pagination__list">
+        {%- for part in paginate.parts -%}
+          <li>
+            {%- if part.is_link -%}
+              <a href="{{ part.url }}" aria-label="{{ 'general.meta.page' | t: page: part.title }}">{{ part.title }}</a>
+            {%- elsif part.title == paginate.current_page -%}
+              <span aria-current="page">{{ part.title }}</span>
+            {%- else -%}
+              <span class="pagination__gap" aria-hidden="true">{{ part.title }}</span>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+
+      {%- if paginate.next -%}
+        <a class="pagination__arrow pagination__arrow--next" href="{{ paginate.next.url }}" rel="next" aria-label="{{ 'general.pagination.next' | t }}">{% render 'icon', name: 'arrow' %}</a>
+      {%- else -%}
+        <span class="pagination__arrow pagination__arrow--next is-off" aria-hidden="true">{% render 'icon', name: 'arrow' %}</span>
+      {%- endif -%}
+    </nav>
+  {%- else -%}
+    <nav class="pagination" aria-label="{{ 'general.pagination.label' | t }}">
+      {%- if paginate.previous -%}
+        <a class="pagination__arrow pagination__arrow--prev" href="{{ paginate.previous.url }}" aria-label="{{ 'general.pagination.previous' | t }}">{% render 'icon', name: 'arrow' %}</a>
+      {%- endif -%}
+      <ul class="pagination__list">
+        {%- for part in paginate.parts -%}
+          <li>
+            {%- if part.is_link -%}
+              <a href="{{ part.url }}" aria-label="{{ 'general.meta.page' | t: page: part.title }}">{{ part.title }}</a>
+            {%- elsif part.title == paginate.current_page -%}
+              <span aria-current="page">{{ part.title }}</span>
+            {%- else -%}
+              <span aria-hidden="true">{{ part.title }}</span>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+      {%- if paginate.next -%}
+        <a class="pagination__arrow" href="{{ paginate.next.url }}" aria-label="{{ 'general.pagination.next' | t }}">{% render 'icon', name: 'arrow' %}</a>
+      {%- endif -%}
+    </nav>
+  {%- endif -%}
 {%- endif -%}

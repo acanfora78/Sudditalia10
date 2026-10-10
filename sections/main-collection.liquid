@@ -1,113 +1,363 @@
-{%- paginate collection.products by section.settings.products_per_page -%}
-  <div class="page-width">
-    <div class="page-head">
-      <h1>{{ collection.title }}</h1>
-      {%- if collection.description != blank -%}
-        <div class="page-head__text rte">{{ collection.description }}</div>
-      {%- endif -%}
-    </div>
+{%- comment -%}
+  Pagina collezione, come l'apertura di un film:
+    - intestazione a tutto schermo con la foto della collezione (o, se manca, il primo capo su un set chiaro),
+      titolo gigante che entra lettera per lettera, descrizione e contatore dei prodotti;
+    - barra in vetro attaccata sotto l'header con filtri (pannello laterale), ordinamento, conteggio
+      e scelta della griglia (computer 2/3/4, telefono 1/2), ricordata nel browser;
+    - griglia con le schede che entrano a cascata per righe, paginazione e stato vuoto.
+  Animazioni in collezione.js / collezione.css. Filtri e ordinamento li invia theme.js (form[data-filters-form]).
+{%- endcomment -%}
+{{ 'collezione.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'collezione.js' | asset_url }}" defer></script>
 
-    <form class="toolbar" method="get" action="{{ collection.url }}" data-filters-form>
-      {%- if collection.filters.size > 0 -%}
-        <details class="filters">
-          <summary>{{ 'products.facets.filter' | t }} {% render 'icon', name: 'chevron' %}</summary>
-          <div class="filters__panel">
-            {%- for filter in collection.filters -%}
-              {%- case filter.type -%}
-                {%- when 'list', 'boolean' -%}
-                  <fieldset class="filters__group">
-                    <legend>{{ filter.label }}</legend>
-                    {%- if filter.type == 'boolean' -%}
-                      <label class="filters__option">
-                        <input type="checkbox" name="{{ filter.param_name }}" value="{{ filter.true_value.value }}" {% if filter.true_value.active %}checked{% endif %}>
-                        {{ filter.true_value.label }}
-                      </label>
-                    {%- else -%}
-                      {%- for value in filter.values -%}
-                        <label class="filters__option{% if value.count == 0 and value.active == false %} filters__option--disabled{% endif %}">
-                          <input type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %}checked{% endif %} {% if value.count == 0 and value.active == false %}disabled{% endif %}>
-                          {{ value.label }} <span class="text-muted">({{ value.count }})</span>
-                        </label>
-                      {%- endfor -%}
-                    {%- endif -%}
-                  </fieldset>
-                {%- when 'price_range' -%}
-                  <fieldset class="filters__group">
-                    <legend>{{ filter.label }}</legend>
-                    <div class="filters__price">
-                      <div>
-                        <label for="FilterPriceMin">{{ 'products.facets.from' | t }}</label>
-                        <input id="FilterPriceMin" type="number" name="{{ filter.min_value.param_name }}" min="0" step="1" inputmode="numeric" placeholder="0" {% if filter.min_value.value %}value="{{ filter.min_value.value | divided_by: 100 }}"{% endif %}>
-                      </div>
-                      <div>
-                        <label for="FilterPriceMax">{{ 'products.facets.to' | t }}</label>
-                        <input id="FilterPriceMax" type="number" name="{{ filter.max_value.param_name }}" min="0" step="1" inputmode="numeric" placeholder="{{ filter.range_max | divided_by: 100 | ceil }}" {% if filter.max_value.value %}value="{{ filter.max_value.value | divided_by: 100 }}"{% endif %}>
-                      </div>
-                    </div>
-                  </fieldset>
-              {%- endcase -%}
-            {%- endfor -%}
-            <div class="filters__actions">
-              <button type="submit" class="btn">{{ 'products.facets.apply' | t }}</button>
-              <a class="link-underline" href="{{ collection.url }}?sort_by={{ collection.sort_by | default: collection.default_sort_by }}">{{ 'products.facets.clear' | t }}</a>
+{%- paginate collection.products by section.settings.products_per_page -%}
+  {%- liquid
+    assign cols_d = section.settings.columns | default: 3
+    assign cols_m = section.settings.columns_mobile | default: '2' | plus: 0
+    assign vw_d = 100 | divided_by: cols_d
+    assign vw_m = 100 | divided_by: cols_m
+    assign grid_sizes = '(min-width: 750px) ' | append: vw_d | append: 'vw, ' | append: vw_m | append: 'vw'
+    assign count = collection.products_count | default: 0
+
+    assign hero_img = nil
+    assign hero_mode = 'plain'
+    if section.settings.show_hero_image
+      if collection.image
+        assign hero_img = collection.image
+        assign hero_mode = 'photo'
+      elsif collection.products.first.featured_media
+        assign hero_img = collection.products.first.featured_media.preview_image
+        assign hero_mode = 'stage'
+      endif
+    endif
+
+    assign title_len = collection.title | size
+    assign title_size = ''
+    if title_len > 24
+      assign title_size = ' ch__title--xl'
+    elsif title_len > 12
+      assign title_size = ' ch__title--l'
+    endif
+
+    assign desc_text = collection.description | strip_html | strip
+    assign desc_words = desc_text | split: ' ' | size
+    assign desc_long = false
+    if desc_words > 34
+      assign desc_long = true
+    endif
+
+    assign active_count = 0
+    for filter in collection.filters
+      if filter.type == 'price_range'
+        if filter.min_value.value != nil or filter.max_value.value != nil
+          assign active_count = active_count | plus: 1
+        endif
+      else
+        assign active_count = active_count | plus: filter.active_values.size
+      endif
+    endfor
+    assign sort_by = collection.sort_by | default: collection.default_sort_by
+    assign clear_url = collection.url | append: '?sort_by=' | append: sort_by
+  -%}
+
+  <div class="coll" data-coll>
+    {%- comment -%} Apertura {%- endcomment -%}
+    <div
+      class="ch ch--{{ hero_mode }}"
+      data-ch
+      style="--ch-h: {{ section.settings.hero_height }}; --ch-dim: {{ section.settings.overlay }}%;"
+    >
+      {%- if hero_img != nil -%}
+        <div class="ch__frame" data-ch-frame aria-hidden="true">
+          <div class="ch__open">
+            <div class="ch__kb">
+              {%- liquid
+                if hero_mode == 'photo'
+                  assign img_sizes = '100vw'
+                  assign focal = hero_img.presentation.focal_point | default: '50% 25%'
+                else
+                  assign img_sizes = '(min-width: 750px) 55vw, 90vw'
+                  assign focal = '50% 50%'
+                endif
+              -%}
+              <img
+                class="ch__img"
+                src="{{ hero_img | image_url: width: 1500 }}"
+                srcset="
+                  {%- assign hero_widths = '600,900,1200,1600,2000,2600' | split: ',' -%}
+                  {%- for w in hero_widths -%}
+                    {%- assign wt = w | plus: 0 -%}
+                    {{ hero_img | image_url: width: wt }} {{ wt }}w{% unless forloop.last %}, {% endunless %}
+                  {%- endfor -%}
+                "
+                sizes="{{ img_sizes }}"
+                width="{{ hero_img.width }}"
+                height="{{ hero_img.height }}"
+                alt=""
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+                style="object-position: {{ focal }};"
+              >
             </div>
           </div>
-        </details>
+          <div class="ch__shade"></div>
+          <div class="ch__dark" data-ch-dark></div>
+        </div>
       {%- endif -%}
 
-      <p class="toolbar__count">{{ 'products.facets.count' | t: count: collection.products_count }}</p>
-
-      <div class="toolbar__sort">
-        <label for="SortBy">{{ 'products.facets.sort_by' | t }}</label>
-        <select id="SortBy" name="sort_by">
-          {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
-          {%- for option in collection.sort_options -%}
-            <option value="{{ option.value }}" {% if option.value == sort_by %}selected{% endif %}>{{ option.name }}</option>
-          {%- endfor -%}
-        </select>
-        <noscript><button type="submit" class="link-underline">{{ 'products.facets.apply' | t }}</button></noscript>
-      </div>
-    </form>
-
-    {%- assign has_active = false -%}
-    {%- capture active_html -%}
-      {%- for filter in collection.filters -%}
-        {%- if filter.type == 'price_range' -%}
-          {%- if filter.min_value.value != nil or filter.max_value.value != nil -%}
-            {%- assign has_active = true -%}
-            <a href="{{ filter.url_to_remove }}">
-              {{ filter.min_value.value | default: 0 | money }} – {{ filter.max_value.value | default: filter.range_max | money }}
-              {% render 'icon', name: 'close' %}
-            </a>
-          {%- endif -%}
-        {%- else -%}
-          {%- for value in filter.active_values -%}
-            {%- assign has_active = true -%}
-            <a href="{{ value.url_to_remove }}">{{ value.label }} {% render 'icon', name: 'close' %}</a>
-          {%- endfor -%}
+      <div class="ch__content page-width" data-ch-content>
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="ch__eyebrow ch__fade" style="--d: 0s;">{{ section.settings.eyebrow | escape }}</p>
         {%- endif -%}
-      {%- endfor -%}
-    {%- endcapture -%}
-    {%- if has_active -%}
-      <div class="active-filters" aria-label="{{ 'products.facets.active' | t }}">{{ active_html }}</div>
-    {%- endif -%}
 
-    {%- if collection.products.size > 0 -%}
-      <div class="grid" style="--cols: {{ section.settings.columns }};">
-        {%- for product in collection.products -%}
-          {%- if forloop.index <= 4 -%}
-            {% render 'product-card', product: product, eager: true %}
-          {%- else -%}
-            {% render 'product-card', product: product %}
+        {%- comment -%} il trattino resta attaccato alla parola prima (spazio non separabile) {%- endcomment -%}
+        {%- assign title_words = collection.title | replace: ' - ', ' - ' | replace: ' – ', ' – ' | replace: ' — ', ' — ' | split: ' ' -%}
+        {%- assign li = 0 -%}
+        <h1 class="ch__title{{ title_size }}" data-ch-title>
+          <span class="visually-hidden">{{ collection.title | escape }}</span>
+          <span class="ch__lines" aria-hidden="true">
+            {%- for word in title_words -%}
+              <span class="ch__w">
+                {%- assign letters = word | split: '' -%}
+                {%- for c in letters -%}
+                  <span class="ch__l" style="--i: {{ li }};">{{ c | escape }}</span>
+                  {%- assign li = li | plus: 1 -%}
+                {%- endfor -%}
+              </span>
+              {%- unless forloop.last %} {% endunless -%}
+            {%- endfor -%}
+          </span>
+        </h1>
+
+        {%- assign show_desc = false -%}
+        {%- if section.settings.show_description and desc_text != blank -%}{%- assign show_desc = true -%}{%- endif -%}
+        {%- if show_desc or section.settings.show_count -%}
+          <div class="ch__foot">
+            {%- if show_desc -%}
+              <p class="ch__desc ch__fade" style="--d: .15s;">
+                {%- if desc_long -%}{{ desc_text | truncatewords: 30 }}{%- else -%}{{ desc_text }}{%- endif -%}
+              </p>
+            {%- endif -%}
+            {%- if section.settings.show_count -%}
+              <p class="ch__count ch__fade" style="--d: .3s;">
+                <span class="ch__num" data-ch-count="{{ count }}" aria-hidden="true">
+                  {%- if count < 10 -%}0{%- endif -%}{{ count }}
+                </span>
+                <span class="ch__unit" aria-hidden="true">
+                  {%- if count == 1 -%}{{ section.settings.count_one | escape }}{%- else -%}{{ section.settings.count_other | escape }}{%- endif -%}
+                </span>
+                <span class="visually-hidden">{{ 'products.facets.count' | t: count: count }}</span>
+              </p>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.scroll_label != blank -%}
+        <p class="ch__scroll ch__fade" style="--d: .45s;" aria-hidden="true">
+          <span>{{ section.settings.scroll_label | escape }}</span><i></i>
+        </p>
+      {%- endif -%}
+    </div>
+    <script>
+      (function (s) {
+        // altezza dell'header subito (poi la tiene aggiornata effetti.js): l'apertura non salta al caricamento
+        var hd = document.querySelector('.section-header');
+        if (hd && hd.offsetHeight) document.documentElement.style.setProperty('--header-h', hd.offsetHeight + 'px');
+        var h = s && s.previousElementSibling;
+        if (h && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) h.classList.add('is-armed');
+      })(document.currentScript);
+    </script>
+
+    {%- comment -%} Barra strumenti: resta attaccata finché si scorre la griglia {%- endcomment -%}
+    <div class="coll__main">
+      <div class="ctb-mark" data-ctb-mark aria-hidden="true"></div>
+      <div class="ctb" data-ctb>
+        <div class="ctb__inner page-width">
+          <form class="ctb__form" method="get" action="{{ collection.url }}" data-filters-form id="CollFilters-{{ section.id }}">
+            {%- if collection.filters.size > 0 -%}
+              <details class="cf" data-cf>
+                <summary class="ctb__btn">
+                  <svg class="icon ctb__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke-linecap="round"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+                  <span>{{ 'products.facets.filter' | t }}</span>
+                  {%- if active_count > 0 -%}<span class="ctb__badge">{{ active_count }}</span>{%- endif -%}
+                </summary>
+                <div class="cf__layer" data-native-scroll>
+                  <div class="cf__scrim" data-cf-close aria-hidden="true"></div>
+                  <div class="cf__panel" role="dialog" aria-modal="true" aria-labelledby="CollFiltersTitle-{{ section.id }}">
+                    <div class="cf__head">
+                      <p class="cf__title" id="CollFiltersTitle-{{ section.id }}">{{ 'products.facets.filter' | t }}</p>
+                      <button type="button" class="cf__close" data-cf-close aria-label="{{ section.settings.close_label | escape }}">{% render 'icon', name: 'close' %}</button>
+                    </div>
+                    <div class="cf__body">
+                      {%- for filter in collection.filters -%}
+                        {%- case filter.type -%}
+                          {%- when 'list', 'boolean' -%}
+                            <fieldset class="cf__group" style="--gi: {{ forloop.index0 }};">
+                              <legend class="cf__legend">{{ filter.label }}</legend>
+                              {%- if filter.type == 'boolean' -%}
+                                <label class="cf__opt">
+                                  <input type="checkbox" name="{{ filter.param_name }}" value="{{ filter.true_value.value }}" {% if filter.true_value.active %}checked{% endif %}>
+                                  <span>{{ filter.true_value.label }}</span>
+                                </label>
+                              {%- else -%}
+                                {%- for value in filter.values -%}
+                                  {%- assign off = false -%}
+                                  {%- if value.count == 0 and value.active == false -%}{%- assign off = true -%}{%- endif -%}
+                                  <label class="cf__opt{% if off %} cf__opt--off{% endif %}">
+                                    <input type="checkbox" name="{{ value.param_name }}" value="{{ value.value }}" {% if value.active %}checked{% endif %} {% if off %}disabled{% endif %}>
+                                    <span>{{ value.label }}</span>
+                                    <span class="cf__n">{{ value.count }}</span>
+                                  </label>
+                                {%- endfor -%}
+                              {%- endif -%}
+                            </fieldset>
+                          {%- when 'price_range' -%}
+                            <fieldset class="cf__group" style="--gi: {{ forloop.index0 }};">
+                              <legend class="cf__legend">{{ filter.label }}</legend>
+                              <div class="cf__price">
+                                <div>
+                                  <label for="FilterPriceMin-{{ section.id }}">{{ 'products.facets.from' | t }}</label>
+                                  <input id="FilterPriceMin-{{ section.id }}" type="number" name="{{ filter.min_value.param_name }}" min="0" step="1" inputmode="numeric" placeholder="0" {% if filter.min_value.value %}value="{{ filter.min_value.value | divided_by: 100 }}"{% endif %}>
+                                </div>
+                                <div>
+                                  <label for="FilterPriceMax-{{ section.id }}">{{ 'products.facets.to' | t }}</label>
+                                  <input id="FilterPriceMax-{{ section.id }}" type="number" name="{{ filter.max_value.param_name }}" min="0" step="1" inputmode="numeric" placeholder="{{ filter.range_max | divided_by: 100 | ceil }}" {% if filter.max_value.value %}value="{{ filter.max_value.value | divided_by: 100 }}"{% endif %}>
+                                </div>
+                              </div>
+                            </fieldset>
+                        {%- endcase -%}
+                      {%- endfor -%}
+                    </div>
+                    <div class="cf__foot">
+                      <button type="submit" class="btn">{{ 'products.facets.apply' | t }}</button>
+                      <a class="cf__clear" href="{{ clear_url }}">{{ 'products.facets.clear' | t }}</a>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            {%- endif -%}
+
+            <p class="ctb__count">{{ 'products.facets.count' | t: count: count }}</p>
+
+            {%- if collection.sort_options.size > 0 -%}
+              <div class="ctb__sort">
+                <label for="SortBy-{{ section.id }}">{{ 'products.facets.sort_by' | t }}</label>
+                <select id="SortBy-{{ section.id }}" name="sort_by">
+                  {%- for option in collection.sort_options -%}
+                    <option value="{{ option.value }}" {% if option.value == sort_by %}selected{% endif %}>{{ option.name }}</option>
+                  {%- endfor -%}
+                </select>
+                <noscript><button type="submit" class="ctb__btn">{{ 'products.facets.apply' | t }}</button></noscript>
+              </div>
+            {%- endif -%}
+          </form>
+
+          {%- if section.settings.enable_density and collection.products.size > 0 -%}
+            {%- assign dens_label = section.settings.density_label | escape -%}
+            <div class="ctb__dens ctb__dens--d" role="group" aria-label="{{ dens_label }}" data-dens="d">
+              <span class="ctb__dens-ind" aria-hidden="true"></span>
+              {%- for n in (2..4) -%}
+                <button type="button" class="ctb__dens-btn" data-cols="{{ n }}" aria-pressed="{% if n == cols_d %}true{% else %}false{% endif %}" aria-label="{{ dens_label }} {{ n }}">
+                  <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                    {%- case n -%}
+                      {%- when 2 -%}<rect x="1" y="3" width="8" height="14" rx="1"/><rect x="11" y="3" width="8" height="14" rx="1"/>
+                      {%- when 3 -%}<rect x="1" y="3" width="5" height="14" rx="1"/><rect x="7.5" y="3" width="5" height="14" rx="1"/><rect x="14" y="3" width="5" height="14" rx="1"/>
+                      {%- else -%}<rect x="1" y="3" width="3.5" height="14" rx=".8"/><rect x="5.83" y="3" width="3.5" height="14" rx=".8"/><rect x="10.66" y="3" width="3.5" height="14" rx=".8"/><rect x="15.5" y="3" width="3.5" height="14" rx=".8"/>
+                    {%- endcase -%}
+                  </svg>
+                </button>
+              {%- endfor -%}
+            </div>
+            <div class="ctb__dens ctb__dens--m" role="group" aria-label="{{ dens_label }}" data-dens="m">
+              <span class="ctb__dens-ind" aria-hidden="true"></span>
+              {%- for n in (1..2) -%}
+                <button type="button" class="ctb__dens-btn" data-cols="{{ n }}" aria-pressed="{% if n == cols_m %}true{% else %}false{% endif %}" aria-label="{{ dens_label }} {{ n }}">
+                  <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                    {%- if n == 1 -%}<rect x="4" y="2" width="12" height="16" rx="1"/>{%- else -%}<rect x="1" y="3" width="8" height="14" rx="1"/><rect x="11" y="3" width="8" height="14" rx="1"/>{%- endif -%}
+                  </svg>
+                </button>
+              {%- endfor -%}
+            </div>
           {%- endif -%}
-        {%- endfor -%}
+        </div>
+        <div class="ctb__progress" aria-hidden="true"><span data-ctb-progress></span></div>
       </div>
-      {% render 'pagination', paginate: paginate %}
-    {%- else -%}
-      <div class="empty-state">
-        <p>{{ 'products.facets.empty' | t }}</p>
-        <a class="btn btn--outline" href="{{ collection.url }}">{{ 'products.facets.clear' | t }}</a>
+
+      <div class="coll__body page-width">
+        {%- if active_count > 0 -%}
+          <div class="cact" aria-label="{{ 'products.facets.active' | t }}">
+            {%- for filter in collection.filters -%}
+              {%- if filter.type == 'price_range' -%}
+                {%- if filter.min_value.value != nil or filter.max_value.value != nil -%}
+                  <a href="{{ filter.url_to_remove }}">
+                    {{ filter.min_value.value | default: 0 | money }} – {{ filter.max_value.value | default: filter.range_max | money }}
+                    {% render 'icon', name: 'close' %}
+                  </a>
+                {%- endif -%}
+              {%- else -%}
+                {%- for value in filter.active_values -%}
+                  <a href="{{ value.url_to_remove }}">{{ value.label }} {% render 'icon', name: 'close' %}</a>
+                {%- endfor -%}
+              {%- endif -%}
+            {%- endfor -%}
+            <a class="cact__clear" href="{{ clear_url }}">{{ 'products.facets.clear' | t }}</a>
+          </div>
+        {%- endif -%}
+
+        {%- if collection.products.size > 0 -%}
+          <ul
+            class="cg"
+            role="list"
+            data-cg
+            data-cols-d="{{ cols_d }}"
+            data-cols-m="{{ cols_m }}"
+            style="--cols-d: {{ cols_d }}; --cols-m: {{ cols_m }}; counter-reset: cg {{ paginate.current_offset | default: 0 }};"
+          >
+            {%- for product in collection.products -%}
+              <li class="cg__item">{% render 'product-card', product: product, sizes: grid_sizes %}</li>
+            {%- endfor -%}
+          </ul>
+          {%- if section.settings.enable_density -%}
+            <script>
+              (function (g) {
+                if (!g) return;
+                try {
+                  var d = localStorage.getItem('sud-griglia-computer');
+                  var m = localStorage.getItem('sud-griglia-telefono');
+                  if (/^[234]$/.test(d)) g.style.setProperty('--cols-d', d);
+                  if (/^[12]$/.test(m)) g.style.setProperty('--cols-m', m);
+                } catch (e) {}
+              })(document.currentScript.previousElementSibling);
+            </script>
+          {%- endif -%}
+          {% render 'pagination', paginate: paginate, variant: 'cine' %}
+        {%- else -%}
+          <div class="cempty">
+            <p class="cempty__big" aria-hidden="true">00</p>
+            {%- if active_count > 0 -%}
+              <h2 class="cempty__title">{{ 'products.facets.empty' | t }}</h2>
+              <a class="btn" href="{{ clear_url }}">{{ 'products.facets.clear' | t }}</a>
+            {%- else -%}
+              <h2 class="cempty__title">{{ section.settings.empty_title | escape }}</h2>
+              {%- if section.settings.empty_text != blank -%}
+                <p class="cempty__text">{{ section.settings.empty_text | escape }}</p>
+              {%- endif -%}
+              {%- if section.settings.empty_button != blank -%}
+                <a class="btn btn--outline" href="{{ routes.collections_url }}">{{ section.settings.empty_button | escape }}</a>
+              {%- endif -%}
+            {%- endif -%}
+          </div>
+        {%- endif -%}
       </div>
+    </div>
+
+    {%- if desc_long and section.settings.show_description -%}
+      <div class="page-width"><div class="cabout">
+        <h2 class="cabout__title">{{ collection.title | escape }}</h2>
+        <div class="cabout__text rte">{{ collection.description }}</div>
+      </div></div>
     {%- endif -%}
   </div>
 {%- endpaginate -%}
@@ -116,7 +366,80 @@
 {
   "name": "Collezione",
   "tag": "section",
+  "class": "section-collection",
   "settings": [
+    {
+      "type": "header",
+      "content": "Apertura"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hero_image",
+      "label": "Mostra la foto della collezione",
+      "info": "Se la collezione non ha una foto si usa quella del primo prodotto, su un set chiaro.",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "hero_height",
+      "label": "Altezza dell'apertura",
+      "min": 60,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 85,
+      "info": "In percentuale dell'altezza dello schermo."
+    },
+    {
+      "type": "range",
+      "id": "overlay",
+      "label": "Scurimento della foto",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "default": 30
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Scritta sopra il titolo",
+      "default": "Collezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Mostra la descrizione",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_count",
+      "label": "Mostra il contatore dei prodotti",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "count_one",
+      "label": "Contatore: parola al singolare",
+      "default": "prodotto"
+    },
+    {
+      "type": "text",
+      "id": "count_other",
+      "label": "Contatore: parola al plurale",
+      "default": "prodotti"
+    },
+    {
+      "type": "text",
+      "id": "scroll_label",
+      "label": "Invito a scorrere",
+      "default": "Scorri"
+    },
+    {
+      "type": "header",
+      "content": "Griglia"
+    },
     {
       "type": "range",
       "id": "products_per_page",
@@ -129,11 +452,64 @@
     {
       "type": "range",
       "id": "columns",
-      "label": "Colonne su desktop",
+      "label": "Colonne su computer",
       "min": 2,
-      "max": 5,
+      "max": 4,
       "step": 1,
-      "default": 4
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Colonne su telefono",
+      "options": [
+        { "value": "1", "label": "1" },
+        { "value": "2", "label": "2" }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_density",
+      "label": "Fai scegliere la griglia a chi visita",
+      "info": "La scelta resta salvata nel browser.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "density_label",
+      "label": "Nome del selettore della griglia",
+      "info": "Letto dai lettori di schermo, seguito dal numero di colonne.",
+      "default": "Colonne"
+    },
+    {
+      "type": "text",
+      "id": "close_label",
+      "label": "Testo del tasto per chiudere i filtri",
+      "default": "Chiudi"
+    },
+    {
+      "type": "header",
+      "content": "Collezione vuota"
+    },
+    {
+      "type": "text",
+      "id": "empty_title",
+      "label": "Titolo",
+      "default": "Nessun prodotto, per ora"
+    },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Testo",
+      "default": "Questa collezione è vuota. Dai un'occhiata alle altre."
+    },
+    {
+      "type": "text",
+      "id": "empty_button",
+      "label": "Testo del bottone",
+      "info": "Porta alla pagina con tutte le collezioni.",
+      "default": "Tutte le collezioni"
     }
   ]
 }
