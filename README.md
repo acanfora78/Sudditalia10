@@ -122,6 +122,9 @@ Nella hero entrano anche le felpe senza foto indossata (sagoma grigia al posto d
 funzionano; i menu sono ricostruiti dalle collezioni della home. Quando arriva un nuovo file
 `foto/capo-fronte-<handle>.png`, basta rilanciare `node genera.mjs`.
 
+## Gestione da Shopify
+Vedi **[GUIDA-SHOPIFY.md](GUIDA-SHOPIFY.md)**: dove si cambiano testi, immagini, video, font (del sito e di ogni sezione), link a collezioni e prodotti, menu e metafield.
+
 ## Cosa manca
 1. Caricare il tema sullo store e provarlo davvero (Shopify CLI: `shopify theme dev`).
 2. Creare i metafield `capo_fronte` e `capo_retro` e caricare il file della felpa.

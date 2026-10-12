@@ -138,8 +138,10 @@ const linkCollezioni = [...new Set(handlesMenu)].filter((h) => collezioni[h]?.pr
 const menus = { 'main-menu': { links: linkCollezioni }, footer: { links: [] } };
 
 function font(id) {
-  const [nome, stile] = id.split('_');
-  return { family: nome.charAt(0).toUpperCase() + nome.slice(1), fallback_families: 'sans-serif',
+  const parti = id.split('_');
+  const stile = parti.pop();
+  const nome = parti.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  return { family: nome, fallback_families: 'sans-serif',
     weight: Number((stile || 'n4').slice(1)) * 100, style: 'normal', 'system?': false };
 }
 
@@ -270,6 +272,8 @@ function risolvi(def, valore) {
     case 'product': return valore ? prodotti[valore] || null : null;
     case 'link_list': return valore ? menus[valore] || { links: [] } : null;
     case 'image_picker': return immagineSezione(valore);
+    case 'product_list': return Array.isArray(valore) ? valore.map((h) => prodotti[h]).filter(Boolean) : [];
+    case 'font_picker': return valore ? font(valore) : null;
     case 'video': return videoSezione(valore);
     case 'page': return null;
     default: return valore ?? null;

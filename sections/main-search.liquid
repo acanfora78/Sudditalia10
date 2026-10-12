@@ -1,8 +1,9 @@
+{% render 'stile-sezione', section: section %}
 {{ 'griglie.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'griglie.js' | asset_url }}" defer></script>
 <div class="page-width">
   <div class="page-head">
-    <h1>{{ 'general.search.title' | t }}</h1>
+    <h1>{% if section.settings.title != blank %}{{ section.settings.title | escape }}{% else %}{{ 'general.search.title' | t }}{% endif %}</h1>
     <form class="search-form" action="{{ routes.search_url }}" method="get" role="search">
       <label class="visually-hidden" for="SearchInput">{{ 'general.search.placeholder' | t }}</label>
       <input id="SearchInput" type="search" name="q" value="{{ search.terms | escape }}" placeholder="{{ 'general.search.placeholder' | t }}">
@@ -52,6 +53,67 @@
 {
   "name": "Ricerca",
   "tag": "section",
-  "settings": []
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titolo",
+      "info": "Se vuoto usa il testo predefinito."
+    },
+    {
+      "type": "header",
+      "content": "Font della sezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "sec_font_custom",
+      "label": "Usa font diversi per questa sezione",
+      "info": "Se spento, la sezione usa i font di Impostazioni tema → Tipografia.",
+      "default": false
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_heading",
+      "label": "Font dei titoli",
+      "default": "archivo_n7"
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_body",
+      "label": "Font dei testi",
+      "default": "archivo_n4"
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_case",
+      "label": "Titoli",
+      "options": [
+        {
+          "value": "theme",
+          "label": "Come il tema"
+        },
+        {
+          "value": "upper",
+          "label": "Maiuscolo"
+        },
+        {
+          "value": "none",
+          "label": "Come scritti"
+        }
+      ],
+      "default": "theme"
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "label": "Spaziatura lettere dei titoli",
+      "min": -10,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "info": "0 = come il tema."
+    }
+  ]
 }
 {% endschema %}

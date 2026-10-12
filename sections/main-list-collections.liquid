@@ -1,3 +1,4 @@
+{% render 'stile-sezione', section: section %}
 {%- comment -%}
   Tutte le collezioni: schermate impilate.
   Ogni collezione è un pannello a tutto schermo che resta fermo sotto l'header; scorrendo, il pannello
@@ -443,12 +444,30 @@
       "id": "sort",
       "label": "Ordine (tutte le collezioni)",
       "options": [
-        { "value": "alphabetical", "label": "Alfabetico, A-Z" },
-        { "value": "alphabetical_reversed", "label": "Alfabetico, Z-A" },
-        { "value": "date_reversed", "label": "Dalla più recente" },
-        { "value": "date", "label": "Dalla meno recente" },
-        { "value": "products_high", "label": "Più prodotti prima" },
-        { "value": "products_low", "label": "Meno prodotti prima" }
+        {
+          "value": "alphabetical",
+          "label": "Alfabetico, A-Z"
+        },
+        {
+          "value": "alphabetical_reversed",
+          "label": "Alfabetico, Z-A"
+        },
+        {
+          "value": "date_reversed",
+          "label": "Dalla più recente"
+        },
+        {
+          "value": "date",
+          "label": "Dalla meno recente"
+        },
+        {
+          "value": "products_high",
+          "label": "Più prodotti prima"
+        },
+        {
+          "value": "products_low",
+          "label": "Meno prodotti prima"
+        }
       ],
       "default": "alphabetical"
     },
@@ -467,8 +486,14 @@
       "id": "panel_style",
       "label": "Sfondo dei pannelli",
       "options": [
-        { "value": "image", "label": "Foto della collezione" },
-        { "value": "set", "label": "Primi prodotti sul set chiaro" }
+        {
+          "value": "image",
+          "label": "Foto della collezione"
+        },
+        {
+          "value": "set",
+          "label": "Primi prodotti sul set chiaro"
+        }
       ],
       "default": "image",
       "info": "Per la foto a tutto schermo usa immagini larghe almeno 2000 px: quelle sotto i 1500 px restano nitide in una cornice. Le collezioni senza foto mostrano i primi prodotti sul set, che rende meglio con foto scontornate su fondo bianco. Per la parte della foto da tenere a schermo usa il punto focale (Contenuti > File)."
@@ -544,6 +569,60 @@
       "id": "outro_button",
       "label": "Testo del bottone",
       "default": "Vedi tutto"
+    },
+    {
+      "type": "header",
+      "content": "Font della sezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "sec_font_custom",
+      "label": "Usa font diversi per questa sezione",
+      "info": "Se spento, la sezione usa i font di Impostazioni tema → Tipografia.",
+      "default": false
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_heading",
+      "label": "Font dei titoli",
+      "default": "archivo_n7"
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_body",
+      "label": "Font dei testi",
+      "default": "archivo_n4"
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_case",
+      "label": "Titoli",
+      "options": [
+        {
+          "value": "theme",
+          "label": "Come il tema"
+        },
+        {
+          "value": "upper",
+          "label": "Maiuscolo"
+        },
+        {
+          "value": "none",
+          "label": "Come scritti"
+        }
+      ],
+      "default": "theme"
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "label": "Spaziatura lettere dei titoli",
+      "min": -10,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "info": "0 = come il tema."
     }
   ],
   "blocks": [

@@ -1,0 +1,48 @@
+{%- comment -%}
+  Font e stile del testo di una singola sezione (impostazioni "Font della sezione").
+  Se attivi, sostituiscono per questa sezione i font scelti in Impostazioni tema → Tipografia.
+  Uso, in cima a ogni sezione: {% render 'stile-sezione', section: section %}
+  Impostazioni attese nello schema (tutte facoltative):
+    sec_font_custom (checkbox), sec_font_heading / sec_font_body (font_picker),
+    sec_heading_case (select: theme | upper | none), sec_heading_spacing (range, in centesimi di em)
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign sel = '#shopify-section-' | append: section.id
+  assign has_case = false
+  if s.sec_heading_case == 'upper' or s.sec_heading_case == 'none'
+    assign has_case = true
+  endif
+  assign has_spacing = false
+  if s.sec_heading_spacing != blank and s.sec_heading_spacing != 0
+    assign has_spacing = true
+  endif
+-%}
+{%- if s.sec_font_custom or has_case or has_spacing -%}
+  <style>
+    {%- if s.sec_font_custom -%}
+      {%- assign fh = s.sec_font_heading -%}
+      {%- assign fb = s.sec_font_body -%}
+      {%- assign fb_bold = fb | font_modify: 'weight', 'bold' -%}
+      {{ fh | font_face: font_display: 'swap' }}
+      {{ fb | font_face: font_display: 'swap' }}
+      {{ fb_bold | font_face: font_display: 'swap' }}
+      {{ sel }} {
+        --font-heading-family: {{ fh.family }}, {{ fh.fallback_families }};
+        --font-heading-weight: {{ fh.weight }};
+        --font-body-family: {{ fb.family }}, {{ fb.fallback_families }};
+        --font-body-weight: {{ fb.weight }};
+        font-family: var(--font-body-family);
+        font-weight: var(--font-body-weight);
+      }
+      {{ sel }} :is(h1, h2, h3, h4, .h1, .h2, .h3) { font-family: var(--font-heading-family); font-weight: var(--font-heading-weight); }
+    {%- endif -%}
+    {%- if has_case -%}
+      {{ sel }} { --heading-transform: {% if s.sec_heading_case == 'upper' %}uppercase{% else %}none{% endif %}; }
+      {{ sel }} :is(h1, h2, h3, h4, .h1, .h2, .h3) { text-transform: var(--heading-transform); }
+    {%- endif -%}
+    {%- if has_spacing -%}
+      {{ sel }} :is(h1, h2, h3, h4, .h1, .h2, .h3) { letter-spacing: {{ s.sec_heading_spacing | divided_by: 100.0 }}em; }
+    {%- endif -%}
+  </style>
+{%- endif -%}

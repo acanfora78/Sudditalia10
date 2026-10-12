@@ -1,3 +1,4 @@
+{% render 'stile-sezione', section: section %}
 {%- comment -%}
   Pagina prodotto a 3 colonne.
     sinistra: tipo di prodotto, frase grande (metafield custom.frase, altrimenti il nome), descrizione
@@ -27,8 +28,14 @@
   <div class="pe" data-product>
     <div class="pe__story">
       <div class="pd-intro">
-        {%- if product.type != blank -%}
-          <p class="pe__eyebrow pd-eyebrow" data-pd-in>{{ product.type }}</p>
+        {%- liquid
+          assign eyebrow = product.metafields.custom.etichetta.value | default: section.settings.eyebrow | default: product.type
+          if section.settings.show_eyebrow == false
+            assign eyebrow = blank
+          endif
+        -%}
+        {%- if eyebrow != blank -%}
+          <p class="pe__eyebrow pd-eyebrow" data-pd-in>{{ eyebrow }}</p>
         {%- endif -%}
         <h1 class="pd__headline" data-pd-lines>{{ headline }}</h1>
       </div>
@@ -256,6 +263,22 @@
   "tag": "section",
   "settings": [
     {
+      "type": "header",
+      "content": "Testi"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_eyebrow",
+      "label": "Mostra l'etichetta sopra il titolo",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Etichetta sopra il titolo",
+      "info": "Se vuota usa il tipo di prodotto. Per un testo diverso su un singolo prodotto: metafield prodotto \"Etichetta\" (custom.etichetta). La frase grande è il metafield \"Frase\" (custom.frase), altrimenti il nome."
+    },
+    {
       "type": "paragraph",
       "content": "La frase grande a sinistra è il metafield prodotto 'Frase' (custom.frase, testo su una riga). Se manca si usa il nome del prodotto. Al centro, se il prodotto ha 'Capo fronte', dopo la foto stesa compare il modello che lo indossa."
     },
@@ -305,6 +328,60 @@
       "label": "Barra di acquisto fissa su telefono",
       "info": "Compare in basso quando il bottone principale esce dallo schermo.",
       "default": true
+    },
+    {
+      "type": "header",
+      "content": "Font della sezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "sec_font_custom",
+      "label": "Usa font diversi per questa sezione",
+      "info": "Se spento, la sezione usa i font di Impostazioni tema → Tipografia.",
+      "default": false
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_heading",
+      "label": "Font dei titoli",
+      "default": "archivo_n7"
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_body",
+      "label": "Font dei testi",
+      "default": "archivo_n4"
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_case",
+      "label": "Titoli",
+      "options": [
+        {
+          "value": "theme",
+          "label": "Come il tema"
+        },
+        {
+          "value": "upper",
+          "label": "Maiuscolo"
+        },
+        {
+          "value": "none",
+          "label": "Come scritti"
+        }
+      ],
+      "default": "theme"
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "label": "Spaziatura lettere dei titoli",
+      "min": -10,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "info": "0 = come il tema."
     }
   ],
   "blocks": [

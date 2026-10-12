@@ -1,3 +1,4 @@
+{% render 'stile-sezione', section: section %}
 {%- comment -%}
   Prodotti in evidenza.
   Intestazione da titoli di testa: nome della collezione gigante che scivola con lo scroll,
@@ -13,10 +14,16 @@
   assign limit = section.settings.products_to_show
   assign columns = section.settings.columns
   assign heading = section.settings.title | default: collection.title
+  assign picked = section.settings.products
   assign count = 0
-  if collection != blank
+  if picked != blank and picked.size > 0
+    assign items = picked
+    assign count = picked.size
+  elsif collection != blank
+    assign items = collection.products
     assign count = collection.products_count
   endif
+  assign link_url = section.settings.link | default: collection.url
   assign card_vw = 100 | divided_by: columns
 -%}
 {%- capture sizes -%}(max-width: 749px) 72vw, {{ card_vw }}vw{%- endcapture -%}
@@ -37,8 +44,8 @@
           <p class="g-head__meta">{{ 'products.facets.count' | t: count: count }}</p>
         {%- endif -%}
         <span class="g-head__rule" aria-hidden="true"></span>
-        {%- if collection != blank and section.settings.link_label != blank -%}
-          <a class="g-link" href="{{ collection.url }}">
+        {%- if link_url != blank and section.settings.link_label != blank -%}
+          <a class="g-link" href="{{ link_url }}">
             <span class="g-link__label">{{ section.settings.link_label | escape }}</span>
             <span class="g-link__arrow">{% render 'icon', name: 'arrow' %}</span>
           </a>
@@ -48,8 +55,8 @@
 
     <div class="g-rail fc__rail" data-g-rail>
       <ul class="g-rail__track fc__track" data-g-track {% if section.settings.stagger %}data-g-lift{% endif %} role="list" style="--cols: {{ columns }};">
-        {%- if collection != blank and collection.products.size > 0 -%}
-          {%- for product in collection.products limit: limit -%}
+        {%- if count > 0 -%}
+          {%- for product in items limit: limit -%}
             <li class="g-rail__item">{% render 'product-card', product: product, sizes: sizes %}</li>
           {%- endfor -%}
         {%- else -%}
@@ -83,6 +90,13 @@
       "label": "Collezione"
     },
     {
+      "type": "product_list",
+      "id": "products",
+      "label": "Oppure scegli i prodotti a mano",
+      "limit": 12,
+      "info": "Se scegli dei prodotti qui, vengono mostrati questi al posto della collezione."
+    },
+    {
       "type": "text",
       "id": "title",
       "label": "Titolo",
@@ -93,6 +107,12 @@
       "id": "link_label",
       "label": "Testo del link alla collezione",
       "default": "Vedi tutto"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "Link di \"Vedi tutto\"",
+      "info": "Se vuoto porta alla collezione scelta."
     },
     {
       "type": "checkbox",
@@ -124,6 +144,60 @@
       "label": "Colonne sfalsate in movimento",
       "info": "Su computer le colonne pari scendono e risalgono mentre la pagina scorre.",
       "default": true
+    },
+    {
+      "type": "header",
+      "content": "Font della sezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "sec_font_custom",
+      "label": "Usa font diversi per questa sezione",
+      "info": "Se spento, la sezione usa i font di Impostazioni tema → Tipografia.",
+      "default": false
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_heading",
+      "label": "Font dei titoli",
+      "default": "archivo_n7"
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_body",
+      "label": "Font dei testi",
+      "default": "archivo_n4"
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_case",
+      "label": "Titoli",
+      "options": [
+        {
+          "value": "theme",
+          "label": "Come il tema"
+        },
+        {
+          "value": "upper",
+          "label": "Maiuscolo"
+        },
+        {
+          "value": "none",
+          "label": "Come scritti"
+        }
+      ],
+      "default": "theme"
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "label": "Spaziatura lettere dei titoli",
+      "min": -10,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "info": "0 = come il tema."
     }
   ],
   "presets": [

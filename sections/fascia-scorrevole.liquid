@@ -1,3 +1,4 @@
+{% render 'stile-sezione', section: section %}
 {%- comment -%}
   Fascia con la scritta gigante che scorre.
   Due righe in direzioni opposte (una piena, una solo contorno) separate dalla stella del brand.
@@ -7,7 +8,7 @@
   assign text = section.settings.text | default: shop.name | upcase
   assign text_2 = section.settings.text_2 | default: text | upcase
 -%}
-<div class="mq" aria-label="{{ text | escape }}" role="img">
+{%- if section.settings.link != blank -%}<a class="mq mq--link" href="{{ section.settings.link }}" aria-label="{{ text | escape }}">{%- else -%}<div class="mq" aria-label="{{ text | escape }}" role="img">{%- endif -%}
   {%- for row in (1..2) -%}
     {%- liquid
       assign row_text = text
@@ -26,7 +27,7 @@
       </div>
     </div>
   {%- endfor -%}
-</div>
+{%- if section.settings.link != blank -%}</a>{%- else -%}</div>{%- endif -%}
 
 {% schema %}
 {
@@ -51,8 +52,72 @@
       "id": "single_row",
       "label": "Solo una riga",
       "default": false
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "Link (facoltativo)",
+      "info": "Rende cliccabile tutta la fascia: per esempio una collezione."
+    },
+    {
+      "type": "header",
+      "content": "Font della sezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "sec_font_custom",
+      "label": "Usa font diversi per questa sezione",
+      "info": "Se spento, la sezione usa i font di Impostazioni tema → Tipografia.",
+      "default": false
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_heading",
+      "label": "Font dei titoli",
+      "default": "archivo_n7"
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_body",
+      "label": "Font dei testi",
+      "default": "archivo_n4"
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_case",
+      "label": "Titoli",
+      "options": [
+        {
+          "value": "theme",
+          "label": "Come il tema"
+        },
+        {
+          "value": "upper",
+          "label": "Maiuscolo"
+        },
+        {
+          "value": "none",
+          "label": "Come scritti"
+        }
+      ],
+      "default": "theme"
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "label": "Spaziatura lettere dei titoli",
+      "min": -10,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "info": "0 = come il tema."
     }
   ],
-  "presets": [{ "name": "Fascia scorrevole" }]
+  "presets": [
+    {
+      "name": "Fascia scorrevole"
+    }
+  ]
 }
 {% endschema %}

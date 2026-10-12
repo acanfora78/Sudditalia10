@@ -1,3 +1,4 @@
+{% render 'stile-sezione', section: section %}
 {%- comment -%}
   Galleria cinema: lookbook orizzontale bloccato.
   La sezione resta ferma sotto l'header mentre, scorrendo in verticale, la pista di pannelli scorre
@@ -344,6 +345,60 @@
       "id": "end_label",
       "label": "Testo del bottone finale",
       "default": "Vedi tutto"
+    },
+    {
+      "type": "header",
+      "content": "Font della sezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "sec_font_custom",
+      "label": "Usa font diversi per questa sezione",
+      "info": "Se spento, la sezione usa i font di Impostazioni tema → Tipografia.",
+      "default": false
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_heading",
+      "label": "Font dei titoli",
+      "default": "archivo_n7"
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_body",
+      "label": "Font dei testi",
+      "default": "archivo_n4"
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_case",
+      "label": "Titoli",
+      "options": [
+        {
+          "value": "theme",
+          "label": "Come il tema"
+        },
+        {
+          "value": "upper",
+          "label": "Maiuscolo"
+        },
+        {
+          "value": "none",
+          "label": "Come scritti"
+        }
+      ],
+      "default": "theme"
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "label": "Spaziatura lettere dei titoli",
+      "min": -10,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "info": "0 = come il tema."
     }
   ],
   "blocks": [
@@ -390,11 +445,26 @@
           "id": "shape",
           "label": "Formato",
           "options": [
-            { "value": "auto", "label": "Automatico (dalla foto)" },
-            { "value": "v", "label": "Verticale" },
-            { "value": "q", "label": "Quadrato" },
-            { "value": "o", "label": "Orizzontale" },
-            { "value": "w", "label": "Panoramico" }
+            {
+              "value": "auto",
+              "label": "Automatico (dalla foto)"
+            },
+            {
+              "value": "v",
+              "label": "Verticale"
+            },
+            {
+              "value": "q",
+              "label": "Quadrato"
+            },
+            {
+              "value": "o",
+              "label": "Orizzontale"
+            },
+            {
+              "value": "w",
+              "label": "Panoramico"
+            }
           ],
           "default": "auto"
         },
@@ -404,10 +474,22 @@
           "label": "Posizione in altezza",
           "info": "Sul computer, per i formati più bassi della pista. Sul telefono i pannelli stanno sempre a metà altezza.",
           "options": [
-            { "value": "auto", "label": "Alternata" },
-            { "value": "start", "label": "In alto" },
-            { "value": "center", "label": "Al centro" },
-            { "value": "end", "label": "In basso" }
+            {
+              "value": "auto",
+              "label": "Alternata"
+            },
+            {
+              "value": "start",
+              "label": "In alto"
+            },
+            {
+              "value": "center",
+              "label": "Al centro"
+            },
+            {
+              "value": "end",
+              "label": "In basso"
+            }
           ],
           "default": "auto"
         }
@@ -418,11 +500,36 @@
     {
       "name": "Galleria cinema",
       "blocks": [
-        { "type": "panel", "settings": { "shape": "v" } },
-        { "type": "panel", "settings": { "shape": "o" } },
-        { "type": "panel", "settings": { "shape": "v" } },
-        { "type": "panel", "settings": { "shape": "q" } },
-        { "type": "panel", "settings": { "shape": "w" } }
+        {
+          "type": "panel",
+          "settings": {
+            "shape": "v"
+          }
+        },
+        {
+          "type": "panel",
+          "settings": {
+            "shape": "o"
+          }
+        },
+        {
+          "type": "panel",
+          "settings": {
+            "shape": "v"
+          }
+        },
+        {
+          "type": "panel",
+          "settings": {
+            "shape": "q"
+          }
+        },
+        {
+          "type": "panel",
+          "settings": {
+            "shape": "w"
+          }
+        }
       ]
     }
   ]

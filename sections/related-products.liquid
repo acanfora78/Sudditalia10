@@ -1,3 +1,4 @@
+{% render 'stile-sezione', section: section %}
 {%- comment -%}
   Prodotti correlati: carosello da trascinare (mouse, con inerzia) o da scorrere col dito,
   con frecce e barra di avanzamento.
@@ -9,9 +10,19 @@
 
 <div class="rp section-spacing">
   <div class="page-width">
-    <product-recommendations class="rp__recs" data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.products_to_show }}&intent=related">
-      {%- if recommendations.performed and recommendations.products_count > 0 -%}
-        {%- assign count = recommendations.products_count -%}
+    <product-recommendations class="rp__recs" {% if section.settings.source == 'collection' and section.settings.collection != blank %}data-static{% else %}data-url{% endif %}="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.products_to_show }}&intent=related">
+      {%- liquid
+        if section.settings.source == 'collection' and section.settings.collection != blank
+          assign items = section.settings.collection.products
+          assign count = section.settings.collection.products_count | at_most: section.settings.products_to_show
+        elsif recommendations.performed
+          assign items = recommendations.products
+          assign count = recommendations.products_count
+        else
+          assign count = 0
+        endif
+      -%}
+      {%- if count > 0 -%}
         <div class="g-rail rp__rail" data-g-rail data-g-drag>
           <header class="g-head g-head--compact" data-g-in>
             <div class="g-head__top">
@@ -30,7 +41,7 @@
             </div>
           </header>
           <ul class="g-rail__track rp__track" data-g-track role="list">
-            {%- for product in recommendations.products -%}
+            {%- for product in items limit: section.settings.products_to_show -%}
               <li class="g-rail__item">{% render 'product-card', product: product, sizes: '(max-width: 749px) 72vw, 26vw' %}</li>
             {%- endfor -%}
           </ul>
@@ -53,6 +64,28 @@
       "default": "Potrebbe piacerti"
     },
     {
+      "type": "select",
+      "id": "source",
+      "label": "Prodotti da mostrare",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Consigliati da Shopify"
+        },
+        {
+          "value": "collection",
+          "label": "Da una collezione scelta"
+        }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collezione",
+      "info": "Usata se hai scelto \"Da una collezione scelta\"."
+    },
+    {
       "type": "range",
       "id": "products_to_show",
       "label": "Prodotti da mostrare",
@@ -60,10 +93,66 @@
       "max": 10,
       "step": 1,
       "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Font della sezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "sec_font_custom",
+      "label": "Usa font diversi per questa sezione",
+      "info": "Se spento, la sezione usa i font di Impostazioni tema → Tipografia.",
+      "default": false
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_heading",
+      "label": "Font dei titoli",
+      "default": "archivo_n7"
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_body",
+      "label": "Font dei testi",
+      "default": "archivo_n4"
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_case",
+      "label": "Titoli",
+      "options": [
+        {
+          "value": "theme",
+          "label": "Come il tema"
+        },
+        {
+          "value": "upper",
+          "label": "Maiuscolo"
+        },
+        {
+          "value": "none",
+          "label": "Come scritti"
+        }
+      ],
+      "default": "theme"
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "label": "Spaziatura lettere dei titoli",
+      "min": -10,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "info": "0 = come il tema."
     }
   ],
   "enabled_on": {
-    "templates": ["product"]
+    "templates": [
+      "product"
+    ]
   },
   "presets": [
     {

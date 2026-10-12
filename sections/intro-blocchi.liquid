@@ -1,3 +1,4 @@
+{% render 'stile-sezione', section: section %}
 {%- comment -%}
   Apertura a blocchi, con ingresso da film.
 
@@ -189,8 +190,14 @@
       "id": "cinema_style",
       "label": "Tipo di ingresso",
       "options": [
-        { "value": "nuvole", "label": "Logo tra le nuvole" },
-        { "value": "titolo", "label": "Scritta su nero" }
+        {
+          "value": "nuvole",
+          "label": "Logo tra le nuvole"
+        },
+        {
+          "value": "titolo",
+          "label": "Scritta su nero"
+        }
       ],
       "default": "nuvole"
     },
@@ -246,9 +253,18 @@
       "id": "focus",
       "label": "Parte della foto da tenere al centro",
       "options": [
-        { "value": "50% 50%", "label": "Centro" },
-        { "value": "50% 20%", "label": "Alto" },
-        { "value": "50% 80%", "label": "Basso" }
+        {
+          "value": "50% 50%",
+          "label": "Centro"
+        },
+        {
+          "value": "50% 20%",
+          "label": "Alto"
+        },
+        {
+          "value": "50% 80%",
+          "label": "Basso"
+        }
       ],
       "default": "50% 50%"
     },
@@ -304,8 +320,66 @@
       "type": "url",
       "id": "button_link",
       "label": "Link del bottone"
+    },
+    {
+      "type": "header",
+      "content": "Font della sezione"
+    },
+    {
+      "type": "checkbox",
+      "id": "sec_font_custom",
+      "label": "Usa font diversi per questa sezione",
+      "info": "Se spento, la sezione usa i font di Impostazioni tema → Tipografia.",
+      "default": false
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_heading",
+      "label": "Font dei titoli",
+      "default": "archivo_n7"
+    },
+    {
+      "type": "font_picker",
+      "id": "sec_font_body",
+      "label": "Font dei testi",
+      "default": "archivo_n4"
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_case",
+      "label": "Titoli",
+      "options": [
+        {
+          "value": "theme",
+          "label": "Come il tema"
+        },
+        {
+          "value": "upper",
+          "label": "Maiuscolo"
+        },
+        {
+          "value": "none",
+          "label": "Come scritti"
+        }
+      ],
+      "default": "theme"
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "label": "Spaziatura lettere dei titoli",
+      "min": -10,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "default": 0,
+      "info": "0 = come il tema."
     }
   ],
-  "presets": [{ "name": "Apertura a blocchi" }]
+  "presets": [
+    {
+      "name": "Apertura a blocchi"
+    }
+  ]
 }
 {% endschema %}
