@@ -19,7 +19,7 @@
         "cinema_text": "",
         "letterbox": true,
         "video": "shopify://files/videos/Spot Diamond Hoodie Ultimo.mov",
-        "video_mobile": "shopify://files/videos/Frezza live sequenza foto.mov",
+        "video_mobile": "shopify://files/videos/Spot Diamond Hoodie Ultimo.mov",
         "focus": "50% 30%",
         "cols": 4,
         "rows": 3,
@@ -35,53 +35,13 @@
         "sec_heading_spacing": 0
       }
     },
-    "fascia_scorrevole_4Q466P": {
-      "type": "fascia-scorrevole",
-      "name": "Fascia scorrevole",
-      "settings": {
-        "text": "",
-        "text_2": "",
-        "single_row": false,
-        "link": "",
-        "sec_font_custom": false,
-        "sec_font_heading": "archivo_n7",
-        "sec_font_body": "archivo_n4",
-        "sec_heading_case": "theme",
-        "sec_heading_spacing": 0
-      }
-    },
-    "finestra_cinema_ifpdGB": {
-      "type": "finestra-cinema",
-      "name": "Finestra cinema",
-      "settings": {
-        "text": "",
-        "word_layout": "lines",
-        "focus": "50% 50%",
-        "scroll_height": 260,
-        "show_frame": true,
-        "scroll_label": "Scorri per aprire",
-        "collection": "",
-        "kicker": "Collezione",
-        "title": "",
-        "subtitle": "",
-        "show_count": true,
-        "button_label": "Scopri la collezione",
-        "button_link": "",
-        "products_to_show": 3,
-        "sec_font_custom": false,
-        "sec_font_heading": "archivo_n7",
-        "sec_font_body": "archivo_n4",
-        "sec_heading_case": "theme",
-        "sec_heading_spacing": 0
-      }
-    },
     "hero_outfit_slider_PPYMF3": {
       "type": "hero-outfit-slider",
       "blocks": {
         "look_qezBqE": {
           "type": "look",
           "settings": {
-            "product": "",
+            "product": "black-on-black-boxy-zip-hoodie",
             "title": "",
             "link": "",
             "scale": 100,
@@ -141,6 +101,7 @@
         "look_pEiHgW",
         "look_YwJzbb"
       ],
+      "disabled": true,
       "name": "Hero capi sul modello",
       "settings": {
         "collection": "",
@@ -151,8 +112,8 @@
         "link_label": "Vedi prodotto",
         "show_price": true,
         "aria_label": "Collezione",
-        "bg_color": "#E9EAEC",
-        "text_color": "#0E1A33",
+        "bg_color": "#e9eaec",
+        "text_color": "#0e1a33",
         "height": 90,
         "figure_height": 86,
         "figure_height_mobile": 62,
@@ -162,6 +123,46 @@
         "loop": true,
         "autoplay": false,
         "autoplay_interval": 4,
+        "sec_font_custom": false,
+        "sec_font_heading": "archivo_n7",
+        "sec_font_body": "archivo_n4",
+        "sec_heading_case": "theme",
+        "sec_heading_spacing": 0
+      }
+    },
+    "fascia_scorrevole_4Q466P": {
+      "type": "fascia-scorrevole",
+      "name": "Fascia scorrevole",
+      "settings": {
+        "text": "SIAMO CRESCIUTI TRA MURI E SOGNI, MA NON CI SIAMO MAI SENTITI SOLI",
+        "text_2": "",
+        "single_row": false,
+        "link": "",
+        "sec_font_custom": false,
+        "sec_font_heading": "archivo_n7",
+        "sec_font_body": "archivo_n4",
+        "sec_heading_case": "theme",
+        "sec_heading_spacing": 0
+      }
+    },
+    "finestra_cinema_ifpdGB": {
+      "type": "finestra-cinema",
+      "name": "Finestra cinema",
+      "settings": {
+        "text": "",
+        "word_layout": "lines",
+        "focus": "50% 50%",
+        "scroll_height": 260,
+        "show_frame": true,
+        "scroll_label": "Scorri per aprire",
+        "collection": "",
+        "kicker": "Collezione",
+        "title": "",
+        "subtitle": "",
+        "show_count": true,
+        "button_label": "Scopri la collezione",
+        "button_link": "",
+        "products_to_show": 3,
         "sec_font_custom": false,
         "sec_font_heading": "archivo_n7",
         "sec_font_body": "archivo_n4",
@@ -305,9 +306,9 @@
   },
   "order": [
     "intro",
+    "hero_outfit_slider_PPYMF3",
     "fascia_scorrevole_4Q466P",
     "finestra_cinema_ifpdGB",
-    "hero_outfit_slider_PPYMF3",
     "galleria_cinema_aaT4Cc",
     "striscia_social_ft9TY4"
   ]
