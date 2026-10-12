@@ -151,6 +151,7 @@
       "settings": {
         "text": "",
         "word_layout": "lines",
+        "logo": "shopify://shop_images/Risorsa_2.png",
         "focus": "50% 50%",
         "scroll_height": 260,
         "show_frame": true,
