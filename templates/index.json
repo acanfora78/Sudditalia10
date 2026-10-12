@@ -3,10 +3,7 @@
     "intro": {
       "type": "intro-blocchi",
       "settings": {
-        "image": "shopify://shop_images/apertura.jpg",
         "focus": "50% 30%",
-        "video": "shopify://files/videos/apertura-computer.mp4",
-        "video_mobile": "shopify://files/videos/apertura-telefono.mp4",
         "cinema_style": "nuvole"
       }
     },
@@ -23,9 +20,6 @@
     "finestra": {
       "type": "finestra-cinema",
       "settings": {
-        "video": "shopify://files/videos/apertura-computer.mp4",
-        "video_mobile": "shopify://files/videos/apertura-telefono.mp4",
-        "image": "shopify://shop_images/apertura.jpg",
         "collection": "hoodies"
       }
     },
@@ -48,7 +42,6 @@
         "palco": {
           "type": "panel",
           "settings": {
-            "image": "shopify://shop_images/instagram-2.jpg",
             "title": "Sul palco",
             "shape": "v"
           }
@@ -56,7 +49,6 @@
         "live": {
           "type": "panel",
           "settings": {
-            "image": "shopify://shop_images/apertura.jpg",
             "collection": "t-shirts",
             "shape": "w"
           }
@@ -64,7 +56,6 @@
         "backstage": {
           "type": "panel",
           "settings": {
-            "video": "shopify://files/videos/apertura-telefono.mp4",
             "title": "Backstage",
             "shape": "v"
           }
@@ -79,7 +70,6 @@
         "felpe": {
           "type": "panel",
           "settings": {
-            "image": "shopify://shop_images/instagram-3.jpg",
             "collection": "hoodies",
             "shape": "v"
           }
@@ -87,7 +77,6 @@
         "bandana": {
           "type": "panel",
           "settings": {
-            "image": "shopify://shop_images/instagram-4.jpg",
             "collection": "accessori",
             "shape": "o"
           }
@@ -95,7 +84,6 @@
         "busta": {
           "type": "panel",
           "settings": {
-            "image": "shopify://shop_images/instagram-1.jpg",
             "title": "Firmato Sudditalia",
             "shape": "v"
           }
@@ -162,34 +150,23 @@
       "blocks": {
         "post1": {
           "type": "post",
-          "settings": {
-            "image": "shopify://shop_images/instagram-1.jpg"
-          }
+          "settings": {}
         },
         "post2": {
           "type": "post",
-          "settings": {
-            "image": "shopify://shop_images/instagram-2.jpg"
-          }
+          "settings": {}
         },
         "post3": {
           "type": "post",
-          "settings": {
-            "image": "shopify://shop_images/instagram-3.jpg"
-          }
+          "settings": {}
         },
         "post4": {
           "type": "post",
-          "settings": {
-            "image": "shopify://shop_images/instagram-4.jpg"
-          }
+          "settings": {}
         },
         "video1": {
           "type": "post",
-          "settings": {
-            "video": "shopify://files/videos/apertura-telefono.mp4",
-            "image": "shopify://shop_images/instagram-2.jpg"
-          }
+          "settings": {}
         }
       },
       "block_order": [

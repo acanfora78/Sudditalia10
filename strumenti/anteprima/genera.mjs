@@ -307,7 +307,10 @@ const css = (n) => fs.readFileSync(path.join(TEMA, 'assets', n), 'utf8');
 const js = (n) => fs.readFileSync(path.join(TEMA, 'assets', n), 'utf8');
 
 function template(nome) {
-  const t = JSON.parse(fs.readFileSync(path.join(TEMA, 'templates', `${nome}.json`), 'utf8'));
+  // la home dell'anteprima usa index-anteprima.json (con le foto e i video di prova di foto/);
+  // il tema vero non può puntare a file che nello store non esistono ancora
+  const fileAnteprima = path.join(QUI, `${nome}-anteprima.json`);
+  const t = JSON.parse(fs.readFileSync(fs.existsSync(fileAnteprima) ? fileAnteprima : path.join(TEMA, 'templates', `${nome}.json`), 'utf8'));
   if (nome === 'index' && !SOLO_PRONTI) {
     // anteprima: tutte le felpe della collezione nella hero, la sagoma dove manca la foto indossata
     const hero = t.sections.hero;
