@@ -67,11 +67,18 @@
       assign shown = shown | plus: 1
     endfor
 
+    # con più pagine totale e posizione contano tutto il negozio; se però le collezioni vuote sono nascoste
+    # non si sa quante sono davvero: si numera solo la pagina e il totale non si mostra
     assign offset = 0
     assign total = shown
+    assign show_total = true
     if use_blocks == false and paginate.pages > 1
-      assign offset = paginate.current_offset | default: 0
-      assign total = paginate.items | default: shown
+      if section.settings.hide_empty
+        assign show_total = false
+      else
+        assign offset = paginate.current_offset | default: 0
+        assign total = paginate.items | default: shown
+      endif
     endif
     assign total_pad = total
     if total < 10
@@ -91,8 +98,10 @@
     <header class="ec__intro page-width">
       <p class="ec__eyebrow">
         <span class="ec__eyebrow-shop">{{ shop.name | escape }}</span>
-        <span class="ec__eyebrow-line" aria-hidden="true"></span>
-        <span>{{ total_pad }} {{ section.settings.collections_label | escape }}</span>
+        {%- if show_total -%}
+          <span class="ec__eyebrow-line" aria-hidden="true"></span>
+          <span>{{ total_pad }} {{ section.settings.collections_label | escape }}</span>
+        {%- endif -%}
       </p>
       <div class="ec__title-wrap">
         <h1 class="ec__title" data-ec-fit>
@@ -115,6 +124,37 @@
           <p class="ec__hint" aria-hidden="true"><span class="ec__hint-line"></span>{{ section.settings.scroll_label | escape }}</p>
         {%- endif -%}
       </div>
+      {%- comment -%} telefono e tablet: l'indice è una fila di nomi che si scorre di lato e porta alla collezione {%- endcomment -%}
+      {%- if section.settings.show_index and shown > 1 -%}
+        <nav class="ec__chips" aria-label="{{ section.settings.index_label | escape }}">
+          <ol class="ec__chips-list" role="list">
+            {%- assign n = 0 -%}
+            {%- for item in items -%}
+              {%- liquid
+                if use_blocks
+                  assign c = item.settings.collection
+                else
+                  assign c = item
+                endif
+                if c == blank
+                  continue
+                endif
+                if section.settings.hide_empty and c.all_products_count == 0
+                  continue
+                endif
+                assign n = n | plus: 1
+                assign num = offset | plus: n
+              -%}
+              <li>
+                <a class="ec__chip" href="#ec-{{ section.id }}-{{ n }}" data-ec-link="{{ n | minus: 1 }}" data-no-curtain>
+                  <span class="ec__chip-num" aria-hidden="true">{% if num < 10 %}0{% endif %}{{ num }}</span>
+                  {{ c.title | escape }}
+                </a>
+              </li>
+            {%- endfor -%}
+          </ol>
+        </nav>
+      {%- endif -%}
     </header>
 
     {%- if shown > 0 -%}
@@ -181,6 +221,15 @@
               if section.settings.panel_style == 'set' or image == blank
                 assign set_style = true
               endif
+              # foto troppo piccola per il tutto schermo (si vedrebbe sfocata): sta in una cornice nitida,
+              # e dietro la stessa foto sfumata fa da atmosfera
+              assign frame_style = false
+              if set_style == false and image.width < 1500
+                assign frame_style = true
+              endif
+              # a tutto schermo la foto copre il pannello ed è ingrandita fino a ~1.24 dalla parallasse;
+              # sul telefono (pannello verticale) una foto quadrata è larga quasi due schermi
+              assign phone_w = image.aspect_ratio | times: 210 | ceil | at_least: 120
               assign focal = '50% 32%'
               if image.presentation.focal_point != blank
                 assign focal = image.presentation.focal_point.x | append: '% ' | append: image.presentation.focal_point.y | append: '%'
@@ -195,25 +244,35 @@
                 assign loading = 'eager'
               endif
             -%}
+            {%- comment -%}
+              data-header-pin: l'header resta a schermo finché c'è la pila (movimento.js), altrimenti sopra
+              i pannelli fermi sotto di lui resterebbe una fascia vuota
+            {%- endcomment -%}
             <article
-              class="ec__panel{% if set_style %} ec__panel--set{% endif %}"
+              class="ec__panel{% if set_style %} ec__panel--set{% elsif frame_style %} ec__panel--frame{% endif %}"
               id="ec-{{ section.id }}-{{ n }}"
-              style="--ec-p: {{ num | times: 1.0 | divided_by: total }};"
+              style="--ec-p: {% if show_total %}{{ num | times: 1.0 | divided_by: total }}{% else %}{{ n | times: 1.0 | divided_by: shown }}{% endif %};"
               aria-labelledby="ec-{{ section.id }}-{{ n }}-t"
               data-ec-panel
+              data-header-pin
               {% if set_style %}data-ec-light{% endif %}
               {% if use_blocks %}{{ item.shopify_attributes }}{% endif %}
             >
               <div class="ec__card" data-ec-card>
-                <div class="ec__media" data-ec-media>
+                {%- comment -%} immagini decorative: il nome della collezione è nel titolo {%- endcomment -%}
+                <div class="ec__media" data-ec-media aria-hidden="true">
                   {%- if set_style -%}
                     <div class="ec__set">
                       {%- assign k = 0 -%}
                       {%- for p in c.products limit: 3 -%}
                         {%- if p.featured_media != blank -%}
                           {%- assign k = k | plus: 1 -%}
-                          <div class="ec__set-item">
-                            {% render 'responsive-image', image: p.featured_media.preview_image, sizes: '(max-width: 749px) 60vw, 30vw', widths: '360, 540, 720, 900, 1100', alt: '', loading: loading %}
+                          <div class="ec__set-item" style="--ar: {{ p.featured_media.preview_image.aspect_ratio | default: 1 }};">
+                            {%- if k == 1 -%}
+                              {% render 'responsive-image', image: p.featured_media.preview_image, sizes: '(max-width: 749px) 90vw, 46vw', widths: '360, 540, 720, 900, 1100, 1400', alt: '', loading: loading %}
+                            {%- else -%}
+                              {% render 'responsive-image', image: p.featured_media.preview_image, sizes: '28vw', widths: '360, 540, 720, 900', alt: '', loading: 'lazy' %}
+                            {%- endif -%}
                           </div>
                         {%- endif -%}
                       {%- endfor -%}
@@ -221,17 +280,33 @@
                         {{ 'collection-1' | placeholder_svg_tag: 'ec__placeholder' }}
                       {%- endif -%}
                     </div>
+                  {%- elsif frame_style -%}
+                    <div class="ec__photo ec__photo--ghost" style="--ec-focal: {{ focal }};">
+                      {% render 'responsive-image', image: image, sizes: '40vw', widths: '360, 540, 720', alt: '', loading: loading, class: 'ec__img' %}
+                    </div>
                   {%- else -%}
+                    {%- capture photo_sizes -%}(max-width: 749px) {{ phone_w }}vw, 125vw{%- endcapture -%}
                     <div class="ec__photo" style="--ec-focal: {{ focal }};">
                       {%- if n == 1 -%}
-                        {% render 'responsive-image', image: image, sizes: '100vw', widths: '750, 1100, 1500, 1800, 2200, 2800', alt: '', loading: loading, fetchpriority: 'high', class: 'ec__img' %}
+                        {% render 'responsive-image', image: image, sizes: photo_sizes, widths: '750, 1100, 1500, 1800, 2200, 2800, 3400', alt: '', loading: loading, fetchpriority: 'high', class: 'ec__img' %}
                       {%- else -%}
-                        {% render 'responsive-image', image: image, sizes: '100vw', widths: '750, 1100, 1500, 1800, 2200, 2800', alt: '', loading: loading, class: 'ec__img' %}
+                        {% render 'responsive-image', image: image, sizes: photo_sizes, widths: '750, 1100, 1500, 1800, 2200, 2800, 3400', alt: '', loading: loading, class: 'ec__img' %}
                       {%- endif -%}
                     </div>
                   {%- endif -%}
                 </div>
                 <div class="ec__veil" aria-hidden="true"></div>
+                {%- if frame_style -%}
+                  <div class="ec__frame" style="--ec-ar: {{ image.aspect_ratio }}; --ec-iw: {{ image.width }}px; --ec-focal: {{ focal }};" aria-hidden="true">
+                    <div class="ec__frame-in" data-ec-frame>
+                      {%- if n == 1 -%}
+                        {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 80vw, 40vw', widths: '400, 600, 800, 1000, 1200, 1500', alt: '', loading: loading, fetchpriority: 'high', class: 'ec__frame-img' %}
+                      {%- else -%}
+                        {% render 'responsive-image', image: image, sizes: '(max-width: 749px) 80vw, 40vw', widths: '400, 600, 800, 1000, 1200, 1500', alt: '', loading: loading, class: 'ec__frame-img' %}
+                      {%- endif -%}
+                    </div>
+                  </div>
+                {%- endif -%}
                 <div class="ec__shade" data-ec-shade aria-hidden="true"></div>
 
                 <a class="ec__hit" href="{{ c.url }}" tabindex="-1" aria-hidden="true" data-cursor="{{ cta_label | escape }}"></a>
@@ -239,8 +314,10 @@
                 <div class="ec__content">
                   <p class="ec__num">
                     <span class="ec__num-cur">{% if num < 10 %}0{% endif %}{{ num }}</span>
-                    <span class="ec__num-sep" aria-hidden="true">/</span>
-                    <span class="ec__num-tot">{{ total_pad }}</span>
+                    {%- if show_total %}
+                      <span class="ec__num-sep" aria-hidden="true">/</span>
+                      <span class="ec__num-tot">{{ total_pad }}</span>
+                    {%- endif %}
                     <span class="ec__num-bar" aria-hidden="true"></span>
                   </p>
 
@@ -394,7 +471,7 @@
         { "value": "set", "label": "Primi prodotti sul set chiaro" }
       ],
       "default": "image",
-      "info": "Le collezioni senza foto mostrano sempre i primi prodotti sul set. Per scegliere la parte della foto da tenere a schermo usa il punto focale dell'immagine (Contenuti > File)."
+      "info": "Per la foto a tutto schermo usa immagini larghe almeno 2000 px: quelle sotto i 1500 px restano nitide in una cornice. Le collezioni senza foto mostrano i primi prodotti sul set, che rende meglio con foto scontornate su fondo bianco. Per la parte della foto da tenere a schermo usa il punto focale (Contenuti > File)."
     },
     {
       "type": "checkbox",
@@ -405,9 +482,9 @@
     {
       "type": "checkbox",
       "id": "show_index",
-      "label": "Mostra l'indice laterale (computer)",
+      "label": "Mostra l'indice delle collezioni",
       "default": true,
-      "info": "Con più di 14 collezioni l'indice non si vede."
+      "info": "Computer: indice laterale fisso (fino a 14 collezioni). Telefono e tablet: una fila di nomi sotto il titolo."
     },
     {
       "type": "text",
@@ -483,7 +560,7 @@
           "type": "image_picker",
           "id": "image",
           "label": "Foto del pannello",
-          "info": "Vuota: la foto della collezione."
+          "info": "Vuota: la foto della collezione. Per il tutto schermo almeno 2000 px di larghezza; sotto i 1500 px la foto sta in una cornice."
         }
       ]
     }

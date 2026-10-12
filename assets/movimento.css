@@ -45,10 +45,11 @@ html.mv-hdr-hide .section-header {
   transition-duration: .5s;
   transition-timing-function: cubic-bezier(.77, 0, .18, 1);
 }
-/* la barra strumenti della collezione sale insieme all'header (senza buco sopra) */
+/* la barra strumenti della collezione, una volta agganciata in alto (.is-stuck, da collezione.js),
+   sale insieme all'header (senza buco sopra); finché scorre con la pagina resta al suo posto */
 .ctb,
 [data-header-follow] { transition: transform .6s cubic-bezier(.2, .8, .2, 1); }
-html.mv-hdr-hide .ctb,
+html.mv-hdr-hide .ctb.is-stuck,
 html.mv-hdr-hide [data-header-follow] {
   transform: translate3d(0, calc(var(--header-h, 64px) * -1), 0);
   transition-duration: .5s;
@@ -90,13 +91,18 @@ html.mv-hdr-hide .ctb:has(.cf[open]),
   width: max-content;
   max-width: none;
   margin-inline: auto;
+  /* con la spaziatura negativa l'ultima lettera sporge oltre la sua casella: questo margine
+     la riporta dentro (il calcolo della larghezza usa scrollWidth e lo comprende) */
+  padding-inline-end: .035em;
   overflow: visible;
   -webkit-user-select: none;
   user-select: none;
 }
+/* ogni lettera ha la sua maschera, ma solo sopra e sotto: di lato il glifo è più largo della
+   casella (spaziatura negativa) e un overflow: hidden taglierebbe i piedi delle A */
 .mv-wl {
   display: inline-block;
-  overflow: hidden;
+  clip-path: inset(0 -.35em);
   vertical-align: top;
   padding-block: .14em .1em;
   margin-block: -.14em -.1em;
@@ -104,6 +110,8 @@ html.mv-hdr-hide .ctb:has(.cf[open]),
   will-change: transform;
 }
 .mv-wi { display: inline-block; }
+/* onda finita: nessuna maschera, le lettere che saltano col mouse restano intere */
+.mv-wm.is-done .mv-wl { clip-path: none; }
 .mv-wm--armed .mv-wi { transform: translate3d(0, 118%, 0); }
 .mv-wm--armed.is-wave .mv-wi {
   animation: mv-wave 1.25s cubic-bezier(.2, .8, .2, 1) calc(var(--i, 0) * .055s) both;
@@ -430,7 +438,22 @@ textarea:focus-visible { outline: 2px solid var(--color-accent); outline-offset:
 .nf__search button { display: grid; place-items: center; flex: none; width: 48px; height: 48px; }
 @keyframes nf-up { from { opacity: 0; transform: translate3d(0, 22px, 0); } to { opacity: 1; transform: none; } }
 
+/* in attesa delle nuvole (nf--wait, finché movimento.js non aggiunge nf--go) la scena resta
+   ferma al primo fotogramma: nuvole chiuse, numero e testi nascosti; poi parte tutta insieme */
+.nf--wait:not(.nf--go) .nf__enter,
+.nf--wait:not(.nf--go) .nf__d,
+.nf--wait:not(.nf--go) .nf__kicker,
+.nf--wait:not(.nf--go) .nf__text,
+.nf--wait:not(.nf--go) .nf__actions,
+.nf--wait:not(.nf--go) .nf__search { animation-play-state: paused; }
+.nf--wait:not(.nf--go) .mv-split.is-in .mv-c { transform: translate3d(0, 112%, 0); transition: none; }
+
+/* il cielo arriva fino al footer, senza la fascia vuota del suo margine */
+.template-404 .footer { margin-top: 0; }
+
 @media (max-width: 749px) {
+  /* sul telefono il numero resta gigante: quasi tutta la larghezza */
+  .nf__code { font-size: min(52vw, 15rem); }
   .nf__actions { flex-direction: column; align-items: stretch; width: min(100%, 360px); }
   .nf__cloud--far { --cw: 300vw; }
   .nf__cloud--left { --cw: 240vw; --cx: -36vw; --cy: -34vh; }
@@ -442,7 +465,7 @@ textarea:focus-visible { outline: 2px solid var(--color-accent); outline-offset:
 /* --- Riduci movimento: tutto fermo e visibile ---------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .section-header, .ctb, [data-header-follow], .mv-progress { transition: none; }
-  html.mv-hdr-hide .section-header, html.mv-hdr-hide .ctb { transform: none; }
+  html.mv-hdr-hide .section-header, html.mv-hdr-hide .ctb.is-stuck, html.mv-hdr-hide [data-header-follow] { transform: none; }
   .mv-c, .mv-split--block { transform: none !important; opacity: 1 !important; transition: none !important; }
   .mv-wi { transform: none !important; animation: none !important; }
   .link-underline::after, .header__nav > ul > li > a::after, .header__nav summary::after, .header__dropdown > ul a::after,

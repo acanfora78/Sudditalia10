@@ -1,8 +1,10 @@
 /* ==========================================================================
    Tutte le collezioni — schermate impilate (sections/main-list-collections.liquid)
-   I pannelli restano fermi sotto l'header (position: sticky); il successivo sale e si appoggia sopra.
+   I pannelli restano fermi sotto l'header (position: sticky; l'header resta grazie a data-header-pin);
+   il successivo sale e si appoggia sopra.
    elenco-collezioni.js aggiunge .is-live e muove solo transform / opacity / clip-path:
    rimpicciolisce e scurisce il pannello coperto, fa scorrere la foto (parallasse), arrotonda gli angoli.
+   Tre fondi: foto a tutto schermo (foto grandi), foto in cornice (foto piccole), primi prodotti sul set chiaro.
    Senza JS: pila funzionante, tutto visibile. Con "riduci movimento": pannelli statici uno sotto l'altro.
    ========================================================================== */
 
@@ -107,6 +109,47 @@
   100% { transform: translateY(100%); }
 }
 
+/* fila di nomi (telefono e tablet): si scorre di lato, porta alla collezione */
+.ec__chips {
+  margin: clamp(24px, 4vw, 40px) calc(-1 * clamp(16px, 4vw, 56px)) 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 28px), transparent);
+}
+.ec__chips::-webkit-scrollbar { display: none; }
+.ec__chips-list {
+  display: flex;
+  gap: 8px;
+  width: max-content;
+  margin: 0;
+  padding: 0 clamp(16px, 4vw, 56px);
+  list-style: none;
+}
+.ec__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 18px 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: border-color .4s var(--ec-ease), background-color .4s var(--ec-ease);
+}
+.ec__chip-num { color: var(--color-accent); font-variant-numeric: tabular-nums; }
+.ec__chip.is-current { border-color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+.ec__chip:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+@media (hover: hover) {
+  .ec__chip:hover { border-color: var(--color-text); }
+}
+
 /* ingresso dell'apertura (solo con JS attivo) */
 .ec.is-live .ec__l > span {
   transform: translateY(105%);
@@ -114,7 +157,8 @@
 }
 .ec.is-live .ec__eyebrow,
 .ec.is-live .ec__text,
-.ec.is-live .ec__hint {
+.ec.is-live .ec__hint,
+.ec.is-live .ec__chips {
   opacity: 0;
   transform: translateY(14px);
   transition: opacity .9s var(--ec-ease) .75s, transform .9s var(--ec-ease) .75s;
@@ -125,6 +169,7 @@
 .ec.is-live.is-ready .ec__eyebrow,
 .ec.is-live.is-ready .ec__text,
 .ec.is-live.is-ready .ec__hint,
+.ec.is-live.is-ready .ec__chips,
 .ec.is-live.is-ready .ec__eyebrow-line { opacity: 1; transform: none; }
 
 /* --- Pila dei pannelli --------------------------------------------------- */
@@ -147,6 +192,7 @@
   background: var(--color-surface);
   color: var(--ec-fg);
   transform-origin: 50% 40%;
+  container-type: size; /* cornice e set si misurano sull'altezza della carta (cqh) */
 }
 /* filo di luce sul bordo alto, come il bordo di uno schermo */
 .ec__card::after {
@@ -160,7 +206,9 @@
 }
 .ec__panel--set .ec__card::after { display: none; }
 .ec__panel.is-near .ec__card,
-.ec__panel.is-near .ec__media { will-change: transform; }
+.ec__panel.is-near .ec__media,
+.ec__panel.is-near .ec__frame-in { will-change: transform; }
+.ec__panel.is-near .ec__shade { will-change: opacity; }
 
 .ec__media {
   position: absolute;
@@ -195,40 +243,127 @@
 }
 .ec__hit { position: absolute; inset: 0; z-index: 2; }
 
-/* collezione mostrata con i primi prodotti sul set chiaro */
+/* collezione mostrata con i primi prodotti sul set chiaro:
+   il primo prodotto grande al centro, gli altri due più piccoli ai lati, come su un set fotografico */
 .ec__panel--set .ec__card { --ec-fg: var(--color-stage-text); --ec-ground: var(--color-stage); background: var(--color-stage); }
 /* il set ha il suo fondo: la foto (su bianco) si fonde con multiply dentro il livello che si muove */
 .ec__panel--set .ec__media { background: var(--color-stage); }
 .ec__set {
+  --ec-set-h: 64cqh; /* altezza della zona dei prodotti (top + bottom = 36%) */
   position: absolute;
-  inset: 13% 6% 26%;
+  inset: 11% 5% 25%;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  gap: clamp(8px, 2.4vw, 40px);
+  gap: clamp(8px, 2.2vw, 36px);
+}
+/* luce da studio dietro il prodotto principale */
+.ec__set::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: min(118cqh, 100%);
+  aspect-ratio: 1.3;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-text) 90%, transparent), color-mix(in srgb, var(--color-text) 30%, transparent) 55%, transparent);
 }
 .ec__set-item {
-  flex: 1 1 0;
-  max-width: 34%;
-  height: 100%;
+  position: relative;
+  flex: none;
+  order: 2;
+  width: min(25%, calc(var(--ec-set-h) * .62 * var(--ar, 1)));
+  aspect-ratio: var(--ar, 1);
 }
-/* sfalsato con top, non con transform: un transform isolerebbe la foto e il multiply non la fonderebbe col set */
-.ec__set-item:nth-child(2) { position: relative; top: 5%; }
-.ec__set-item:only-child { max-width: 52%; }
+.ec__set-item:first-child { width: min(46%, calc(var(--ec-set-h) * var(--ar, 1))); }
+.ec__set-item:nth-child(2) { order: 1; margin-bottom: 2%; }
+.ec__set-item:nth-child(3) { order: 3; margin-bottom: 11%; }
+/* ombra sul pavimento: si vede attraverso il bianco della foto, che si fonde col set */
+.ec__set-item::before {
+  content: '';
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 3%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-stage-text) 26%, transparent), transparent);
+}
+/* posizionate, così l'immagine si dipinge sopra la sua ombra; sfalsate con margin e non con transform:
+   un transform isolerebbe la foto e il multiply non la fonderebbe col set */
 .ec__set-item img,
 .ec__placeholder {
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: contain;
   mix-blend-mode: multiply;
 }
-.ec__set-item img { clip-path: inset(1%); } /* via i bordi non bianchi di certe foto */
-.ec__placeholder { color: var(--color-stage-text); opacity: .35; }
+/* bordi sfumati: sulle foto su bianco non si vede niente, quelle con un fondo (ambientate, bordi grigi)
+   non sembrano rettangoli incollati sul set */
+.ec__set-item img {
+  --ec-fade: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent), linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: var(--ec-fade);
+  -webkit-mask-composite: source-in;
+  mask-image: var(--ec-fade);
+  mask-composite: intersect;
+}
+.ec__placeholder { position: absolute; inset: 0; color: var(--color-stage-text); opacity: .35; }
 .ec__panel--set .ec__veil {
   background:
     linear-gradient(to top, color-mix(in srgb, var(--color-stage) 92%, transparent) 0%, transparent 34%),
     linear-gradient(to bottom, color-mix(in srgb, var(--color-stage) 70%, transparent) 0%, transparent 18%);
 }
+
+/* foto piccola: nitida in una cornice; dietro la stessa foto, sfocata e scura, fa da atmosfera */
+.ec__photo--ghost { inset: -8%; }
+.ec__photo--ghost .ec__img { opacity: .5; filter: blur(26px) saturate(1.2); }
+.ec__frame {
+  position: absolute;
+  left: 57%;
+  top: 46%;
+  z-index: 1;
+  width: min(44cqw, var(--ec-iw, 100cqw), calc(62cqh * var(--ec-ar, 1)));
+  aspect-ratio: var(--ec-ar, 1);
+  translate: -50% -50%;
+  pointer-events: none;
+}
+.ec__frame-in {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--corner-radius);
+  background: var(--color-surface);
+  box-shadow: 0 50px 90px -40px color-mix(in srgb, var(--color-bg) 90%, transparent);
+}
+.ec__frame-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--ec-focal, 50% 50%);
+}
+/* filo di luce in alto e velo in basso, dove il titolo passa sopra la foto */
+.ec__frame-in::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-text) 30%, transparent);
+  background: linear-gradient(to top, color-mix(in srgb, var(--color-bg) 55%, transparent), transparent 42%);
+}
+/* entra scoprendosi dal basso quando il pannello arriva a schermo (una volta, solo con JS attivo) */
+.ec.is-live .ec__frame {
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 1.3s var(--ec-ease-io) .05s;
+}
+.ec.is-live .ec__frame-img {
+  transform: scale(1.22);
+  transition: transform 1.8s var(--ec-ease) .05s;
+}
+.ec.is-live .is-in .ec__frame { clip-path: inset(0); }
+.ec.is-live .is-in .ec__frame-img { transform: none; }
 
 /* --- Contenuto del pannello ---------------------------------------------- */
 .ec__content {
@@ -425,6 +560,15 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-text) 38%, transparent) 50%, transparent);
 }
+/* in fondo la luce sfuma nel colore della pagina (niente taglio netto prima del footer) */
+.ec__outro::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 38%;
+  pointer-events: none;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-bg) 0%, transparent), var(--color-bg));
+}
 .ec__outro-glow {
   position: absolute;
   left: 50%;
@@ -439,6 +583,7 @@
 }
 .ec__outro-inner {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -516,7 +661,7 @@
     gap: 14px;
     min-height: 44px;
     padding-left: 12px;
-    color: color-mix(in srgb, var(--ec-ix) 58%, transparent);
+    color: color-mix(in srgb, var(--ec-ix) 74%, transparent);
     font-size: .66rem;
     font-weight: 700;
     letter-spacing: .2em;
@@ -572,18 +717,22 @@
     background: var(--ec-ix);
     transform: scaleY(0);
     transform-origin: 50% 0;
+    will-change: transform;
   }
   .ec__index-box.is-off .ec__index-link { pointer-events: none; }
   .ec__index-box:focus-within { opacity: 1 !important; transform: none !important; }
 
   /* sul set i prodotti lasciano spazio all'indice */
   .ec--index .ec__set { left: 4%; right: clamp(220px, 19vw, 300px); }
+  .ec--index .ec__frame { left: 53%; }
+  /* l'indice laterale fa già da indice: la fila di nomi dell'apertura serve solo sotto i 990 px */
+  .ec--index .ec__chips { display: none; }
   /* velo sul lato dell'indice, perché si legga su ogni foto */
   .ec--index .ec__veil::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to left, color-mix(in srgb, var(--ec-ground) 52%, transparent) 0%, transparent 30%);
+    background: linear-gradient(to left, color-mix(in srgb, var(--ec-ground) 64%, transparent) 0%, color-mix(in srgb, var(--ec-ground) 30%, transparent) 18%, transparent 34%);
   }
 }
 @media (min-width: 990px) and (pointer: fine) {
@@ -608,14 +757,16 @@
   .ec__foot { align-items: stretch; padding-bottom: 0; }
   .ec__peek { display: none; }
   .ec__meta { justify-content: space-between; }
-  .ec__set { inset: 11% 5% 34%; }
-  .ec__set-item { max-width: 50%; }
-  .ec__set-item:nth-child(3) { display: none; }
-  .ec__set-item:only-child { max-width: 82%; }
+  /* sul telefono un prodotto solo, grande */
+  .ec__set { --ec-set-h: 57cqh; inset: 12% 6% 31%; }
+  .ec__set::before { width: 150%; }
+  .ec__set-item:first-child { width: min(100%, calc(var(--ec-set-h) * var(--ar, 1))); }
+  .ec__set-item:nth-child(n + 2) { display: none; }
+  .ec__frame { left: 50%; top: 40%; width: min(78cqw, var(--ec-iw, 100cqw), calc(50cqh * var(--ec-ar, 1))); }
   .ec__hint-line { height: 34px; }
   .ec__intro { min-height: calc(58vh - var(--header-h, 0px)); }
   .ec__eyebrow-shop, .ec__eyebrow-shop + .ec__eyebrow-line { display: none; }
-  .ec { --ec-gap: 22vh; }
+  .ec { --ec-gap: 14vh; }
   .ec__outro-title { font-size: clamp(2.8rem, 15vw, 5rem); }
   .ec__outro-glow { bottom: -30%; }
 }
@@ -627,6 +778,7 @@
   .ec__outro { margin-top: clamp(8px, 1vw, 14px); }
   .ec__outro { height: auto; min-height: 70vh; padding-block: 80px; }
   .ec__hint-line::after { animation: none; transform: none; }
+  .ec__chip { transition: none; }
   .ec__cta, .ec__cta::before, .ec__cta-icon, .ec__peek-link,
   .ec__index-link, .ec__index-name, .ec__index-name::before, .ec__index-num { transition: none; }
   /* senza pila l'indice resta in cima al primo pannello, non scorre sopra gli altri */

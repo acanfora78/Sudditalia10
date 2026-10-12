@@ -1,12 +1,15 @@
 /*
   Tutte le collezioni — schermate impilate (sections/main-list-collections.liquid)
   <elenco-collezioni>
-    - i pannelli stanno fermi sotto l'header con position: sticky (CSS); qui, a ogni frame di scroll,
-      il pannello che viene coperto si rimpicciolisce, si scurisce e arrotonda gli angoli, quello che sale
-      ha la foto in parallasse e gli angoli che si raddrizzano mentre si appoggia
+    - i pannelli stanno fermi sotto l'header con position: sticky (CSS; data-header-pin tiene l'header
+      a schermo per tutta la pila); qui, a ogni frame di scroll, il pannello che viene coperto si rimpicciolisce,
+      si scurisce e arrotonda gli angoli, quello che sale ha la foto in parallasse e gli angoli che si raddrizzano
+      mentre si appoggia (il raggio cambia a scatti: il clip-path non passa dal compositore e ogni cambio ridisegna)
+    - foto piccole in cornice: la cornice scorre al contrario della foto sfumata dietro (profondità)
     - la schermata finale ("Tutti i prodotti") copre l'ultima collezione come un'ultima carta
     - la collezione a schermo (quella che attraversa il centro dello schermo) accende il suo titolo
       e si evidenzia nell'indice laterale; il binario dell'indice segue lo scroll; un clic porta alla collezione
+      (anche dalla fila di nomi dell'apertura, su telefono e tablet)
   Solo transform / opacity / clip-path; misure prese una volta (e al resize), non a ogni frame;
   si lavora solo quando la pila è a schermo.
   Con "riduci movimento": niente pila né animazioni, l'indice funziona lo stesso.
@@ -19,8 +22,17 @@
   var mqPhone = window.matchMedia('(max-width: 749px)');
 
   // quanto si muove: sul telefono la pila è più leggera
-  var DESKTOP = { scale: 0.1, lift: 2.5, radius: 28, par: 10, drift: 4, zoomBase: 1.1, zoomIn: 0.14, shadeIn: 0.45, shadeOut: 0.8 };
-  var PHONE = { scale: 0.06, lift: 1.5, radius: 18, par: 5, drift: 2, zoomBase: 1.05, zoomIn: 0.07, shadeIn: 0.3, shadeOut: 0.72 };
+  var DESKTOP = {
+    scale: 0.1, lift: 2.5, radius: 28, par: 10, drift: 4, zoomBase: 1.1, zoomIn: 0.14, shadeIn: 0.45, shadeOut: 0.8, frame: 7,
+    // set chiaro: niente zoom (porterebbe i prodotti fuori dal pannello e sotto l'indice), solo scorrimento
+    light: { par: 5, drift: 2, zoomBase: 1, zoomIn: 0.03 }
+  };
+  var PHONE = {
+    scale: 0.06, lift: 1.5, radius: 18, par: 5, drift: 2, zoomBase: 1.05, zoomIn: 0.07, shadeIn: 0.3, shadeOut: 0.72, frame: 4,
+    light: { par: 3, drift: 1.5, zoomBase: 1, zoomIn: 0.02 }
+  };
+  // quanti valori può prendere il raggio degli angoli in un passaggio (ognuno è un ridisegno della carta)
+  var RADIUS_STEPS = 5;
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function round(v, k) { return Math.round(v * k) / k; }
@@ -59,8 +71,9 @@
           card: panel.querySelector('[data-ec-card]'),
           media: panel.querySelector('[data-ec-media]'),
           shade: panel.querySelector('[data-ec-shade]'),
+          frame: panel.querySelector('[data-ec-frame]'),
           light: panel.hasAttribute('data-ec-light'),
-          p: -1, e: -1, near: null
+          p: -1, e: -1, l: -1, r: -1, near: null
         };
       });
 
@@ -167,8 +180,9 @@
     setCurrent(i) {
       if (i === this.current) return;
       this.current = i;
-      this.links.forEach(function (a, k) {
-        var on = k === i;
+      // indice laterale e fila di nomi dell'apertura: ogni link sa a quale collezione porta
+      this.links.forEach(function (a) {
+        var on = parseInt(a.getAttribute('data-ec-link'), 10) === i;
         a.classList.toggle('is-current', on);
         if (on) a.setAttribute('aria-current', 'true');
         else a.removeAttribute('aria-current');
@@ -279,7 +293,7 @@
       this.stackTop = this.stack.getBoundingClientRect().top + window.scrollY;
       this.cfg = mqPhone.matches ? PHONE : DESKTOP;
       // forza il ridisegno di tutto con le nuove misure
-      this.items.forEach(function (it) { it.p = it.e = it.l = -1; });
+      this.items.forEach(function (it) { it.p = it.e = it.l = it.r = -1; });
       this.indexO = this.fillS = this.outroQ = -1;
     }
 
@@ -312,17 +326,26 @@
           it.card.style.transform = p > 0
             ? 'translate3d(0,' + (-cfg.lift * p).toFixed(2) + '%,0) scale(' + (1 - cfg.scale * p).toFixed(4) + ')'
             : '';
-          var r = p > 0 ? cfg.radius * p : cfg.radius * (1 - e);
-          it.card.style.clipPath = r > 0.4 ? 'inset(0 round ' + r.toFixed(1) + 'px)' : '';
+          // angoli: arrotondati mentre la carta sale e mentre viene coperta, a scatti (vedi RADIUS_STEPS);
+          // del tutto coperta non serve più ritagliarla
+          var k = p > 0 ? p : 1 - e;
+          var r = p >= 1 ? 0 : Math.round(k * RADIUS_STEPS) / RADIUS_STEPS * cfg.radius;
+          if (r !== it.r) {
+            it.r = r;
+            it.card.style.clipPath = r > 0 ? 'inset(0 round ' + r.toFixed(1) + 'px)' : '';
+          }
           // del tutto coperto: non si disegna più (resta raggiungibile con la tastiera)
           it.card.style.opacity = p >= 1 ? '0' : '';
           if (it.shade) it.shade.style.opacity = Math.max(cfg.shadeIn * (1 - e), cfg.shadeOut * p).toFixed(3);
         }
         if (it.media) {
-          var y = -cfg.par + (cfg.par + cfg.drift) * l;
-          var z = cfg.zoomBase + cfg.zoomIn * (1 - l);
+          var m = it.light ? cfg.light : cfg;
+          var y = -m.par + (m.par + m.drift) * l;
+          var z = m.zoomBase + m.zoomIn * (1 - l);
           it.media.style.transform = 'translate3d(0,' + y.toFixed(2) + '%,0) scale(' + z.toFixed(4) + ')';
         }
+        // la cornice sale mentre la foto dietro scende
+        if (it.frame) it.frame.style.transform = 'translate3d(0,' + (cfg.frame * (1 - 2 * l)).toFixed(2) + '%,0)';
       }
 
       var sLast = (n - 1) * P;

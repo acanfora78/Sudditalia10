@@ -1,7 +1,8 @@
 {%- comment -%}
   Pagina non trovata, da film: cielo blu con le nuvole del tema che si aprono come un sipario e poi
   scorrono lente; "404" gigante con un disturbo a scatti (al passaggio del mouse è più forte);
-  frase, bottoni verso home e collezioni e, se attiva, la ricerca.
+  frase, bottoni verso home e collezioni e, se attiva, la ricerca. L'apertura aspetta che le nuvole
+  siano decodificate (classe nf--go), così non si perde nemmeno con la rete lenta.
   Stili e movimento in movimento.css / movimento.js, già caricati dal layout per tutto il sito:
   data-parallax (le nuvole scorrono a velocità diverse), data-depth (seguono il mouse),
   data-split (il titolo entra parola per parola), data-glitch (il disturbo).
@@ -30,8 +31,14 @@
 -%}
 <div class="nf{% if section.settings.clouds %} nf--clouds{% endif %}" data-nf>
   <script>
-    // arrivando col sipario tra le pagine, l'apertura delle nuvole aspetta che il telo si alzi
-    if (document.documentElement.classList.contains('curtain-in')) document.currentScript.parentNode.classList.add('nf--late');
+    (function (nf) {
+      // arrivando col sipario tra le pagine, l'apertura delle nuvole aspetta che il telo si alzi
+      if (document.documentElement.classList.contains('curtain-in')) nf.classList.add('nf--late');
+      // la scena parte quando le nuvole sono pronte (movimento.js aggiunge nf--go);
+      // se lo script non arriva, parte comunque dopo pochi secondi
+      nf.classList.add('nf--wait');
+      setTimeout(function () { nf.classList.add('nf--go'); }, 3200);
+    })(document.currentScript.parentNode);
   </script>
 
   <div class="nf__sky" aria-hidden="true">
@@ -92,14 +99,14 @@
     <div class="nf__layer nf__layer--near" data-parallax="-0.12" data-depth="44">
       <div class="nf__enter nf__enter--near-left">
         <div class="nf__drift nf__drift--near-left">
-          <img class="nf__cloud nf__cloud--near-left" src="{{ 'nuvola-vicina-sinistra.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" decoding="async">
+          <img class="nf__cloud nf__cloud--near-left" src="{{ 'nuvola-vicina-sinistra.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" fetchpriority="high" decoding="async">
         </div>
       </div>
     </div>
     <div class="nf__layer nf__layer--near" data-parallax="-0.16" data-depth="52">
       <div class="nf__enter nf__enter--near-right">
         <div class="nf__drift nf__drift--near-right">
-          <img class="nf__cloud nf__cloud--near-right" src="{{ 'nuvola-vicina-destra.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" decoding="async">
+          <img class="nf__cloud nf__cloud--near-right" src="{{ 'nuvola-vicina-destra.webp' | asset_url }}" alt="" width="1920" height="1080" loading="eager" fetchpriority="high" decoding="async">
         </div>
       </div>
     </div>

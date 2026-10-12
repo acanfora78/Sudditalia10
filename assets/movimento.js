@@ -134,20 +134,45 @@
     var headerH = sec.offsetHeight;
     var zones = [];
 
-    // sezioni bloccate proprio sotto l'header (top = --header-h) e alte quasi quanto lo schermo:
-    // finché sono a schermo l'header resta, altrimenti sopra di loro resterebbe un buco
+    // sezioni bloccate proprio sotto l'header (top = --header-h) e alte almeno mezzo schermo
+    // (apertura, galleria, finestra, pila di "tutte le collezioni", set del prodotto…):
+    // finché sono a schermo l'header resta, altrimenti sopra di loro resterebbe un buco.
+    // Non si cercano per nome di classe: si guarda chi è davvero "sticky". La ricerca su tutta
+    // la pagina si fa solo quando serve (avvio, sezioni pronte o ricaricate, cambio di larghezza
+    // che può accendere o spegnere uno sticky); alle altre misure si rileggono solo quelli trovati.
+    var candidates = [];
+    var scanW = -1;
+    var needScan = true;
+    function scan() {
+      needScan = false;
+      scanW = window.innerWidth;
+      candidates = [];
+      var all = document.querySelectorAll('main *, [data-header-pin]');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i];
+        if (el.hasAttribute('data-header-pin') || getComputedStyle(el).position === 'sticky') candidates.push(el);
+      }
+    }
     function measure() {
       headerH = header().offsetHeight;
+      if (needScan || window.innerWidth !== scanW) scan();
       zones = [];
-      document.querySelectorAll('main [class*="sticky"], main [class*="pin"], [data-header-pin]').forEach(function (el) {
-        var cs = getComputedStyle(el);
-        if (cs.position !== 'sticky' && !el.hasAttribute('data-header-pin')) return;
-        if (cs.position === 'sticky' && Math.abs((parseFloat(cs.top) || 0) - headerH) > 3) return;
+      candidates.forEach(function (el) {
+        if (!el.isConnected) { needScan = true; return; }
+        // la barra strumenti della collezione sale insieme all'header (movimento.css): niente zona
+        if (el.closest('.ctb, [data-header-follow]')) return;
+        if (!el.hasAttribute('data-header-pin')) {
+          var cs = getComputedStyle(el);
+          if (cs.position !== 'sticky' || Math.abs((parseFloat(cs.top) || 0) - headerH) > 3) return;
+        }
         if (el.offsetHeight < vh * 0.5) return;
         var box = (el.parentElement || el).getBoundingClientRect();
         zones.push({ top: box.top + window.scrollY, bottom: box.bottom + window.scrollY });
       });
+      // un elemento sparito (sezione ricaricata): la prossima misura ricerca da capo
+      if (needScan) scheduleMeasure();
     }
+    function rescan() { needScan = true; scheduleMeasure(); }
     function inZone(y) {
       for (var i = 0; i < zones.length; i++) {
         if (zones[i].top - y < vh * 0.6 && zones[i].bottom - y > vh * 0.4) return true;
@@ -186,8 +211,11 @@
       if (hidden && e.target.closest && e.target.closest('.section-header') && keyboardFocusIn(header())) set(false);
     });
     measure();
-    // la galleria e la finestra si preparano dopo: si rimisura appena sono pronte
-    setTimeout(scheduleMeasure, 600);
+    // la galleria e la finestra si preparano dopo (lo sticky arriva con le loro classi):
+    // si ricerca appena sono pronte, a pagina caricata e quando l'editor ricarica una sezione
+    setTimeout(rescan, 600);
+    window.addEventListener('load', rescan);
+    document.addEventListener('shopify:section:load', rescan);
   }
 
   /* ------------------------------------------------------------------
@@ -456,9 +484,26 @@
      effetti.js lo ridimensiona (data-fit-text) misurando il genitore: il nome
      va in un contenitore senza margini interni, largo quanto lo spazio vero.
      ------------------------------------------------------------------ */
+  // nomi attivi: un solo ascolto del resize e una sola misura per tutti; quelli staccati
+  // (footer ricaricato dall'editor) escono dalla lista
+  var wordmarks = [];
+  function eachWordmark(fn) {
+    wordmarks = wordmarks.filter(function (w) { return w.el.isConnected; });
+    wordmarks.forEach(fn);
+  }
+  // al resize effetti.js rifà il calcolo; qui lo si ripete (identico) per un nome ricaricato dall'editor,
+  // che effetti.js non conosce, e si rimisurano le lettere
+  window.addEventListener('resize', function () {
+    if (wordmarks.length) requestAnimationFrame(function () { eachWordmark(function (w) { w.fit(); }); });
+  }, { passive: true });
+  onMeasureFns.push(function () { eachWordmark(function (w) { w.measure(); }); });
+
   function wordmark(scope) {
-    var el = scope.querySelector ? scope.querySelector('.footer__wordmark') : null;
-    if (!el || el._mvWm) return;
+    if (!scope.querySelectorAll) return;
+    toArray(scope.querySelectorAll('.footer__wordmark')).forEach(setupWordmark);
+  }
+  function setupWordmark(el) {
+    if (el._mvWm) return;
     var text = el.textContent.replace(/\s+/g, ' ').trim();
     if (!text) return;
     el._mvWm = true;
@@ -512,10 +557,7 @@
     }
     fit();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-    // al resize effetti.js rifà il calcolo; qui lo si ripete (identico) per un nome ricaricato dall'editor,
-    // che effetti.js non conosce, e si rimisurano le lettere
-    window.addEventListener('resize', function () { if (el.isConnected) requestAnimationFrame(fit); }, { passive: true });
-    onMeasureFns.push(measureLetters);
+    wordmarks.push({ el: el, fit: fit, measure: measureLetters });
     if (reduce || !letters.length) return;
 
     // ingresso a onda quando il footer arriva
@@ -673,8 +715,32 @@
     });
   }
 
+  /* ------------------------------------------------------------------
+     Pagina 404: la scena (nuvole che si aprono, 404 che sale) parte solo
+     quando le nuvole sono decodificate, con un ripiego dopo 2,5 s
+     ------------------------------------------------------------------ */
+  function notFound(scope) {
+    var list = toArray(scope.querySelectorAll ? scope.querySelectorAll('[data-nf]') : []);
+    if (scope.nodeType === 1 && scope.hasAttribute('data-nf')) list.unshift(scope);
+    list.forEach(function (nf) {
+      if (nf._mvNf) return;
+      nf._mvNf = true;
+      var go = function () { nf.classList.add('nf--go'); };
+      if (reduce || !nf.classList.contains('nf--wait') || nf.classList.contains('nf--go')) { go(); return; }
+      var ready = toArray(nf.querySelectorAll('img.nf__cloud')).map(function (img) {
+        if (img.decode) return img.decode().catch(function () {});
+        return img.complete ? null : new Promise(function (res) { img.addEventListener('load', res); img.addEventListener('error', res); });
+      });
+      Promise.race([Promise.all(ready), new Promise(function (res) { setTimeout(res, 2500); })]).then(function () {
+        // un fotogramma per far arrivare a schermo le nuvole decodificate prima che si muovano
+        requestAnimationFrame(go);
+      });
+    });
+  }
+
   /* ------------------------------------------------------------------ */
   function initScope(scope) {
+    notFound(scope);
     split(scope);
     parallax(scope);
     depth(scope);
