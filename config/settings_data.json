@@ -1,7 +1,17 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "current": {
-    "color_bg": "#06132F",
+    "color_bg": "#004F9F",
     "color_surface": "#0C1E45",
+    "color_stage": "#E4EBF5",
     "color_text": "#EEF3FB",
     "color_muted": "#8FA3C8",
     "color_border": "#1C3264",
@@ -14,13 +24,13 @@
     "page_width": 1600,
     "spacing_sections": 96,
     "corner_radius": 2,
+    "smooth_scroll": true,
+    "film_grain": "all",
     "card_ratio": "4 / 5",
     "card_fit": "contain",
     "card_second_image": true,
     "social_instagram": "https://www.instagram.com/sudditalia.clothing",
     "social_tiktok": "https://www.tiktok.com/@sudditalia.clothing",
-    "smooth_scroll": true,
-    "film_grain": "all",
-    "color_stage": "#E4EBF5"
+    "content_for_index": []
   }
 }

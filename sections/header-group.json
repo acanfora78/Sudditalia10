@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "type": "header",
   "name": "Header",
@@ -5,7 +14,16 @@
     "header": {
       "type": "header",
       "settings": {
-        "menu": "main-menu"
+        "logo": "shopify://shop_images/logo_sudditalia_2.png",
+        "logo_width": 140,
+        "menu": "main-menu",
+        "announcement": "",
+        "announcement_link": "",
+        "sec_font_custom": false,
+        "sec_font_heading": "archivo_n7",
+        "sec_font_body": "archivo_n4",
+        "sec_heading_case": "theme",
+        "sec_heading_spacing": 0
       }
     }
   },
