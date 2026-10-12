@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "type": "footer",
   "name": "Footer",
@@ -21,7 +30,10 @@
         },
         "newsletter": {
           "type": "newsletter",
-          "settings": {}
+          "settings": {
+            "title": "ISCRIVITI ALLA NEWSLETTER",
+            "text": "Nuovi drop e anteprime, prima di tutti."
+          }
         }
       },
       "block_order": [
@@ -29,7 +41,17 @@
         "info",
         "newsletter"
       ],
-      "settings": {}
+      "settings": {
+        "show_wordmark": true,
+        "wordmark": "",
+        "tagline": "",
+        "show_payment": true,
+        "sec_font_custom": false,
+        "sec_font_heading": "archivo_n7",
+        "sec_font_body": "archivo_n4",
+        "sec_heading_case": "theme",
+        "sec_heading_spacing": 0
+      }
     }
   },
   "order": [
